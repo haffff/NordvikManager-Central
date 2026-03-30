@@ -1,0 +1,5 @@
+- Check security of a system or application
+- Ensure that the system or application is protected against potential threats and vulnerabilities
+- Ensure that Log masking is implemented to protect sensitive information in logs
+- Ensure that the system or application is compliant with relevant security standards and regulations
+- Identify and mitigate potential security risks and vulnerabilities in the system or application/
