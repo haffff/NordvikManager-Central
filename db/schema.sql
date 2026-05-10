@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     image_data        TEXT,
     password_hash     TEXT,
     password_required INTEGER NOT NULL DEFAULT 0,
+    is_public         INTEGER NOT NULL DEFAULT 0,
     owner_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at        TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at        TEXT NOT NULL DEFAULT (datetime('now'))

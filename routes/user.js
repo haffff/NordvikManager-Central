@@ -10,6 +10,7 @@ const authService = require('../services/authService');
 const inviteService = require('../services/inviteService');
 const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
+const config = require('../config/config');
 
 const router = express.Router();
 const PAGE_SIZE = 10;
@@ -33,8 +34,8 @@ const registerLimiter = rateLimit({
 function setCookieToken(res, token) {
   res.cookie('Authorization', token, {
     httpOnly: true,
-    sameSite: 'None',
-    secure: true,
+    sameSite: config.isProduction ? 'None' : 'Lax',
+    secure: config.isProduction,
     maxAge: 15 * 60 * 1000,
   });
 }
@@ -71,7 +72,7 @@ router.post(
     const refreshToken = authService.generateRefreshToken(user.id);
 
     setCookieToken(res, accessToken);
-    res.json({ refreshToken });
+    res.json({ refreshToken, accessToken });
   }
 );
 
@@ -108,7 +109,7 @@ router.post(
     body('password').notEmpty().isLength({ min: 6, max: 128 }),
     body('confirmPassword').notEmpty(),
     body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail(),
-    body('inviteCode').trim().notEmpty(),
+    body('inviteCode').if(() => process.env.NO_INVITATION !== 'true').trim().notEmpty(),
   ],
   validate,
   (req, res) => {
@@ -118,8 +119,11 @@ router.post(
       return res.status(400).json({ error: 'Passwords do not match' });
     }
 
-    if (!inviteService.validateInvite(inviteCode)) {
-      return res.status(400).json({ error: 'Invalid or expired invite code' });
+    //check configuration of nodejs if invitation is required 
+    if (process.env.NO_INVITATION !== 'true') {
+      if (!inviteService.validateInvite(inviteCode)) {
+        return res.status(400).json({ error: 'Invalid or expired invite code' });
+      }
     }
 
     const existing = db
@@ -143,7 +147,7 @@ router.post(
     const refreshToken = authService.generateRefreshToken(id);
 
     setCookieToken(res, accessToken);
-    res.status(201).json({ refreshToken });
+    res.status(201).json({ refreshToken, accessToken });
   }
 );
 
@@ -362,7 +366,7 @@ router.post(
       return res.status(401).json({ error: 'Invalid or expired refresh token' });
     }
     setCookieToken(res, result.accessToken);
-    res.json({ refreshToken: result.refreshToken });
+    res.json({ refreshToken: result.refreshToken, accessToken: result.accessToken });
   }
 );
 

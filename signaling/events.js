@@ -14,4 +14,7 @@ module.exports = Object.freeze({
   PEER_LEFT: 'peer-left',
   SESSION_INFO: 'session-info',
   ERROR: 'error',
+
+  // Server → GM (with ack) — GM backend must call the acknowledgment callback immediately
+  PING_GM: 'ping-gm',
 });

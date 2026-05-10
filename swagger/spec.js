@@ -98,8 +98,18 @@ const spec = {
           description: { type: 'string', nullable: true },
           imageData: { type: 'string', nullable: true, description: 'Base64 image' },
           passwordRequired: { type: 'boolean' },
+          isPublic: { type: 'boolean' },
           ownerId: { type: 'string', format: 'uuid' },
           createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      PaginatedGameSessions: {
+        type: 'object',
+        properties: {
+          data: { type: 'array', items: { $ref: '#/components/schemas/GameSession' } },
+          page: { type: 'integer' },
+          total: { type: 'integer' },
+          count: { type: 'integer' },
         },
       },
       SignalingPeer: {
@@ -518,6 +528,7 @@ const spec = {
                   image: { type: 'string', description: 'Base64 image data' },
                   passwordRequired: { type: 'boolean', default: false },
                   password: { type: 'string', format: 'password' },
+                  isPublic: { type: 'boolean', default: false, description: 'List this session in the public game browser. Requires ALLOW_PUBLIC_GAMES to be enabled on the server.' },
                 },
               },
             },
@@ -526,6 +537,26 @@ const spec = {
         responses: {
           201: { description: 'Session created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GameSession' } } } },
           400: { description: 'Validation error' },
+          401: { description: 'Not authenticated' },
+          403: { description: 'Public games are not allowed on this server' },
+        },
+      },
+    },
+
+    '/api/gamelist/publicgames': {
+      get: {
+        tags: ['Game Sessions'],
+        summary: 'Browse public game sessions',
+        description:
+          'Returns paginated public sessions that have an active GM WebRTC channel. ' +
+          'Each candidate is verified with a live ping to the GM backend before being included. ' +
+          'Only available when `ALLOW_PUBLIC_GAMES=true` on the server (sessions can still be fetched even if the flag was later disabled).',
+        parameters: [
+          { name: 'page', in: 'query', schema: { type: 'integer', default: 1, minimum: 1 }, description: 'Page number' },
+          { name: 'count', in: 'query', schema: { type: 'integer', default: 20, minimum: 1, maximum: 100 }, description: 'Results per page' },
+        ],
+        responses: {
+          200: { description: 'Paginated public sessions', content: { 'application/json': { schema: { $ref: '#/components/schemas/PaginatedGameSessions' } } } },
           401: { description: 'Not authenticated' },
         },
       },

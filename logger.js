@@ -4,7 +4,7 @@ const { createLogger, format, transports } = require('winston');
 const config = require('./config/config');
 
 const logger = createLogger({
-  level: config.isProduction ? 'info' : 'debug',
+  level: config.logLevel ?? (config.isProduction ? 'info' : 'debug'),
   format: format.combine(
     format.timestamp(),
     format.errors({ stack: true }),

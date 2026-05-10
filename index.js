@@ -23,6 +23,13 @@ const app = express();
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        // blob: is required for fabric.js canvas image rendering on the player client
+        'img-src': ["'self'", 'data:', 'blob:'],
+      },
+    },
   })
 );
 
@@ -48,6 +55,7 @@ app.use(
 
 // Static files
 app.use('/client', express.static('static/client'));
+app.use('/client-admin', express.static('static/client-admin'));
 app.get('/', (_req, res) => {
   res.sendFile('static/landing/index.html', { root: __dirname });
 });

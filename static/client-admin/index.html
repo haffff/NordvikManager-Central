@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NordvikManager Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a2e;
+      --bg2: #16213e;
+      --bg3: #0f3460;
+      --gold: #c9a84c;
+      --gold-dim: #a08030;
+      --text: #e0e0e0;
+      --text-dim: #aaa;
+      --red: #e05555;
+      --green: #55a855;
+      --border: #2a2a4e;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 1rem;
+    }
+    #login-screen h1 { color: var(--gold); font-size: 2rem; }
+    #login-screen p { color: var(--text-dim); }
+    .login-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+    }
+    .login-box label { font-size: .85rem; color: var(--text-dim); }
+    .login-box input {
+      width: 100%;
+      padding: .6rem .8rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 1rem;
+      margin-top: .25rem;
+    }
+    .error-msg { color: var(--red); font-size: .85rem; min-height: 1.2em; }
+
+    /* ── Shared buttons ── */
+    .btn {
+      display: inline-block;
+      padding: .5rem 1.2rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 600;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .82; }
+    .btn:disabled { opacity: .4; cursor: default; }
+    .btn-gold  { background: var(--gold); color: var(--bg); }
+    .btn-red   { background: var(--red); color: #fff; }
+    .btn-ghost { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+    .btn-sm    { padding: .3rem .75rem; font-size: .8rem; }
+
+    /* ── App shell ── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: .9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { color: var(--gold); font-size: 1.3rem; flex: 1; }
+    header .who { color: var(--text-dim); font-size: .85rem; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .tab-btn {
+      padding: .75rem 1.4rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: .95rem;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── Content ── */
+    .content { flex: 1; padding: 1.5rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+    .tab-panel { display: none; flex-direction: column; gap: 1.2rem; }
+    .tab-panel.active { display: flex; }
+
+    /* ── Cards / section boxes ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+    }
+    .card h2 { font-size: 1rem; color: var(--gold); margin-bottom: 1rem; }
+
+    /* ── Forms inside cards ── */
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      align-items: flex-end;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .25rem; }
+    .form-group label { font-size: .8rem; color: var(--text-dim); }
+    .form-group input, .form-group select {
+      padding: .45rem .7rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: .9rem;
+      min-width: 140px;
+    }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    thead th {
+      text-align: left;
+      padding: .6rem .8rem;
+      background: var(--bg3);
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: .6rem .8rem; vertical-align: middle; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    .badge {
+      display: inline-block;
+      padding: .15rem .5rem;
+      border-radius: 999px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .badge-gold   { background: rgba(201,168,76,.2); color: var(--gold); }
+    .badge-green  { background: rgba(85,168,85,.2);  color: var(--green); }
+    .badge-red    { background: rgba(224,85,85,.2);  color: var(--red); }
+    .badge-dim    { background: rgba(255,255,255,.08); color: var(--text-dim); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .85rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .7rem 1.2rem;
+      font-size: .9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; }
+    #toast.ok  { border-color: var(--green); color: var(--green); }
+    #toast.err { border-color: var(--red);   color: var(--red);   }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .modal h3 { color: var(--gold); }
+    .modal .form-group input { width: 100%; }
+    .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+
+    .loading { color: var(--text-dim); padding: 1rem 0; text-align: center; font-size: .9rem; }
+
+    .invite-key {
+      font-family: monospace;
+      font-size: .82rem;
+      color: var(--text-dim);
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <h1>NordvikManager</h1>
+  <p>Admin Panel</p>
+  <div class="login-box">
+    <div class="form-group">
+      <label for="login-user">Username</label>
+      <input id="login-user" type="text" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label for="login-pass">Password</label>
+      <input id="login-pass" type="password" autocomplete="current-password" />
+    </div>
+    <div class="error-msg" id="login-error"></div>
+    <button class="btn btn-gold" id="login-btn">Sign in</button>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <header>
+    <h1>NordvikManager Admin</h1>
+    <span class="who" id="header-who"></span>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Logout</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="users">Users</button>
+    <button class="tab-btn" data-tab="invites">Invitations</button>
+  </div>
+
+  <div class="content">
+
+    <!-- Users tab -->
+    <div id="tab-users" class="tab-panel active">
+      <!-- Create user -->
+      <div class="card">
+        <h2>Create User</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Username</label>
+            <input id="cu-username" type="text" placeholder="username" />
+          </div>
+          <div class="form-group">
+            <label>Email (optional)</label>
+            <input id="cu-email" type="email" placeholder="user@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input id="cu-password" type="password" placeholder="min 6 chars" />
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="cu-admin">
+              <option value="false">User</option>
+              <option value="true">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-gold" id="cu-btn">Create</button>
+        </div>
+        <div class="error-msg" id="cu-error" style="margin-top:.5rem"></div>
+      </div>
+
+      <!-- Users list -->
+      <div class="card">
+        <h2>All Users</h2>
+        <div class="table-wrap">
+          <table id="users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="5" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:.8rem; display:flex; align-items:center; gap:.8rem;">
+          <div class="pagination" id="users-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invites tab -->
+    <div id="tab-invites" class="tab-panel">
+      <!-- Generate invite -->
+      <div class="card">
+        <h2>Generate Invitation</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valid for (hours)</label>
+            <input id="inv-hours" type="number" value="24" min="1" max="720" style="width:100px" />
+          </div>
+          <button class="btn btn-gold" id="gen-invite-btn">Generate</button>
+        </div>
+        <div id="new-invite-box" style="margin-top:.8rem; display:none;">
+          <p style="font-size:.8rem; color:var(--text-dim); margin-bottom:.3rem;">New invite key (click to copy):</p>
+          <span class="invite-key" id="new-invite-key" style="cursor:pointer; text-decoration:underline dotted;"></span>
+        </div>
+      </div>
+
+      <!-- Invites list -->
+      <div class="card">
+        <h2>All Invitations</h2>
+        <div class="table-wrap">
+          <table id="invites-table">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Created By</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invites-tbody">
+              <tr><td colspan="5" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:.8rem;">
+          <div class="pagination" id="invites-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Reset password modal ── -->
+<div class="modal-backdrop" id="reset-modal">
+  <div class="modal">
+    <h3>Reset Password</h3>
+    <p style="font-size:.85rem; color:var(--text-dim)">User: <strong id="reset-username"></strong></p>
+    <div class="form-group">
+      <label>New Password</label>
+      <input id="reset-pw" type="password" placeholder="min 6 chars" />
+    </div>
+    <div class="error-msg" id="reset-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="reset-cancel">Cancel</button>
+      <button class="btn btn-gold btn-sm" id="reset-confirm">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script src="/client-admin/admin.js" defer></script>
+</body>
+</html>

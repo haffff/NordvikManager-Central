@@ -29,6 +29,11 @@ const config = Object.freeze({
   corsOrigins: (process.env.CORS_ORIGIN || 'http://localhost:3001')
     .split(',')
     .map((o) => o.trim()),
+
+  allowPublicGames: process.env.ALLOW_PUBLIC_GAMES === 'true',
+
+  // Optional log level override. If not set, defaults to 'debug' in development and 'info' in production.
+  logLevel: process.env.LOG_LEVEL || null,
 });
 
 module.exports = config;

@@ -4,16 +4,16 @@ const { randomUUID } = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('../db/database');
 
-function createSession(ownerId, { name, summary, description, imageData, passwordRequired, password }) {
+function createSession(ownerId, { name, summary, description, imageData, passwordRequired, password, isPublic }) {
   const id = randomUUID();
   const passwordHash = passwordRequired && password
     ? bcrypt.hashSync(password, 10)
     : null;
 
   db.prepare(
-    `INSERT INTO game_sessions (id, name, summary, description, image_data, password_hash, password_required, owner_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, name, summary || null, description || null, imageData || null, passwordHash, passwordRequired ? 1 : 0, ownerId);
+    `INSERT INTO game_sessions (id, name, summary, description, image_data, password_hash, password_required, is_public, owner_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, name, summary || null, description || null, imageData || null, passwordHash, passwordRequired ? 1 : 0, isPublic ? 1 : 0, ownerId);
 
   return getSessionById(id);
 }
@@ -54,13 +54,13 @@ function joinSession(userId, sessionId, password) {
   const existing = db
     .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
     .get(sessionId, userId);
-  if (existing) return { error: 'Already joined', status: 409 };
+  if (existing) return { error: 'Already joined', status: 409, sessionId };
 
   db.prepare(
     'INSERT INTO session_players (id, session_id, user_id) VALUES (?, ?, ?)'
   ).run(randomUUID(), sessionId, userId);
 
-  return { ok: true };
+  return { ok: true, sessionId };
 }
 
 function deleteSession(sessionId, requestingUserId, isAdmin) {
@@ -84,10 +84,15 @@ function getPlayersInSession(sessionId) {
     .all(sessionId);
 }
 
+function getPublicSessions() {
+  return db.prepare('SELECT * FROM game_sessions WHERE is_public = 1 ORDER BY created_at DESC').all();
+}
+
 module.exports = {
   createSession,
   getSessionById,
   getSessionsForUser,
+  getPublicSessions,
   joinSession,
   deleteSession,
   getPlayersInSession,
