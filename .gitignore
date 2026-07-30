@@ -8,5 +8,5 @@ logs/
 
 .local/
 .vscode/
+.claude/
 
-.claude/settings.local.json
