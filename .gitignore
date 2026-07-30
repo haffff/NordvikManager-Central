@@ -9,3 +9,4 @@ logs/
 .local/
 .vscode/
 
+.claude/settings.local.json

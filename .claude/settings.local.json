@@ -4,7 +4,9 @@
       "Bash(find E:ProjectsNordvikManagerNordvikManager-Central -type f \\\\\\(-name *.md -o -name CLAUDE.md \\\\\\))",
       "Bash(grep -r \"webrtc\\\\|WebRTC\\\\|ice\\\\|ICE\\\\|SDP\\\\|sdp\" E:/Projects/NordvikManager/NordvikManager-Backend/DNDOnePlaceManager --include=*.cs)",
       "Bash(xargs ls:*)",
-      "Bash(timeout 5 node index.js)"
+      "Bash(timeout 5 node index.js)",
+      "Bash(grep -iE '\\\\.env$|\\\\.db$|\\\\.sqlite|secret|key|credential|password')",
+      "Bash(git grep *)"
     ]
   }
 }

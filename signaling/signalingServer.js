@@ -3,6 +3,7 @@
 const { Server } = require('socket.io');
 const config = require('../config/config');
 const authService = require('../services/authService');
+const sessionService = require('../services/gameSessionService');
 const signaling = require('../services/signalingService');
 const EVENTS = require('./events');
 const logger = require('../logger');
@@ -42,8 +43,18 @@ function attachSignalingServer(httpServer) {
         return;
       }
 
-      // Any authenticated user may host a session as GM.
-      // The isGmAlreadyConnected check below prevents session hijacking.
+      // Only the session's owner may connect as GM — prevents a player who
+      // knows the sessionId from racing the real GM backend for the GM role.
+      if (role === 'gm') {
+        const session = sessionService.getSessionById(sessionId);
+        if (!session || session.owner_id !== user.id) {
+          const reason = 'Only the session owner may connect as GM';
+          logger.warn(`[signaling] AUTH_REJECTED reason="${reason}" ${logCtx} userId=${user.id}`);
+          socket.emit(EVENTS.AUTH_ERROR, { error: reason });
+          socket.disconnect(true);
+          return;
+        }
+      }
 
       // Re-authentication: this socket is already registered in this session
       const existingPeer = signaling.getPeer(socket.id);
