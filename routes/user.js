@@ -312,6 +312,15 @@ router.post(
   }
 );
 
+// Key-combo format, e.g. "Ctrl+Shift+G" or "DELETE". Order must match the
+// frontend's CreateActionName emission order (Ctrl, Shift, Alt).
+const KEYBOARD_BINDING_KEY_REGEX = /^(Ctrl\+)?(Shift\+)?(Alt\+)?(.|HOME|DELETE|INSERT|PAGEUP|END|PAGEDOWN|BACKSPACE)$/;
+// "panel.command" — a ClientMediator command reference. An empty string is a
+// valid tombstone value (unbinds a built-in default's key client-side).
+const KEYBOARD_BINDING_COMMAND_REGEX = /^[A-Za-z_][\w-]*\.[A-Za-z_][\w-]*$/;
+const MAX_KEYBOARD_BINDINGS = 200;
+const MAX_KEYBOARD_BINDING_STRING_LENGTH = 64;
+
 // GET /api/user/KeyboardBindings
 router.get('/KeyboardBindings', auth, (req, res) => {
   const user = db
@@ -329,7 +338,37 @@ router.get('/KeyboardBindings', auth, (req, res) => {
 router.post(
   '/KeyboardBindings',
   auth,
-  [body().isObject()],
+  [
+    body().isObject().withMessage('Body must be an object'),
+    body().custom((bindings) => {
+      if (Array.isArray(bindings)) {
+        throw new Error('Body must be an object, not an array');
+      }
+
+      const entries = Object.entries(bindings);
+      if (entries.length > MAX_KEYBOARD_BINDINGS) {
+        throw new Error(`Too many bindings (max ${MAX_KEYBOARD_BINDINGS})`);
+      }
+
+      for (const [key, value] of entries) {
+        if (
+          typeof key !== 'string' ||
+          key.length > MAX_KEYBOARD_BINDING_STRING_LENGTH ||
+          !KEYBOARD_BINDING_KEY_REGEX.test(key)
+        ) {
+          throw new Error(`Invalid key combination: ${key}`);
+        }
+        if (typeof value !== 'string' || value.length > MAX_KEYBOARD_BINDING_STRING_LENGTH) {
+          throw new Error(`Invalid binding value for ${key}`);
+        }
+        if (value !== '' && !KEYBOARD_BINDING_COMMAND_REGEX.test(value)) {
+          throw new Error(`Invalid command format for ${key}: ${value}`);
+        }
+      }
+
+      return true;
+    }),
+  ],
   validate,
   (req, res) => {
     const bindings = req.body;
