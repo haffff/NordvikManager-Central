@@ -53,6 +53,32 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 - `content` holds the steps, run top to bottom. `Type` picks the step and `Data` holds its arguments.
   Every step is listed in the [step reference](./steps.md).
 
+## The action editor
+
+Open *Addons → Actions*. Actions are listed by prefix on the left; a ⚡ marks actions with a trigger.
+
+- **Steps tab.** Each step is one line that reads like a sentence, e.g. *Roll 1d20+(%modifier%) → roll*.
+  Variables are highlighted, and a missing required value shows in red.
+  - Click a step to edit it in the panel beside the list (or below it, when the panel is narrow).
+  - Drag the grip to reorder. Hover a step to duplicate or delete it.
+  - Click **+** between steps, or **Add step** at the end, and type to search for a step.
+  - Steps that run another action (If, For Each, Execute Action) show the target under the step, with a link
+    that opens it.
+- **Writing values.** Type `%` in a field to pick from the variables available at that step: built-ins,
+  the trigger's variables, and values created by earlier steps. A variable that isn't defined anywhere
+  before the step is pointed out under the field. RunScript's script gets a code editor.
+- **Inputs.** For an action without a trigger, names it uses but never sets (like `%cardId%`) are listed
+  as its *inputs*: values the caller passes in.
+- **Settings tab.** Name, prefix, description, trigger, permission, export and delete.
+- **Saving.** `Ctrl+S` saves, `Ctrl+Z` / `Ctrl+Shift+Z` undo and redo. Switching to another action with
+  unsaved changes asks first. If the panel is closed or the page reloads, the changes are kept and offered
+  back the next time you open the action.
+- **Running.** The run bar above the steps holds the values to run with (pre-filled from the inputs).
+  **Run** (or **Save & run**) runs the action and marks each step ✓ or ✗ as it goes; hover ✗ for the error.
+  Select a step afterwards to see the variables as they were after it ran. If a step runs another action
+  and that action fails, the step shows ✗ with that action's error. Only the GM and players who may edit
+  the game see this; it doesn't pause anything, unlike debug mode.
+
 ## Variables
 
 Steps pass values to each other through **variables**. A step with an `Output` (or `OutputName`,
