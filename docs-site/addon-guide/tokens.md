@@ -59,6 +59,6 @@ A menu item with `Location: "battlemap_add"` appears under the map's right-click
 
 ## Templates players can use
 
-A template with `"genericPermission": 1` (Read for everyone) shows up in every player's **Cards → Add Item**.
+A template with `"genericPermission": 1` (Read for everyone) shows up in every player's **Cards → Add Item**. To make its cards follow the game's theme, see [Cards and the app's styles](./cards.md).
 - **What the player gets:** their own card made from it, which the GM also has full rights to.
 - **Without it:** only the GM can create cards from the template.

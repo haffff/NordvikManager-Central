@@ -112,7 +112,22 @@ These class names and attributes are kept stable for stylesheets to use:
 .nm_toolbar { border-bottom: 2px solid var(--nordvik-accent-gold); }
 ```
 
+## Cards that use the app's styles
+
+Cards normally run in their own sandboxed frames and keep their own styles. A card whose template opts in gets the game's stylesheets too. Notes from the built-in Basics addon opt in. Inside such a card:
+- the `--nordvik-*` variables have the app's current values, and `:root` rules in your stylesheet apply there too;
+- `.nm_basePanel`, `.nm_label`, `.nm_container` and `.nm_button` look as they do in the app, so the same rules reach them;
+- `@font-face` fonts embedded as `data:` URIs work;
+- the same `url()` rules apply.
+
+Changing the stylesheets updates open cards straight away.
+
+```css
+/* reaches the app's panels and opted-in cards (e.g. notes) alike */
+.nm_basePanel { background: #1e1a14; }
+```
+
 ## Not covered
 
 - **The battle map** is drawn on a canvas; CSS can't reach the grid, tokens or drawings.
-- **Cards and addon views** run in their own sandboxed frames and keep their own styles.
+- **Other cards and addon views** run in their own sandboxed frames and keep their own styles. Character sheets from addons are an example, unless the addon opts in.

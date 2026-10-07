@@ -5,7 +5,11 @@ title: Generic tokens and notes
 
 # Generic tokens and notes
 
-Every new game comes with the **Basics** addon. It's built into the server, so it doesn't need the addon registry, and you can uninstall or update it like any other addon. It adds two things.
+**Basics** is an addon built into the server, so it doesn't need the addon registry.
+- **New games:** it's offered **ticked** under *Recommended add-ons* when you create a game. Untick it to leave it out.
+- **Afterwards:** you can uninstall or update it like any other addon.
+
+It adds two things.
 
 ## Generic token
 
@@ -25,7 +29,9 @@ To let everyone drop tokens on a map, right-click the map, open **Map Settings �
 
 ## Notes
 
-A **Note** is a card with one text area. It saves as you type.
+A **Note** is a rich-text card: headings, bold, italic, lists, checklists, quotes and links. It saves as you type.
+
+It follows the game's look: with a theme switched on (*Game Settings → Appearance*), notes use the theme's colours, fonts and panel style.
 
 - **Create one:** **Cards → Add Item**, choose the **Note** template, and give it a name.
 - **Who sees it:** only its author and the GM. Other players don't see it.
