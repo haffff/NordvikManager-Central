@@ -315,11 +315,18 @@ router.post(
 // Key-combo format, e.g. "Ctrl+Shift+G" or "DELETE". Order must match the
 // frontend's CreateActionName emission order (Ctrl, Shift, Alt).
 const KEYBOARD_BINDING_KEY_REGEX = /^(Ctrl\+)?(Shift\+)?(Alt\+)?(.|HOME|DELETE|INSERT|PAGEUP|END|PAGEDOWN|BACKSPACE)$/;
-// "panel.command" — a ClientMediator command reference. An empty string is a
-// valid tombstone value (unbinds a built-in default's key client-side).
-const KEYBOARD_BINDING_COMMAND_REGEX = /^[A-Za-z_][\w-]*\.[A-Za-z_][\w-]*$/;
+
+// "panel.command" optionally followed by whitespace and an argument tail
+// (e.g. "Playlist.PlaySound --resourceId=abc-123") — a ClientMediator command
+// reference the frontend parses and dispatches. An empty string is a valid
+// tombstone value (unbinds a built-in default's key client-side). Must stay in
+// sync with COMMAND_REGEX (frontend KeyBoardEventsManager.js) and
+// KeyboardBindingCommandRegex (Backend UserController.cs).
+const KEYBOARD_BINDING_COMMAND_REGEX = /^[A-Za-z_][\w-]*\.[A-Za-z_][\w-]*(\s+\S.*)?$/;
 const MAX_KEYBOARD_BINDINGS = 200;
-const MAX_KEYBOARD_BINDING_STRING_LENGTH = 64;
+
+// Room for a command plus a GUID-valued argument or two.
+const MAX_KEYBOARD_BINDING_STRING_LENGTH = 256;
 
 // GET /api/user/KeyboardBindings
 router.get('/KeyboardBindings', auth, (req, res) => {
