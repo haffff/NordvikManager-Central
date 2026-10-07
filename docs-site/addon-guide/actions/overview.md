@@ -107,6 +107,7 @@ Tokens inside step arguments are replaced before the step runs:
 | `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. Missing parts give empty text. |
 | `%q:{varName}.prop%` / `%q:<guid>.prop%` | Property `prop` of the entity whose id is in `varName` (or the literal id). `.name` and `.id` also work. |
 | `%qn:card-"Goblin".hp%` | Property `hp` of the card named *Goblin*. Types: `card`, `map`, `player`, `game`, `action` |
+| `%qn:resource-"myaddon_theme.css".id%` | Id of a resource, found by its key (an addon's resources are keyed `<addon key>_<file name>`) or else by its name. Type `resource` |
 
 A few arguments are **not** filled in before the step runs, because the step fills them in itself at the
 right moment:
