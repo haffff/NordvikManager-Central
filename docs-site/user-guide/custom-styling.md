@@ -69,6 +69,12 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
 | `--nordvik-input-focus` | `rgb(100,120,180)` | focused chat input |
 | `--nordvik-roll-crit` / `-fail` / `-normal` | green / red / grey | dice in roll results |
 | `--nordvik-drop-zone` / `-hover` | translucent blue | file drop areas |
+| `--nordvik-list-item` / `-hover` / `-text` | 50 / 60 grey, white | rows in lists such as Players and Permissions |
+| `--nordvik-dock-void` / `-panel` | `#1a1a1a` / `#1e1e1e` | the space behind windows, and window backgrounds |
+| `--nordvik-dock-border` / `-border-active` | `#333` / `#555` | window frames, and the frame of the focused window |
+| `--nordvik-dock-tab` / `-tab-text` | `#272727` / `#e8e8e8` | window tabs |
+| `--nordvik-dock-accent` / `-overlay` | `#00aaff` / translucent blue | the current tab's underline, divider and resize-handle hover, the drop preview while dragging a window |
+| `--nordvik-dock-button-hover` / `-scrollbar` | `#3a3a3a` / `#555` | window buttons (hide, lock, close) on hover, tab-row scrollbar |
 
 Buttons, inputs, tabs, menus and dialogs come from the UI library (Chakra UI). Their colours are the
 `--chakra-colors-*` variables. Set them on `:root, .dark`, because the dark theme declares them on `.dark`:
