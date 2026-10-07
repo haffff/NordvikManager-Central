@@ -160,6 +160,23 @@ player only. Whispers aren't saved in the chat history. Leave it empty to post t
 | **PlaySound** / **StopSound** | Plays or stops a soundboard sound for one player or everyone | `ResourceId`, `Player` |
 | **PlayPlaylist** / **PausePlaylist** / **StopPlaylist** | Controls a music playlist for everyone | `PlaylistId` |
 
+## Turn order
+
+Each map has its own turn order. `MapId` may be left empty when the game has a single battle map view; its current map is used. The steps act as the system, then tell everyone and fire **Turn Changed** like a player's change would.
+
+| Step | What it does | Arguments |
+|---|---|---|
+| **AddToTurnOrder** | Adds a token (by `ElementId`) or a free entry (by `Name`). The first entry starts round 1. | `MapId`, `ElementId`, `Name`, `Initiative`, `Hidden`, `Output` (the new entry's id) |
+| **RemoveFromTurnOrder** | Removes an entry, or a token's entry. If it was its turn, the turn passes on. | `MapId`, `EntryId` or `ElementId` |
+| **SetInitiative** | Sets (or, when empty, clears) an initiative, and can sort right after | `MapId`, `EntryId` or `ElementId`, `Initiative`, `Sort` |
+| **NextTurn** / **PreviousTurn** | Passes the turn on or back. After the last entry the next round starts; back from the first goes to the previous round, never below 1. | `MapId` |
+| **SortTurnOrder** | Highest initiative first; ties keep their place, entries without one go last | `MapId` |
+| **ResetTurnOrder** | Round 1 with the first entry, or (`Clear`) removes every entry | `MapId`, `Clear` |
+| **GetTurnOrder** | Reads the whole turn order, hidden entries too | `MapId`, `Output` |
+
+*GetTurnOrder* stores `{ MapId, Round, CurrentEntryId, Entries: [{ Id, Name, Initiative, ElementId, Hidden }] }`.
+For example, roll initiative for a token with **RollDice**, then **SetInitiative** with `Sort` = `true`.
+
 ## Network and security
 
 | Step | What it does | Arguments |
