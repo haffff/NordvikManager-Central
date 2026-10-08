@@ -16,9 +16,12 @@ npm start                   # plain node, no restart
 
 # Inspect the database directly
 npx better-sqlite3 data/nordvik.db  # opens a REPL; or use any SQLite GUI
+
+# Tests (Node's built-in runner, no extra dependencies)
+npm test
 ```
 
-There is no test runner configured yet.
+Tests live in `test/*.test.js` and must `require('./setupEnv')` first — it sets the required secrets and an in-memory `DB_PATH` before `config/config.js` loads.
 
 ## Architecture
 
@@ -53,6 +56,8 @@ Refresh tokens are UUID strings stored in the `refresh_tokens` table with a `rev
 Socket.io is attached to the same HTTP server at path `/socket.io`. It is a **pure relay** — it never participates in the WebRTC handshake itself.
 
 After connecting, a client must emit `authenticate { token, sessionId, role }` (role is `'gm'` or `'player'`). On success the socket joins room `session:<sessionId>`. All subsequent signaling events (`webrtc-offer`, `webrtc-answer`, `ice-candidate`) carry a `targetPeerId` and are forwarded only if sender and target are in the same room. See `signaling/events.js` for all event name constants.
+
+**Protocol version.** The GM backend sends `protocol` (integer) in its `authenticate`. `services/protocol.js` validates it; below `MIN_GM_PROTOCOL` the GM gets an `auth-error` telling it to update. Players receive it as `gmProtocol` in `session-info` and switch to the matching frozen player build at `/client/p<N>/` before connecting. The protocol number only goes up on breaking player↔backend changes; bump it in Backend (`ProtocolVersion.Current`) and Frontend (`src/protocol.json`) together.
 
 In-memory state lives in `services/signalingService.js` (a plain `Map`). It is lost on restart — clients are expected to reconnect and re-authenticate.
 

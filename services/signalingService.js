@@ -11,11 +11,14 @@ const GM_PING_TIMEOUT_MS = 3000;
 // A single slow ACK (GC pause, scheduler delay) will not break an active session.
 const GM_PING_MAX_STRIKES = 3;
 
-// socketId → { userId, username, isAdmin, sessionId, role: 'gm'|'player' }
+// socketId → { userId, username, isAdmin, sessionId, role: 'gm'|'player', traceId }
 const peers = new Map();
 
 // sessionId → socketId (only one GM per session)
 const gmSockets = new Map();
+
+// sessionId → protocol version announced by the session's GM backend
+const gmProtocols = new Map();
 
 // sessionId → number of consecutive ping timeouts (reset on any successful ping)
 const gmPingStrikes = new Map();
@@ -30,8 +33,8 @@ function setIo(io) {
   _io = io;
 }
 
-function addPeer(socketId, { userId, username, isAdmin, sessionId, role }) {
-  peers.set(socketId, { userId, username, isAdmin, sessionId, role });
+function addPeer(socketId, { userId, username, isAdmin, sessionId, role, traceId = null }) {
+  peers.set(socketId, { userId, username, isAdmin, sessionId, role, traceId });
 }
 
 function removePeer(socketId) {
@@ -39,6 +42,7 @@ function removePeer(socketId) {
   if (peer) {
     if (peer.role === 'gm' && gmSockets.get(peer.sessionId) === socketId) {
       gmSockets.delete(peer.sessionId);
+      gmProtocols.delete(peer.sessionId);
       gmPingStrikes.delete(peer.sessionId);
     }
   }
@@ -56,8 +60,13 @@ function getPeer(socketId) {
   return peers.get(socketId) || null;
 }
 
-function registerGm(sessionId, socketId) {
+function registerGm(sessionId, socketId, protocol) {
   gmSockets.set(sessionId, socketId);
+  gmProtocols.set(sessionId, protocol);
+}
+
+function getGmProtocol(sessionId) {
+  return gmProtocols.get(sessionId) ?? null;
 }
 
 function getGmSocket(sessionId) {
@@ -139,6 +148,7 @@ async function pingGmSocket(sessionId, timeoutMs = GM_PING_TIMEOUT_MS) {
   if (!socket || !socket.connected) {
     // Socket is already gone at the transport level — clean up immediately.
     gmSockets.delete(sessionId);
+    gmProtocols.delete(sessionId);
     gmPingStrikes.delete(sessionId);
     return false;
   }
@@ -157,6 +167,7 @@ async function pingGmSocket(sessionId, timeoutMs = GM_PING_TIMEOUT_MS) {
           logger.warn(`[signaling] GM evicted sessionId=${sessionId} reason="consecutive ping timeouts (${GM_PING_MAX_STRIKES})" socketId=${gmSocketId}`);
           gmPingStrikes.delete(sessionId);
           gmSockets.delete(sessionId);
+          gmProtocols.delete(sessionId);
           removePeer(gmSocketId);
           socket.disconnect(true);
         } else {
@@ -181,6 +192,7 @@ module.exports = {
   getPeer,
   registerGm,
   getGmSocket,
+  getGmProtocol,
   isGmAlreadyConnected,
   isSessionFull,
   inSameSession,

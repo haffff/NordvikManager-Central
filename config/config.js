@@ -32,6 +32,9 @@ const config = Object.freeze({
 
   allowPublicGames: process.env.ALLOW_PUBLIC_GAMES === 'true',
 
+  // Lowest GM backend protocol version allowed to start a session (see services/protocol.js).
+  minGmProtocol: parseInt(process.env.MIN_GM_PROTOCOL || '1', 10),
+
   // Optional log level override. If not set, defaults to 'debug' in development and 'info' in production.
   logLevel: process.env.LOG_LEVEL || null,
 });
