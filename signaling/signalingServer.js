@@ -5,6 +5,7 @@ const config = require('../config/config');
 const authService = require('../services/authService');
 const sessionService = require('../services/gameSessionService');
 const signaling = require('../services/signalingService');
+const { checkGmProtocol } = require('../services/protocol');
 const EVENTS = require('./events');
 const logger = require('../logger');
 
@@ -23,7 +24,7 @@ function attachSignalingServer(httpServer) {
     logger.debug(`[signaling] socket connected: ${socket.id}`);
 
     // ── AUTHENTICATE ────────────────────────────────────────────────────
-    socket.on(EVENTS.AUTHENTICATE, ({ token, sessionId, role, traceId } = {}) => {
+    socket.on(EVENTS.AUTHENTICATE, ({ token, sessionId, role, traceId, protocol } = {}) => {
       const logCtx = `socketId=${socket.id} sessionId=${sessionId ?? 'n/a'} role=${role ?? 'n/a'} traceId=${traceId ?? 'n/a'}`;
 
       if (!token || !sessionId || !['gm', 'player'].includes(role)) {
@@ -54,6 +55,18 @@ function attachSignalingServer(httpServer) {
           socket.disconnect(true);
           return;
         }
+      }
+
+      let gmProtocol = null;
+      if (role === 'gm') {
+        const protocolCheck = checkGmProtocol(protocol, config.minGmProtocol);
+        if (!protocolCheck.ok) {
+          logger.warn(`[signaling] AUTH_REJECTED reason="${protocolCheck.error}" ${logCtx} userId=${user.id}`);
+          socket.emit(EVENTS.AUTH_ERROR, { error: protocolCheck.error });
+          socket.disconnect(true);
+          return;
+        }
+        gmProtocol = protocolCheck.protocol;
       }
 
       // Re-authentication: this socket is already registered in this session
@@ -88,7 +101,7 @@ function attachSignalingServer(httpServer) {
       });
 
       if (role === 'gm') {
-        signaling.registerGm(sessionId, socket.id);
+        signaling.registerGm(sessionId, socket.id, gmProtocol);
       }
 
       socket.join(`session:${sessionId}`);
@@ -97,8 +110,11 @@ function attachSignalingServer(httpServer) {
 
       // Tell the player who the GM backend is so they can send the offer
       if (role === 'player') {
+        // gmProtocol lets the player client switch to the build matching the GM backend
+        // (/client/p<N>/) before it opens the WebRTC connection.
         socket.emit(EVENTS.SESSION_INFO, {
           gmPeerId: signaling.getGmSocket(sessionId) || null,
+          gmProtocol: signaling.getGmProtocol(sessionId),
           sessionId,
         });
       }

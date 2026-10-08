@@ -44,17 +44,20 @@ function joinSession(userId, sessionId, password) {
     return { error: 'You are the owner of this session', status: 400 };
   }
 
+  // Members already passed the password check when they first joined. Checking membership
+  // first lets them back in without it — e.g. after the player client switches to the
+  // build matching the GM's protocol version and re-joins via ?game=.
+  const existing = db
+    .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
+    .get(sessionId, userId);
+  if (existing) return { error: 'Already joined', status: 409, sessionId };
+
   if (session.password_required) {
     if (!password) return { error: 'Password required', status: 400 };
     if (!bcrypt.compareSync(password, session.password_hash)) {
       return { error: 'Incorrect password', status: 401 };
     }
   }
-
-  const existing = db
-    .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
-    .get(sessionId, userId);
-  if (existing) return { error: 'Already joined', status: 409, sessionId };
 
   db.prepare(
     'INSERT INTO session_players (id, session_id, user_id) VALUES (?, ?, ?)'
