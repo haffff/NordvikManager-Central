@@ -49,7 +49,7 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
 | `--nordvik-background-color` | `rgb(30,30,30)` | page and panel background |
 | `--nordvik-text-color` | `#f0f0f0` | main text |
 | `--nordvik-secondary-color` | `#0b0b0b` | secondary backgrounds |
-| `--nordvik-accent` | `rgb(189,24,24)` | the one highlight colour: selected items, the current window tab, the current turn, focus and drop targets. Text and thin lines use a lighter tint of it (`--nordvik-accent-text`) |
+| `--nordvik-accent` | `rgb(25,165,158)` (teal) | the one highlight colour: selected items, the current window tab, the current turn, focus and drop targets. Text and thin lines use a lighter tint of it (`--nordvik-accent-text`) |
 | `--nordvik-selection-color` | `--nordvik-accent` | selected items, if they should differ from the accent |
 | `--nordvik-item-color` | `rgb(70,70,70)` | list items |
 | `--nordvik-item-hover-color` | — | list items on hover |
