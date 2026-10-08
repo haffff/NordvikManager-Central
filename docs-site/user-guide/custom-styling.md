@@ -40,7 +40,7 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
   --nordvik-surface-raised: #30263f;
   --nordvik-border: #4a3a5e;
   --nordvik-text-color: #efe6ff;
-  --nordvik-accent-blue: #c9a227;
+  --nordvik-accent: #c9a227;
 }
 ```
 
@@ -49,7 +49,8 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
 | `--nordvik-background-color` | `rgb(30,30,30)` | page and panel background |
 | `--nordvik-text-color` | `#f0f0f0` | main text |
 | `--nordvik-secondary-color` | `#0b0b0b` | secondary backgrounds |
-| `--nordvik-selection-color` | `rgb(189,24,24)` | selected items |
+| `--nordvik-accent` | `rgb(189,24,24)` | the one highlight colour: selected items, the current window tab, the current turn, focus and drop targets. Text and thin lines use a lighter tint of it (`--nordvik-accent-text`) |
+| `--nordvik-selection-color` | `--nordvik-accent` | selected items, if they should differ from the accent |
 | `--nordvik-item-color` | `rgb(70,70,70)` | list items |
 | `--nordvik-item-hover-color` | — | list items on hover |
 | `--nordvik-button-color` / `-hover` / `-active` / `--nordvik-button-border-color` | dark greys | classic buttons |
@@ -64,7 +65,7 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
 | `--nordvik-toolbar` | `black` | the main toolbar |
 | `--nordvik-status-bar` / `--nordvik-status-bar-border` | dark blue-grey | connection bar at the bottom |
 | `--nordvik-text-strong` / `-soft` / `-muted` / `-subtle` | 220 / 200 / 140 / 130 grey | titles, secondary and hint text |
-| `--nordvik-accent-blue` / `-green` / `-red` / `-gold` | | highlights, statuses, log levels |
+| `--nordvik-accent-blue` / `-green` / `-red` / `-gold` | | statuses, log levels, links and `%variables%` (not highlights) |
 | `--nordvik-chat-own` / `--nordvik-chat-own-border` | blue-grey | your own chat messages |
 | `--nordvik-input-focus` | `rgb(100,120,180)` | focused chat input |
 | `--nordvik-roll-crit` / `-fail` / `-normal` | green / red / grey | dice in roll results |
@@ -73,7 +74,7 @@ layers the UI library uses. The quickest way to restyle is to set the palette va
 | `--nordvik-dock-void` / `-panel` | `#1a1a1a` / `#1e1e1e` | the space behind windows, and window backgrounds |
 | `--nordvik-dock-border` / `-border-active` | `#333` / `#555` | window frames, and the frame of the focused window |
 | `--nordvik-dock-tab` / `-tab-text` | `#272727` / `#e8e8e8` | window tabs |
-| `--nordvik-dock-accent` / `-overlay` | `#00aaff` / translucent blue | the current tab's underline, divider and resize-handle hover, the drop preview while dragging a window |
+| `--nordvik-dock-accent` / `-overlay` | `--nordvik-accent` / a translucent tint of it | the current tab's underline, divider and resize-handle hover, the drop preview while dragging a window |
 | `--nordvik-dock-button-hover` / `-scrollbar` | `#3a3a3a` / `#555` | window buttons (hide, lock, close) on hover, tab-row scrollbar |
 
 Buttons, inputs, tabs, menus and dialogs come from the UI library (Chakra UI). Their colours are the
