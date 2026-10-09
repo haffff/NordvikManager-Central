@@ -7,5 +7,5 @@ services:
     network_mode: host
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/coturn/certs:/etc/coturn/certs:ro
     command: ["-c", "/etc/coturn/turnserver.conf"]

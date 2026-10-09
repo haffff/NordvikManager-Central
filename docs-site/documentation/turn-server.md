@@ -24,13 +24,84 @@ Open these ports in the firewall:
 | 5349 | TCP | TURN over TLS (`turns:` URLs) |
 | 49160–49200 | UDP | Relay range (`min-port`/`max-port` in the config) |
 
-The Central Server repository contains a sample config and a Docker Compose file in `coturn/`:
+The Central Server repository contains a sample config (`coturn/turnserver.conf`) and a Docker Compose file. Fill in `static-auth-secret` (generate it with `openssl rand -hex 32`), `realm` and `external-ip`. Then run coturn either as a systemd service or with Docker.
 
-1. Generate a secret: `openssl rand -hex 32`.
-2. Copy `coturn/turnserver.conf` to the server. Fill in `static-auth-secret`, `realm`, `external-ip` and the certificate paths.
-3. Start it: `docker compose up -d` (or install the `coturn` package and point it at the config).
+### Option A: systemd (Debian / Ubuntu)
 
-For `turns:` you need a domain (e.g. `turn.example.com`) and a certificate for it, e.g. from Let's Encrypt. coturn must be able to read the private key. Certificate renewals take effect only after a coturn restart.
+Run these as root.
+
+1. Install coturn. The package ships a `coturn.service` unit that runs as the `turnserver` user and reads `/etc/turnserver.conf`.
+
+   ```bash
+   apt update && apt install -y coturn
+   ```
+
+   On older packages (Ubuntu 20.04, Debian 11) also set `TURNSERVER_ENABLED=1` in `/etc/default/coturn`.
+
+2. Install the config:
+
+   ```bash
+   cp /etc/turnserver.conf /etc/turnserver.conf.orig
+   nano /etc/turnserver.conf    # paste coturn/turnserver.conf and fill in the <...> values
+   ```
+
+   `external-ip` is the VPS's public IPv4. If `ip -4 addr` shows only a private address (1:1 NAT), use `external-ip=<public-ip>/<private-ip>`.
+
+3. Set up the certificate for `turns:`. Point a DNS `A` record for `turn.example.com` at the VPS, then get a certificate. With nothing listening on port 80:
+
+   ```bash
+   apt install -y certbot
+   certbot certonly --standalone -d turn.example.com
+   ```
+
+   Let's Encrypt's private key is readable only by root, and coturn runs as `turnserver`. Install a deploy hook that copies the files for coturn and restarts it. coturn loads certificates only at startup, so the restart is needed on every renewal.
+
+   ```bash
+   cat > /etc/letsencrypt/renewal-hooks/deploy/coturn.sh <<'HOOK'
+   #!/bin/sh
+   set -e
+   install -d -m 750 -o root -g turnserver /etc/coturn/certs
+   install -m 640 -o root -g turnserver /etc/letsencrypt/live/turn.example.com/fullchain.pem /etc/coturn/certs/fullchain.pem
+   install -m 640 -o root -g turnserver /etc/letsencrypt/live/turn.example.com/privkey.pem /etc/coturn/certs/privkey.pem
+   systemctl restart coturn
+   HOOK
+   chmod +x /etc/letsencrypt/renewal-hooks/deploy/coturn.sh
+   /etc/letsencrypt/renewal-hooks/deploy/coturn.sh    # run once now
+   ```
+
+   Without a certificate yet, comment out `tls-listening-port`, `cert` and `pkey`, and leave `turns:` out of `TURN_URLS`.
+
+4. Raise the open-file limit. This is optional, but useful with many players.
+
+   ```bash
+   systemctl edit coturn
+   # add:
+   # [Service]
+   # LimitNOFILE=65535
+   ```
+
+5. Open the firewall (here with `ufw`), then enable and start coturn:
+
+   ```bash
+   ufw allow 3478/udp && ufw allow 3478/tcp && ufw allow 5349/tcp && ufw allow 49160:49200/udp
+   systemctl enable --now coturn
+   systemctl status coturn
+   journalctl -u coturn -f      # the sample config logs to stdout, which goes to the journal
+   ```
+
+   If the VPS provider also has a cloud firewall, open the same ports there.
+
+6. Check that coturn is listening:
+
+   ```bash
+   ss -lunpt | grep turnserver
+   ```
+
+   After any config change, run `systemctl restart coturn`.
+
+### Option B: Docker
+
+Put `turnserver.conf` next to `coturn/docker-compose.yml`, copy the certificates to `/etc/coturn/certs` with a deploy hook like the one in step 3, and run `docker compose up -d`. In the hook, use `docker compose restart` instead of `systemctl`, and make the files readable by the container's user instead of the `turnserver` group.
 
 The sample config blocks relaying to private and loopback addresses, so the relay can't be used to reach the server's internal network. Keep those `denied-peer-ip` lines.
 
@@ -48,7 +119,14 @@ TURN is enabled only when both `TURN_URLS` and `TURN_SECRET` are set. `STUN_SERV
 
 ## 3. Verify
 
-1. While logged in, open `/api/ice-servers` on the Central Server and copy the TURN `username` and `credential`.
+1. While logged in, open `/api/ice-servers` on the Central Server and copy the TURN `username` and `credential`. To test coturn before Central is configured, generate a pair on the VPS:
+
+   ```bash
+   SECRET='<static-auth-secret>'
+   USERNAME="$(( $(date +%s) + 3600 )):test"
+   PASSWORD=$(printf '%s' "$USERNAME" | openssl dgst -sha1 -hmac "$SECRET" -binary | base64)
+   echo "$USERNAME  $PASSWORD"
+   ```
 2. Enter them with a TURN URL in the WebRTC samples [Trickle ICE](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/) page and click *Gather candidates*. A `relay` candidate means coturn works.
 3. In a game, `chrome://webrtc-internals` on the player shows which candidate pair is in use. If it is `relay`, the connection goes through TURN.
 
