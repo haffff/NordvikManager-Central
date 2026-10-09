@@ -1,0 +1,123 @@
+name: Deploy to hosting (FTP)
+
+# Uploads the Central server source and/or the docs site to the hosting over FTP.
+# node_modules are NOT uploaded: after a dependency change, run "npm install"
+# and restart the app from the hosting panel.
+#
+# Required repo secrets: CENTRAL_FTP_SERVER, CENTRAL_FTP_USERNAME, CENTRAL_FTP_PASSWORD
+# Required repo variables: CENTRAL_FTP_DIR (server app dir), DOCS_FTP_DIR (docs web dir)
+# Optional repo variable:  CENTRAL_FTP_PROTOCOL (ftp | ftps | ftps-legacy, default ftp)
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_server:
+        description: 'Deploy the Central server'
+        type: boolean
+        default: true
+      deploy_docs:
+        description: 'Deploy the docs site'
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      deploy_server:
+        type: boolean
+        default: true
+      deploy_docs:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ftp-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy_server:
+    if: inputs.deploy_server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check FTP target
+        run: |
+          if [ -z "${{ vars.CENTRAL_FTP_DIR }}" ]; then
+            echo "::error::Repo variable CENTRAL_FTP_DIR is not set (e.g. /domains/nordvikmanager.pl/app/)."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Stage server files
+        run: bash scripts/stage-server.sh deploy
+
+      # Passenger-style hosts restart the app when tmp/restart.txt changes; ignored elsewhere.
+      - name: Touch restart marker
+        run: mkdir -p deploy/tmp && date -u +%FT%TZ > deploy/tmp/restart.txt
+
+      - name: Upload over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.CENTRAL_FTP_SERVER }}
+          username: ${{ secrets.CENTRAL_FTP_USERNAME }}
+          password: ${{ secrets.CENTRAL_FTP_PASSWORD }}
+          protocol: ${{ vars.CENTRAL_FTP_PROTOCOL || 'ftp' }}
+          local-dir: ./deploy/
+          server-dir: ${{ vars.CENTRAL_FTP_DIR }}
+          dangerous-clean-slate: false
+          # Never touch runtime state on the host, nor the separately deployed player client.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .env
+            data/**
+            logs/**
+            node_modules/**
+            static/client/**
+
+  deploy_docs:
+    if: inputs.deploy_docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check FTP target
+        run: |
+          if [ -z "${{ vars.DOCS_FTP_DIR }}" ]; then
+            echo "::error::Repo variable DOCS_FTP_DIR is not set (e.g. /domains/nordvikmanager.pl/public_html/)."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Build docs
+        working-directory: docs-site
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.CENTRAL_FTP_SERVER }}
+          username: ${{ secrets.CENTRAL_FTP_USERNAME }}
+          password: ${{ secrets.CENTRAL_FTP_PASSWORD }}
+          protocol: ${{ vars.CENTRAL_FTP_PROTOCOL || 'ftp' }}
+          local-dir: ./docs-site/build/
+          server-dir: ${{ vars.DOCS_FTP_DIR }}
+          dangerous-clean-slate: false
+          # Separate sync-state file so docs and server deploys never share state.
+          state-name: .ftp-deploy-docs-state.json
+          exclude: |
+            **/.git*
+            **/.git*/**
+            client/**

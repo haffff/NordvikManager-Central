@@ -1,0 +1,120 @@
+name: Release
+
+# Builds a downloadable zip of the Central server and publishes it as a GitHub Release,
+# then (optionally) deploys the same commit to the hosting via deploy.yml.
+#
+# Trigger either by pushing a tag (git tag v1.2.0 && git push Central v1.2.0)
+# or manually from the Actions tab with a version number.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.2.0, no leading v)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        type: boolean
+        default: false
+      deploy:
+        description: 'Deploy to hosting after release'
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ inputs.version }}"
+            VERSION="${VERSION#v}"
+          fi
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$VERSION' is not a valid semver version"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Stage server files
+        run: bash scripts/stage-server.sh "stage/nordvikmanager-central" "${{ steps.version.outputs.version }}"
+
+      # Fails fast if package-lock.json is out of sync with package.json,
+      # which would also break "npm install" on the hosting panel.
+      - name: Verify lockfile installs cleanly
+        run: |
+          cp -r stage/nordvikmanager-central "$RUNNER_TEMP/verify"
+          cd "$RUNNER_TEMP/verify" && npm ci --omit=dev --ignore-scripts
+
+      - name: Create zip
+        run: |
+          ZIP="NordvikManager-Central_${{ steps.version.outputs.version }}.zip"
+          (cd stage && zip -r "../$ZIP" nordvikmanager-central)
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Write release notes
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## NordvikManager Central server
+
+          Central authentication, game session registry and WebRTC signaling server.
+
+          ### Install
+          Requires **Node.js 20+** (`better-sqlite3` is a native module and is built during install).
+
+          1. Unzip `NordvikManager-Central_<version>.zip`.
+          2. `cp .env.example .env` and set at least `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, `CORS_ORIGIN` and `NODE_ENV=production`.
+          3. `npm ci --omit=dev`
+          4. `npm run seed` (creates the first admin from `ADMIN_USERNAME` / `ADMIN_PASSWORD`).
+          5. `npm start`
+
+          ### Notes
+          - The player web client (`/client`) is **not** included — it is built from the frontend repository with your Central URL baked in, and placed in `static/client/`.
+          - The database (`data/`) and `.env` are never part of the package, so upgrading is: replace files, `npm ci --omit=dev`, restart.
+          EOF
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [ "${{ inputs.prerelease }}" = "true" ] || echo "$VERSION" | grep -q -- '-'; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "v$VERSION" "$ZIP" \
+            --target "${{ github.sha }}" \
+            --title "Central $VERSION" \
+            --notes-file release-notes.md \
+            $PRERELEASE_FLAG
+
+  # A release created with GITHUB_TOKEN does not fire other workflows' "release" triggers,
+  # so deployment is chained here directly.
+  deploy:
+    needs: release
+    if: github.event_name == 'push' || inputs.deploy
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      deploy_server: true
+      deploy_docs: true
+    secrets: inherit
