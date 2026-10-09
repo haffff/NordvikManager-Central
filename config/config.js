@@ -9,6 +9,10 @@ for (const key of required) {
   }
 }
 
+function splitList(value) {
+  return (value || '').split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 const config = Object.freeze({
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -31,6 +35,15 @@ const config = Object.freeze({
     .map((o) => o.trim()),
 
   allowPublicGames: process.env.ALLOW_PUBLIC_GAMES === 'true',
+
+  // ICE servers handed to WebRTC peers. TURN is enabled only when TURN_URLS and TURN_SECRET are both set;
+  // TURN_SECRET must match coturn's static-auth-secret (see coturn/turnserver.conf).
+  stunServers: splitList(process.env.STUN_SERVERS),
+  turn: {
+    urls: splitList(process.env.TURN_URLS),
+    secret: process.env.TURN_SECRET || null,
+    ttlSeconds: parseInt(process.env.TURN_TTL_SECONDS || '86400', 10),
+  },
 
   // Lowest GM backend protocol version allowed to start a session (see services/protocol.js).
   minGmProtocol: parseInt(process.env.MIN_GM_PROTOCOL || '1', 10),

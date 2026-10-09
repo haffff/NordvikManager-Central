@@ -59,6 +59,8 @@ After connecting, a client must emit `authenticate { token, sessionId, role }` (
 
 **Protocol version.** The GM backend sends `protocol` (integer) in its `authenticate`. `services/protocol.js` validates it; below `MIN_GM_PROTOCOL` the GM gets an `auth-error` telling it to update. Players receive it as `gmProtocol` in `session-info` and switch to the matching frozen player build at `/client/p<N>/` before connecting. The protocol number only goes up on breaking player↔backend changes; bump it in Backend (`ProtocolVersion.Current`) and Frontend (`src/protocol.json`) together.
 
+**ICE servers.** `GET /api/ice-servers` (authenticated) returns the `RTCIceServer[]` both peers use: STUN from `STUN_SERVERS`, plus TURN with short-lived coturn `use-auth-secret` credentials when `TURN_URLS` + `TURN_SECRET` are set (`services/iceServers.js`). The unauthenticated `/api/meta` never carries TURN details. Sample coturn config is in `coturn/`.
+
 In-memory state lives in `services/signalingService.js` (a plain `Map`). It is lost on restart — clients are expected to reconnect and re-authenticate.
 
 ### Database
