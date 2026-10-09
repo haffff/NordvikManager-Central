@@ -94,8 +94,8 @@ Lines are split **before** tokens are filled in, so a value may contain line bre
 |---|---|---|
 | **CreateCard** | Creates a card from a template and stores its id | `Name`, `TemplateId`, `Owner`, `IsTemplate`, `Output` |
 | **DeleteCard** | Permanently deletes a card and its properties | `CardId` |
-| **GetData** | Reads entities (e.g. cards, maps) by type, name or id | `Type`, `Name`, `Id`, `PropertyName`, `SingleElement`, `Output` |
-| **GetDetail** / **SetDetail** | Reads or writes a field of an object variable or an element | `Input`, `DetailName`, `Value`, `Type`, `IsElement`, `Output` |
+| **GetData** | Finds entities of one type by `Id`, else by having a property named `PropertyName`, else by `Name`; stores a list, or the first match with `SingleElement` | `Type`, `Name`, `Id`, `PropertyName`, `SingleElement`, `Output` |
+| **GetDetail** / **SetDetail** | Reads or writes a field of an object variable (case-sensitive, e.g. `Name`) or, with `IsElement`, a canvas key of a map element (e.g. `left`). SetDetail changes only the variable; `Type` is `string`, `int`, `long`, `float`, `double` or `bool` | `Input`, `DetailName`, `Value`, `Type`, `IsElement`, `Output` |
 | **GetConnectedPlayers** | Stores the list of connected players | `Value` (variable name) |
 | **SetResource** | Creates or overwrites a text resource by key | `Key`, `Name`, `Content`, `MimeType`, `FolderId`, `OutputVariable` |
 | **ReadResource** | Reads a text resource | `Key` or `ResourceId`, `OutputVariable` |
@@ -144,14 +144,85 @@ Supported notation:
 |---|---|---|
 | **SendChat** | Posts a card to chat: `Text`, `BigNumber`, or `Roll` (after a RollDice) | `Template`, `Title`, `Message`, `Number`, `RollVariable`, `Color`, `BorderColor`, `Player` |
 | **ShowView** | Shows a view (hidden panel) to one player or everyone | `ViewKey`, `Player`, `Data` |
-| **AddMenuItem** | Adds a menu entry that runs an action | `Name`, `UiName`, `Icon`, `Action`, `Location`, `OnlyOwner`, `SubMenuId`, `SubMenuName`, `ActionArgs` |
-| **AddToolbarButton** | Adds a toolbar button that runs an action | `Name`, `UiName`, `Icon`, `Action`, `Location`, `OnlyOwner`, `MenuId`, `MenuName`, `ActionArgs` |
+| **AddMenuItem** | Adds a menu entry that runs an action, in the menu named by `Location` (see [Menu locations](#menu-locations)) | `Name`, `UiName`, `Action`, `Location`, `OnlyOwner`, `SubMenuId`, `SubMenuName`, `ActionArgs` |
+| **AddToolbarButton** | Adds a button at the end of the main toolbar that runs an action, or with `MenuId` a dropdown menu | `Name`, `UiName`, `Action`, `OnlyOwner`, `MenuId`, `MenuName`, `ActionArgs` |
+| **AddMapTool** | Adds a tool to the Tools panel; clicking the map with it runs an action (see [Map tools](#map-tools)) | `Name`, `UiName`, `Action`, `Hint`, `Target`, `StayActive`, `OnlyOwner`, `ActionArgs` |
 | **FireClientMediator** | Sends an event to the players' browsers | `EventName`, `Payload`, `Player` |
 | **RunClientCommand** | Runs a panel command in one player's browser | `Panel`, `Command`, `Player`, `Data` |
 | **SendCommand** | Sends a raw lobby command (advanced) | The command itself |
 
 **SendChat → `Player`** (whisper): set a player's name, id or `%playerId%` to send the message to that
 player only. Whispers aren't saved in the chat history. Leave it empty to post to everyone.
+
+`Icon` (both steps) and AddToolbarButton's `Location` are accepted but not used yet: menu items and
+toolbar buttons are text only, and buttons always go at the end of the main toolbar.
+
+### Menu locations
+
+AddMenuItem's `Location` is the id of the menu the item goes into. The action editor offers these in
+a list; you can also type one.
+
+| Location | Menu | Who sees it |
+|---|---|---|
+| `game` (or empty) | **Game** menu | everyone |
+| `views` | **View** | everyone |
+| `views_battlemaps` | View → **Battle Maps** | GM |
+| `layouts` | **Layouts** | everyone |
+| `settings` | **Settings** | everyone |
+| `addons` | **Addons** | GM |
+| `addons_addons` / `addons_views` / `addons_code` | Addons → **Addons** / **Views** / **Code** | GM |
+| `battlemap_add` | Map right-click → **Add** | anyone who can place tokens on the map |
+| `battlemap` | Map right-click on empty space | everyone |
+| `battlemap_element` | Map right-click on a token or element | anyone who can right-click it |
+| `cards_item` | Cards panel: right-click on a card | anyone who can see the card |
+
+Right-click menus pass what was clicked to the action as variables:
+
+| Location | Variables |
+|---|---|
+| `battlemap_add`, `battlemap` | `battleMapId`, `position` (`{ x, y }` on the map) |
+| `battlemap_element` | `battleMapId`, `position`, `elementId` |
+| `cards_item` | `cardId` |
+
+Players can open these menus too, and a player's click runs the action as that player. If the action
+should only work for some players, check it with a **RequirePermission** step first (e.g. `Control`
+on `%elementId%`).
+
+**Your own menu:** make a toolbar dropdown with AddToolbarButton and a `MenuId` (e.g. `myaddon_menu`),
+then add items to it with AddMenuItem and that id as `Location`. To group items inside an existing
+menu instead, give them a `SubMenuId` (and `SubMenuName`): the submenu is created the first time.
+`Name` identifies an item within its menu; sending the same `Name` again doesn't add a duplicate.
+
+### Map tools
+
+**AddMapTool** adds a tool to the Tools panel, under **Addon tools**. While a player has it active,
+a left click on the map runs the tool's `Action` with these variables (plus `ActionArgs`):
+
+| Variable | Value |
+|---|---|
+| `battleMapId`, `mapId` | the battle map view and the map that was clicked |
+| `position` | `{ x, y }` of the click on the map |
+| `elementId` | the clicked token or element, if any |
+
+- `Target` decides which clicks count: `point` (anywhere, the default), `token` or `element`.
+  Other clicks are ignored.
+- `Hint` is shown on the map while the tool is active, with a **Stop** button.
+- With `StayActive` off, the tool turns itself off after one use; with it on, it stays until Stop.
+- Tools, like menu items, last until the player leaves the game, so add them from a hook that runs
+  when the game starts.
+
+Example: a *Teleport* tool. Add it from a game-start hook:
+
+```json
+{ "Type": "AddMapTool", "Data": { "Name": "teleport", "UiName": "Teleport", "Action": "myaddon/teleport",
+  "Target": "token", "StayActive": true, "Hint": "Click a token to move it to the map's top-left corner." } }
+```
+
+and in `myaddon/teleport`, move the clicked token:
+
+```json
+{ "Type": "MoveElement", "Data": { "ElementId": "%elementId%", "X": "0", "Y": "0" } }
+```
 
 ## Audio
 
