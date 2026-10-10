@@ -2,13 +2,12 @@
 
 const http = require('http');
 const express = require('express');
-const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
 const config = require('./config/config');
-const helmetOptions = require('./config/securityHeaders');
+const securityHeaders = require('./config/securityHeaders');
 const runMigration = require('./db/migrations/001_initial');
 const mountRoutes = require('./routes/index');
 const { attachSignalingServer } = require('./signaling/signalingServer');
@@ -21,7 +20,7 @@ runMigration();
 const app = express();
 
 // Security headers
-app.use(helmet(helmetOptions));
+app.use(securityHeaders());
 
 // CORS
 app.use(
