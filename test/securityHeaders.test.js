@@ -26,3 +26,13 @@ test('CSP lets the player client load images and audio from blob: URLs', async (
   // Playlist tracks and sounds are played from blob: object URLs (PlaybackManager).
   assert.match(csp, /media-src 'self' blob:/);
 });
+
+test('CSP lets card iframes run: blob: frames inherit this policy for their own scripts and styles', async () => {
+  const csp = await cspOf();
+
+  assert.match(csp, /frame-src 'self' blob:/);
+  // The card bridge is an inline script; addon JS and CSS come as data: URIs.
+  assert.match(csp, /script-src 'self' 'unsafe-inline' data: blob:/);
+  assert.match(csp, /script-src-attr 'unsafe-inline'/);
+  assert.match(csp, /style-src 'self' https: 'unsafe-inline' data:/);
+});
