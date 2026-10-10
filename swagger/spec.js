@@ -643,6 +643,45 @@ const spec = {
     },
 
     // ── WEBRTC ─────────────────────────────────────────────────────────
+    '/api/ice-servers': {
+      get: {
+        tags: ['WebRTC'],
+        summary: 'ICE servers for a WebRTC peer connection',
+        description:
+          'Returns an `RTCIceServer[]` usable as-is in `RTCPeerConnection`. When TURN is configured ' +
+          '(`TURN_URLS` + `TURN_SECRET`), it includes a TURN entry with short-lived coturn ' +
+          '`use-auth-secret` credentials (`username` = `<expiry>:<userId>`). `ttl` is the credential ' +
+          'lifetime in seconds, or null without TURN.',
+        responses: {
+          200: {
+            description: 'ICE configuration',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    iceServers: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          urls: { type: 'array', items: { type: 'string' }, example: ['turn:turn.example.com:3478?transport=udp'] },
+                          username: { type: 'string', example: '1767226200:3f1c…' },
+                          credential: { type: 'string' },
+                        },
+                      },
+                    },
+                    ttl: { type: 'integer', nullable: true, example: 86400 },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Not authenticated' },
+        },
+      },
+    },
+
     '/webrtc/sessions': {
       get: {
         tags: ['WebRTC'],

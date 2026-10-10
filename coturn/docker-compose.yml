@@ -1,0 +1,11 @@
+# Runs coturn with the sample config. Host networking avoids Docker NAT on the large UDP relay range.
+#   docker compose up -d
+services:
+  coturn:
+    image: coturn/coturn:4.6
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - /etc/coturn/certs:/etc/coturn/certs:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
