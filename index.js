@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
 const config = require('./config/config');
+const helmetOptions = require('./config/securityHeaders');
 const runMigration = require('./db/migrations/001_initial');
 const mountRoutes = require('./routes/index');
 const { attachSignalingServer } = require('./signaling/signalingServer');
@@ -20,18 +21,7 @@ runMigration();
 const app = express();
 
 // Security headers
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: {
-      directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        // blob: is required for fabric.js canvas image rendering on the player client
-        'img-src': ["'self'", 'data:', 'blob:'],
-      },
-    },
-  })
-);
+app.use(helmet(helmetOptions));
 
 // CORS
 app.use(
