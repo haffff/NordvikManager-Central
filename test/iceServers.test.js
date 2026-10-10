@@ -93,6 +93,15 @@ test('GET /api/ice-servers returns credentials for the caller', async () => {
   assert.equal(turn.credential, crypto.createHmac('sha1', 'test-turn-secret').update(turn.username).digest('base64'));
 });
 
+test('a Bearer token wins over a stale Authorization cookie', async () => {
+  // localhost cookies are shared across ports, so a GM page can carry an expired player cookie.
+  const token = authService.generateAccessToken({ id: 'user-42', username: 'u', email: null, is_admin: 0 });
+  const res = await fetch(`${baseUrl}/api/ice-servers`, {
+    headers: { Authorization: `Bearer ${token}`, Cookie: 'Authorization=expired.or.invalid' },
+  });
+  assert.equal(res.status, 200);
+});
+
 test('GET /api/meta never exposes TURN details', async () => {
   const res = await fetch(`${baseUrl}/api/meta`);
   const body = await res.json();

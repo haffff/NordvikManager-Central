@@ -10,7 +10,9 @@ function auth(req, res, next) {
   // Authorization: Bearer <token> header as an equivalent alternative.
   const authHeader = req.headers['authorization'];
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const token = req.cookies['Authorization'] || bearerToken;
+  // An explicit header wins: localhost cookies are shared across ports, so a page can carry
+  // a stale cookie from another app (e.g. a GM page with an expired player cookie).
+  const token = bearerToken || req.cookies['Authorization'];
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
