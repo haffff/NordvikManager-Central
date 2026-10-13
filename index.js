@@ -11,6 +11,7 @@ const config = require('./config/config');
 const helmetOptions = require('./config/securityHeaders');
 const runMigration = require('./db/migrations/001_initial');
 const mountRoutes = require('./routes/index');
+const mountDocs = require('./routes/docs');
 const { attachSignalingServer } = require('./signaling/signalingServer');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./logger');
@@ -49,6 +50,11 @@ app.use('/client-admin', express.static('static/client-admin'));
 app.get('/', (_req, res) => {
   res.sendFile('static/landing/index.html', { root: __dirname });
 });
+if (mountDocs(app, config.docsDir)) {
+  logger.info(`Docs site served from ${config.docsDir}`);
+} else {
+  logger.warn(`Docs site not found at ${config.docsDir} (set DOCS_DIR); /quickstart, /user-guide etc. won't be served`);
+}
 
 // API routes
 mountRoutes(app);
