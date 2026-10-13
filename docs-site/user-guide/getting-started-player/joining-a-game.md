@@ -1,11 +1,11 @@
 ---
-sidebar_position: 5
+sidebar_position: 1
 title: Joining a game
 ---
 
 # Joining a game
 
-*For players.* You only need a browser: a recent Chrome, Edge, Firefox or Safari on a computer. Nothing to install.
+You only need a browser: a recent Chrome, Edge, Firefox or Safari on a computer. Nothing to install.
 
 ## 1. Open the invite link
 
@@ -43,10 +43,4 @@ You don't need the link again. Open [nordvikmanager.pl/client](https://nordvikma
 
 {/* SCREENSHOT: img/player-lobby.png — The player lobby: joined games, Join by ID and Public Games. */}
 
-## If it doesn't connect
-
-- **The game doesn't load:** your GM's server has to be running, with the game open. Check with your GM, then reload the page.
-- **"You are banned from this server.":** the GM has banned your account from their server.
-- **The connection keeps dropping, or never starts:**
-  - Try another browser.
-  - Try another network: some workplace and school networks block the direct connection games use.
+Trouble connecting? See [Connection problems](./connection-problems.md).

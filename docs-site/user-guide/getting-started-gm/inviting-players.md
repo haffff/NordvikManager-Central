@@ -5,8 +5,6 @@ title: Inviting players
 
 # Inviting players
 
-*For the GM.*
-
 ## Send the invite link
 
 1. In the lobby, choose the **gear** button on the game's card.
@@ -33,7 +31,7 @@ A **Public** game needs no link at all: it's listed for every registered player 
 - **A Nordvik Manager account:** they create one the first time they open the link. If the central server is invitation-only, they also need an **invite code** to register.
 - **Your game to be running:** they can only connect while your server is running and you've opened the game (see [Open the game](./creating-a-game.md#open-the-game)).
 
-Point them to [Joining a game](./joining-a-game.md).
+Point them to [Getting started as a Player](../getting-started-player/joining-a-game.md).
 
 ## When they arrive
 

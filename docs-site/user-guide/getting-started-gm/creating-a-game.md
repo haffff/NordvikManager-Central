@@ -5,7 +5,7 @@ title: Creating a game
 
 # Creating a game
 
-*For the GM.* A game holds everything for one campaign or one-shot: its maps, cards, resources, chat and players. You can have as many games as you like on one server.
+A game holds everything for one campaign or one-shot: its maps, cards, resources, chat and players. You can have as many games as you like on one server.
 
 ## Create it
 

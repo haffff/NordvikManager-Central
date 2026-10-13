@@ -21,7 +21,8 @@ That means **players can only join while the GM's server is running and the GM h
 
 ## Setting up your first game
 
-1. [Install and start the server](./installing-the-server.md) (GM).
-2. [Create a game](./creating-a-game.md) (GM).
-3. [Invite your players](./inviting-players.md) (GM).
-4. [Join the game](./joining-a-game.md) (players).
+1. [Install and start the server](./installing-the-server.md).
+2. [Create a game](./creating-a-game.md).
+3. [Invite your players](./inviting-players.md).
+
+Your players then follow [Getting started as a Player](../getting-started-player/joining-a-game.md).

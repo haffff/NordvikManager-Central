@@ -5,7 +5,7 @@ title: Installing the server
 
 # Installing the server
 
-*For the GM.* Players skip this page: they don't install anything.
+Players don't install anything; this is only for the GM.
 
 ## Download
 
