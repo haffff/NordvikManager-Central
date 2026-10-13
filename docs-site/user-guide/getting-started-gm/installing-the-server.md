@@ -31,13 +31,13 @@ The zip contains everything the server needs. You don't need to install .NET or 
 
 {/* SCREENSHOT: img/server-console.png — The server console window after starting. */}
 
-:::tip Windows warnings
+:::tip[Windows warnings]
 Windows may warn that the program is from an unknown publisher. Choose **More info → Run anyway**.
 
 The first time players connect, Windows may also ask whether to allow the server through the firewall. Allow it on private networks.
 :::
 
-:::note Open it on the same computer
+:::note[Open it on the same computer]
 Log in at `localhost` on the computer running the server. Sign-in cookies are only sent over a secure connection, and `localhost` is the one address that browsers treat as secure without HTTPS.
 :::
 

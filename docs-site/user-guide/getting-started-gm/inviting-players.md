@@ -19,7 +19,7 @@ The link looks like `https://nordvikmanager.pl/client/?game=<session id>`.
 
 The part after `game=` is the game's **session ID**. A player can also paste it into **Join by ID** in their lobby.
 
-:::note Who can join
+:::note[Who can join]
 Anyone with the link (and the password, if you set one) can join. If the link leaks, set a password, or ban the account that shouldn't be there (see [Managing players](#managing-players)).
 
 A **Public** game needs no link at all: it's listed for every registered player under *Public Games*.

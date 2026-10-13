@@ -33,7 +33,7 @@ Choose **Create game**. The game appears in your lobby.
 - The **lock** badge means the game needs a password.
 - The **gear** button opens the game's settings: rename it, change the description, copy the [invite link](./inviting-players.md), or delete the game.
 
-:::danger Deleting a game
+:::danger[Deleting a game]
 **Delete Game** (then **Confirm Delete**) removes the game and everything in it for good. Make a backup first if you might want it back: **Application Settings → Backups**.
 :::
 
