@@ -1,5 +1,7 @@
 'use strict';
 
+const path = require('path');
+
 require('dotenv').config();
 
 const required = ['JWT_SECRET', 'REFRESH_TOKEN_SECRET'];
@@ -50,6 +52,10 @@ const config = Object.freeze({
 
   // Optional log level override. If not set, defaults to 'debug' in development and 'info' in production.
   logLevel: process.env.LOG_LEVEL || null,
+
+  // Built docs site (docs-site/build) served at /quickstart, /user-guide, /documentation and
+  // /addon-guide. On the hosting, point it at the folder the docs deploy uploads to (DOCS_FTP_DIR).
+  docsDir: process.env.DOCS_DIR || path.join(__dirname, '..', 'docs-site', 'build'),
 });
 
 module.exports = config;
