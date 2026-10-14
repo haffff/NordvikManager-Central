@@ -510,6 +510,40 @@ const spec = {
       },
     },
 
+    '/api/gamelist/updategame': {
+      post: {
+        tags: ['Game Sessions'],
+        summary: "Update a session's listed details",
+        description: 'Sent by the GM backend when it starts the session, so the list players see stays current. Owner or admin only. The password is not changed; a detail left out is cleared.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['sessionId', 'name'],
+                properties: {
+                  sessionId: { type: 'string', format: 'uuid' },
+                  name: { type: 'string', maxLength: 200 },
+                  summary: { type: 'string', maxLength: 500 },
+                  description: { type: 'string', maxLength: 5000 },
+                  image: { type: 'string', description: 'Cover image as a data URL' },
+                  isPublic: { type: 'boolean', default: false },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Session updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GameSession' } } } },
+          400: { description: 'Validation error' },
+          401: { description: 'Not authenticated' },
+          403: { description: 'Not the owner, or public games are not allowed on this server' },
+          404: { description: 'Session not found' },
+        },
+      },
+    },
+
     '/api/gamelist/addgame': {
       post: {
         tags: ['Game Sessions'],
