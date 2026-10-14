@@ -76,6 +76,22 @@ function deleteSession(sessionId, requestingUserId, isAdmin) {
   return { ok: true };
 }
 
+// The listed details of a session, sent again by the GM backend when it starts the
+// session so the list stays current. The password isn't among them (the backend
+// doesn't keep it in a form it can send); a value left out is cleared.
+function updateSession(sessionId, requestingUserId, isAdmin, { name, summary, description, imageData, isPublic }) {
+  const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
+  if (!session) return { error: 'Session not found', status: 404 };
+  if (!isAdmin && session.owner_id !== requestingUserId) {
+    return { error: 'Forbidden', status: 403 };
+  }
+  db.prepare(
+    `UPDATE game_sessions SET name = ?, summary = ?, description = ?, image_data = ?, is_public = ?
+     WHERE id = ?`
+  ).run(name, summary || null, description || null, imageData || null, isPublic ? 1 : 0, sessionId);
+  return { ok: true, session: getSessionById(sessionId) };
+}
+
 function getPlayersInSession(sessionId) {
   return db
     .prepare(
@@ -98,5 +114,6 @@ module.exports = {
   getPublicSessions,
   joinSession,
   deleteSession,
+  updateSession,
   getPlayersInSession,
 };

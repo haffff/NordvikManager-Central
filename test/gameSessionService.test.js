@@ -49,3 +49,52 @@ test('joinSession rejects a wrong password for a new player', () => {
   const result = sessionService.joinSession(otherId, session.id, 'wrong');
   assert.equal(result.status, 401);
 });
+
+// The GM backend re-sends a game's details whenever it starts the session, so the
+// session list players see (read before any WebRTC connection) stays current —
+// e.g. a cover image changed after the session was first made.
+test('updateSession lets the owner change the listed details', () => {
+  const own = sessionService.createSession(ownerId, { name: 'Old', isPublic: false });
+
+  const result = sessionService.updateSession(own.id, ownerId, false, {
+    name: 'New',
+    summary: 'Short',
+    description: 'Long',
+    imageData: 'data:image/png;base64,aGk=',
+    isPublic: true,
+  });
+
+  assert.equal(result.ok, true);
+  const row = sessionService.getSessionById(own.id);
+  assert.equal(row.name, 'New');
+  assert.equal(row.summary, 'Short');
+  assert.equal(row.description, 'Long');
+  assert.equal(row.image_data, 'data:image/png;base64,aGk=');
+  assert.equal(row.is_public, 1);
+});
+
+test('updateSession clears what is no longer set, and keeps the password', () => {
+  const own = sessionService.createSession(ownerId, {
+    name: 'Game', summary: 'S', imageData: 'data:image/png;base64,aGk=', passwordRequired: true, password: 'pw',
+  });
+
+  sessionService.updateSession(own.id, ownerId, false, { name: 'Game' });
+
+  const row = sessionService.getSessionById(own.id);
+  assert.equal(row.summary, null);
+  assert.equal(row.image_data, null);
+  assert.equal(row.password_required, 1);
+  assert.equal(row.password_hash, own.password_hash);
+});
+
+test('updateSession refuses anyone but the owner or an admin', () => {
+  const own = sessionService.createSession(ownerId, { name: 'Mine' });
+
+  assert.equal(sessionService.updateSession(own.id, playerId, false, { name: 'Taken' }).status, 403);
+  assert.equal(sessionService.getSessionById(own.id).name, 'Mine');
+  assert.equal(sessionService.updateSession(own.id, playerId, true, { name: 'By admin' }).ok, true);
+});
+
+test('updateSession reports a missing session', () => {
+  assert.equal(sessionService.updateSession(randomUUID(), ownerId, false, { name: 'X' }).status, 404);
+});
