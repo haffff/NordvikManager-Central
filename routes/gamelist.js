@@ -113,6 +113,52 @@ router.post(
   }
 );
 
+// POST /api/gamelist/updategame
+// The GM backend re-sends a game's listed details whenever it starts the session, so
+// what players see before connecting (the cover image above all) stays current.
+router.post(
+  '/updategame',
+  auth,
+  [
+    body('sessionId').trim().notEmpty(),
+    body('name').trim().notEmpty().isLength({ max: 200 }),
+    body('summary').optional({ checkFalsy: true }).isLength({ max: 500 }),
+    body('description').optional({ checkFalsy: true }).isLength({ max: 5000 }),
+    body('isPublic').optional().isBoolean().toBoolean(),
+  ],
+  validate,
+  (req, res) => {
+    const { sessionId, name, summary, description, image, isPublic } = req.body;
+
+    if (isPublic && !config.allowPublicGames) {
+      return res.status(403).json({ error: 'Public games are not allowed on this server' });
+    }
+
+    const result = sessionService.updateSession(sessionId, req.user.id, req.user.isAdmin, {
+      name,
+      summary,
+      description,
+      imageData: image || null,
+      isPublic: !!isPublic,
+    });
+    if (result.error) {
+      return res.status(result.status).json({ error: result.error });
+    }
+    const session = result.session;
+    res.json({
+      id: session.id,
+      name: session.name,
+      summary: session.summary,
+      description: session.description,
+      imageData: session.image_data,
+      passwordRequired: session.password_required === 1,
+      isPublic: session.is_public === 1,
+      ownerId: session.owner_id,
+      createdAt: session.created_at,
+    });
+  }
+);
+
 // POST /api/gamelist/join
 router.post(
   '/join',
