@@ -40,6 +40,28 @@ function setCookieToken(res, token) {
   });
 }
 
+// Refresh token as an httpOnly cookie, for the player client (refreshMode "cookie"):
+// page scripts never see it. Scoped to /api/user (refresh + logout).
+const REFRESH_COOKIE = 'nm_refresh';
+const refreshCookieOptions = () => ({
+  httpOnly: true,
+  sameSite: config.isProduction ? 'None' : 'Lax',
+  secure: config.isProduction,
+  path: '/api/user',
+});
+
+// Hands the client its new tokens. Cookie mode keeps the refresh token out of the
+// body; body mode (the GM backend's server-to-server refresh, frozen player builds)
+// still returns it.
+function sendTokens(req, res, status, accessToken, refreshToken, { cookieMode = req.body?.refreshMode === 'cookie' } = {}) {
+  setCookieToken(res, accessToken);
+  if (cookieMode) {
+    res.cookie(REFRESH_COOKIE, refreshToken, { ...refreshCookieOptions(), maxAge: authService.refreshTokenMaxAgeMs() });
+    return res.status(status).json({ accessToken });
+  }
+  return res.status(status).json({ refreshToken, accessToken });
+}
+
 function validate(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -71,8 +93,7 @@ router.post(
     const accessToken = authService.generateAccessToken(user);
     const refreshToken = authService.generateRefreshToken(user.id);
 
-    setCookieToken(res, accessToken);
-    res.json({ refreshToken, accessToken });
+    sendTokens(req, res, 200, accessToken, refreshToken);
   }
 );
 
@@ -85,6 +106,7 @@ router.get('/checklogin', auth, (_req, res) => {
 router.get('/logout', auth, (req, res) => {
   authService.revokeRefreshTokensForUser(req.user.id);
   res.clearCookie('Authorization');
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
   res.sendStatus(200);
 });
 
@@ -146,8 +168,7 @@ router.post(
     const accessToken = authService.generateAccessToken(user);
     const refreshToken = authService.generateRefreshToken(id);
 
-    setCookieToken(res, accessToken);
-    res.status(201).json({ refreshToken, accessToken });
+    sendTokens(req, res, 201, accessToken, refreshToken);
   }
 );
 
@@ -402,18 +423,19 @@ router.get(
 );
 
 // POST /api/user/refresh
-router.post(
-  '/refresh',
-  [body('refreshToken').trim().notEmpty()],
-  validate,
-  (req, res) => {
-    const result = authService.rotateRefreshToken(req.body.refreshToken);
-    if (!result) {
-      return res.status(401).json({ error: 'Invalid or expired refresh token' });
-    }
-    setCookieToken(res, result.accessToken);
-    res.json({ refreshToken: result.refreshToken, accessToken: result.accessToken });
+// The token comes from the body or, for the player client, the nm_refresh cookie.
+// A token from the cookie is always answered with a cookie: answering in the body
+// would leave the revoked token in the cookie and break the next refresh — which any
+// site could otherwise trigger with a cross-site POST that carries no refreshMode.
+router.post('/refresh', (req, res) => {
+  const fromBody = typeof req.body?.refreshToken === 'string' ? req.body.refreshToken.trim() : '';
+  const token = fromBody || req.cookies?.[REFRESH_COOKIE];
+  const result = token ? authService.rotateRefreshToken(token) : null;
+  if (!result) {
+    return res.status(401).json({ error: 'Invalid or expired refresh token' });
   }
-);
+  const cookieMode = !fromBody || req.body?.refreshMode === 'cookie';
+  sendTokens(req, res, 200, result.accessToken, result.refreshToken, { cookieMode });
+});
 
 module.exports = router;

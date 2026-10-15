@@ -88,8 +88,14 @@ function parseExpiry(expiry) {
   return parseInt(match[1], 10) * units[match[2]];
 }
 
+/** How long a refresh token lives, in ms (REFRESH_TOKEN_EXPIRES_IN). */
+function refreshTokenMaxAgeMs() {
+  return parseExpiry(config.refreshToken.expiresIn);
+}
+
 module.exports = {
   hashPassword,
+  refreshTokenMaxAgeMs,
   comparePassword,
   generateAccessToken,
   verifyAccessToken,
