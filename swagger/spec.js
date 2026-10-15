@@ -159,6 +159,7 @@ const spec = {
                 properties: {
                   UserName: { type: 'string', example: 'admin' },
                   password: { type: 'string', format: 'password', example: 'secret' },
+                  refreshMode: { type: 'string', enum: ['cookie'], description: '"cookie": the refresh token is set as the httpOnly `nm_refresh` cookie (path /api/user) instead of returned in the body.' },
                 },
               },
             },
@@ -166,7 +167,7 @@ const spec = {
         },
         responses: {
           200: {
-            description: 'Login successful — cookie set, refresh token returned',
+            description: 'Login successful — cookie set; refresh token returned (or set as the nm_refresh cookie in cookie mode)',
             content: {
               'application/json': {
                 schema: {
@@ -198,7 +199,7 @@ const spec = {
       get: {
         tags: ['Auth'],
         summary: 'Logout',
-        description: 'Clears the cookie and revokes all refresh tokens for the current user.',
+        description: 'Clears the cookies and revokes all refresh tokens for the current user.',
         responses: {
           200: { description: 'Logged out' },
           401: { description: 'Not authenticated' },
@@ -210,16 +211,18 @@ const spec = {
       post: {
         tags: ['Auth'],
         summary: 'Refresh access token',
-        description: 'Exchanges a refresh token for a new access token (cookie) and a new refresh token.',
+        description: 'Exchanges a refresh token — from the body, or the nm_refresh cookie — for a new access token (cookie) and a new refresh token (body, or the cookie in cookie mode).',
         security: [],
         requestBody: {
-          required: true,
+          required: false,
           content: {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['refreshToken'],
-                properties: { refreshToken: { type: 'string', format: 'uuid' } },
+                properties: {
+                  refreshToken: { type: 'string', format: 'uuid' },
+                  refreshMode: { type: 'string', enum: ['cookie'] },
+                },
               },
             },
           },
