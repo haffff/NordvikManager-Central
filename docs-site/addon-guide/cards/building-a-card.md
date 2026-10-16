@@ -75,10 +75,12 @@ async function start(api) {
 
 ## A React card with Vite
 
-The Fifth Edition sheets are Vite + React apps, one per card type, all sharing one HTML page:
+The [starter template](https://github.com/haffff/NordvikManager-Addons/tree/main/template) has one ready to
+copy: an HP tracker in `card_sources/myaddon-hpcard/`. The Fifth Edition sheets are built the same way, one
+Vite app per card type, all sharing one HTML page:
 
 ```html
-<!-- Resources/index.html -->
+<!-- addon_files/Resources/index.html -->
 <div id="root"></div>
 ```
 
@@ -87,15 +89,15 @@ The entry point renders with a stand-in API during development and with the real
 ```jsx
 // src/main.jsx
 const root = createRoot(document.getElementById('root'))
+const render = (api) => root.render(<App Api={api} />)
 
 if (import.meta.env.DEV) {
-  const { ApiMock } = await import('../ApiMock.js')
-  root.render(<App Api={ApiMock} />)
+  // `pnpm dev`: no app around, so use the mock. This branch is left out of the build.
+  import('../ApiMock.js').then(({ createApiMock }) => render(createApiMock({ properties: { hp: '8' } })))
+} else if (window.CardAPI?.cardId) {
+  render(window.CardAPI)
 } else {
-  window.addEventListener('cardapi:ready', () => {
-    const api = window.CardAPI
-    root.render(<App Api={api} additionalArguments={api.additionalArguments} />)
-  }, { once: true })
+  window.addEventListener('cardapi:ready', (e) => render(e.detail), { once: true })
 }
 ```
 
@@ -105,19 +107,31 @@ Components then read, write and subscribe:
 useEffect(() => {
   const onChange = (prop) => setScore(Number(prop?.value ?? 10));
   Api.Properties.Subscribe('strength_attribute', onChange);
-  Api.Properties.Init('strength_attribute', 10).then(() => Api.Properties.Get('strength_attribute')).then(onChange);
+  Api.Properties.Init('strength_attribute', '10').then(() => Api.Properties.Get('strength_attribute')).then(onChange);
   return () => Api.Properties.Unsubscribe('strength_attribute', onChange);
 }, []);
 ```
 
-**Building.** `vite build` produces `dist/assets/index-<hash>.js` (and a `.css` if the app has one). The
-addon's pack script copies them into `Resources/` under a fixed name, for example
-`dnd5e-nordvikcard.js`, and the template lists that resource (`dnd5e_dnd5e-nordvikcard.js`). See
-[Packaging and release](./packaging.md).
+**Building.** The app adds a card's scripts as classic `<script>` tags, not modules, so each card must build
+to **one self-contained file**. The template's `vite.config.js` does it:
+
+```js
+build: {
+  modulePreload: false,
+  cssCodeSplit: false,           // CSS in its own file, added before the game's theme
+  rollupOptions: { output: { format: 'iife' } },
+},
+```
+
+Don't use top-level `await`, or `import()` outside the development branch. The addon's pack script copies
+the built `.js` (and `.css`) into `Resources/` under a fixed name, for example `myaddon-hpcard.js`, and the
+template lists that resource (`myaddon_myaddon-hpcard.js`). See [Packaging and release](./packaging.md).
 
 :::tip[Developing without the app]
-Run `vite` with an `ApiMock.js`: an object with the same methods as `CardAPI` that keeps properties in
-memory. The Fifth Edition and Roll20 addons each have one to copy.
+Run `pnpm dev` with the template's `ApiMock.js`. `createApiMock({ properties, globals, isGM, actions })`
+returns an object with the same methods and rules as `CardAPI` (string values, change echoes, refused
+calls), kept in memory. `Api.emit(command, data)` pretends a game event arrived, and `Api.sent` lists the
+chat messages and actions the card sent.
 :::
 
 ## Buttons that do things

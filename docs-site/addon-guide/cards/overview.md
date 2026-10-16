@@ -46,6 +46,7 @@ From the Fifth Edition addon, `Templates/character_template.json`:
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/haffff/NordvikManager-Addons/refs/heads/main/schemas/card.json",
   "name": "5E Character Template",
   "description": "A template for fifth edition characters.",
   "key": "character",
@@ -70,7 +71,9 @@ From the Fifth Edition addon, `Templates/character_template.json`:
 | `gmPermission` | What the GM may do. Defaults to everything. |
 | `owner` | The player who gets Read and Edit on the card. |
 
-A view file has the same fields; its `properties` are usually empty.
+A view file has the same fields; its `properties` are usually empty. Start both with the `$schema` line
+above: editors then check the file and point out unknown fields, and property values that aren't strings
+(a number fails the install).
 
 ## Properties are the card's data
 
