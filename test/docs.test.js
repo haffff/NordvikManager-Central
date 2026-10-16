@@ -26,6 +26,7 @@ before(() => {
   write('user-guide/layers/index.html', 'layers page');
   write('assets/js/main.js', 'js');
   write('img/favicon.ico', 'ico');
+  write('ai/AGENTS.md', '# guide');
   write('404.html', 'not found page');
   write('.ftp-deploy-docs-state.json', '{}');
   write('secret.txt', 'secret');
@@ -54,6 +55,12 @@ test('serves nested pages and the assets they load', async () => {
   assert.equal(await (await fetch(`${base}/user-guide/layers`)).text(), 'layers page');
   assert.equal((await fetch(`${base}/assets/js/main.js`)).status, 200);
   assert.equal((await fetch(`${base}/img/favicon.ico`)).status, 200);
+});
+
+test('serves the AI guide for addon developers at /ai/AGENTS.md', async () => {
+  const res = await fetch(`${base}/ai/AGENTS.md`);
+  assert.equal(res.status, 200);
+  assert.equal(await res.text(), '# guide');
 });
 
 test('an unknown docs page gets the docs 404 page', async () => {
