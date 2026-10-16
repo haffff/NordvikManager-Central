@@ -41,6 +41,7 @@ Read fields inside `Data` with `%v:`, e.g. `%v:Data.id%` or `%v:Data.name%`.
 | 20 | Card Added | A card is created | `Data`, `Player` |
 | 21 | Card Updated | A card changes | `Data`, `Player` |
 | 22 | Card Deleted | A card is deleted | `Data`, `Player` |
+| 23 | Turn Changed | The turn passes to another entry of a map's turn order, or the round changes | `Data` (`mapId`, `round`, `currentEntryId`, `elementId`), `Player` |
 
 ## Element Moved
 
@@ -55,6 +56,19 @@ and `%v:` reads it for you:
 
 Moving an element also fires **Element Updated**. An action on either hook that moves the **same** element
 triggers itself again and never stops. Check a condition first, or move a different element.
+
+## Turn Changed
+
+Fires when **Next**, **Previous**, jumping to an entry, *End my turn*, a reset, or removing the current entry moves the turn or the round. It also fires when the first entries start round 1. `Data`:
+
+| Field | Value |
+|---|---|
+| `mapId` | the map whose turn order changed |
+| `round` | the round now |
+| `currentEntryId` | whose turn it is, empty when that entry is hidden from players |
+| `elementId` | the current token, empty for a free or hidden entry |
+
+To start a token's turn, e.g. tick down a status: read `%v:Data.elementId%`, and use **GetTurnOrder** for the rest.
 
 ## Game Updated
 
