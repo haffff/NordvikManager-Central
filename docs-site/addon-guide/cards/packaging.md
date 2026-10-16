@@ -28,11 +28,19 @@ The addon's own description, at the root of the zip:
 | Field | Rules |
 |---|---|
 | `key` | Required. Lowercase letters and digits only. It prefixes the addon's resources (`dnd5e_index.html`) and actions (`dnd5e/roll_attribute`), so never change it after release. |
-| `name` | Letters, digits, spaces and dashes. |
+| `name` | Letters, digits, spaces and `- ( ) . , : ' &`. |
 | `version` | Semantic version, e.g. `1.2.0`. **Raise it with every release**, so games can tell they're out of date. |
 | `dependencies` | Optional: `[{ "key": "dnd5e", "version": "0.0.4" }]`. Addons from the registry, installed first; leave `version` out for any version. |
 
-The `$schema` line gives you checking and completion in editors that support JSON Schema.
+The `$schema` line gives you checking and completion in editors that support JSON Schema. Templates and
+views use `schemas/card.json`, actions `schemas/action.json` and token files `schemas/token.json`, from the
+same place.
+
+:::tip[Start from the template]
+The [starter template](https://github.com/haffff/NordvikManager-Addons/tree/main/template) has this layout,
+a working card and action, the pack script and the release workflow. Copy the folder, change `key` and
+`name` in `info.json`, and rename `myaddon` in the files.
+:::
 
 ## Packing
 

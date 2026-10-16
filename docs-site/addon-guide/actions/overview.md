@@ -20,6 +20,7 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/haffff/NordvikManager-Addons/refs/heads/main/schemas/action.json",
   "name": "roll_attribute",
   "prefix": "dnd5e",
   "hook": 0,
@@ -52,6 +53,10 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 - `isEnabled` only matters for hooks. Actions called by name run either way.
 - `content` holds the steps, run top to bottom. `Type` picks the step and `Data` holds its arguments.
   Every step is listed in the [step reference](./steps.md).
+- In an addon's files, `prefix` is replaced with the addon's key and `isEnabled` is ignored: addon actions
+  are always enabled.
+- The `$schema` line lets editors check the file: an unknown field, a misspelt `Type` key or a missing
+  `Data` shows up before you install.
 
 ## The action editor
 
