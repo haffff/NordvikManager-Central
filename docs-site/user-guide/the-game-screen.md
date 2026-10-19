@@ -36,6 +36,8 @@ The **…** button on a title bar has more:
 - **Lock position** stops the window from being dragged away by accident (a lock icon shows on the tab). **Unlock position** undoes it.
 - **Hide header** hides the title bar to save space. A small **Show Header** button brings it back.
 
+**Help:** most windows have a small **ⓘ** in their top-right corner. Hover over it for what the window is for; click it to open its page in this guide.
+
 To get a window back after closing it, open it again from the **View** menu. To get back the arrangement the GM set up, use **Layouts → Reset my layout**.
 
 ## The status bar
