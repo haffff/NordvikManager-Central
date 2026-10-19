@@ -9,7 +9,7 @@ title: Materials
 
 **View → Materials** opens them.
 
-{/* SCREENSHOT: img/user-guide/materials.png — the Materials window with folders and images */}
+![The Materials window with folders of pictures](/img/user-guide/materials.png)
 
 ## Uploading
 

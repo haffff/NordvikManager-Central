@@ -17,7 +17,7 @@ The menu has three groups: **Addons** (installing), **Views** (templates and vie
 
 **Addons → Addons → Addons Manage** has three tabs.
 
-{/* SCREENSHOT: img/user-guide/addons-manage.png — Addons Manage, Browse tab */}
+![Addons Manage, Browse tab](/img/user-guide/addons-manage.png)
 
 - **Browse:** addons from the addon registry. Search, read about one, and install it with a click. Installed ones are marked, and **Update available** shows when there's a newer version.
 - **Installed:** the game's addons, with their author, licence, website and dependencies. Per addon:
@@ -47,7 +47,7 @@ An addon can run code in the game, so only install addons you trust.
 
 **Addons → Code → Actions** is the action editor. An **action** is a list of steps the GM's server runs, e.g. *roll dice, read a value from a card, post the result to chat*.
 
-{/* SCREENSHOT: img/user-guide/actions-editor.png — the Actions window with an action open */}
+![The Actions window with an action open](/img/user-guide/actions-editor.png)
 
 - The list on the left groups actions by their **prefix** (usually the addon's name). **+** creates one.
 - **Settings:** **Name**, **Prefix (group)**, **Description**, **Trigger** (run it on an event, a *hook*, or only when called by name) and **Permission for all players** (who may run it).

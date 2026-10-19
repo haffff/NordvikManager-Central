@@ -7,7 +7,7 @@ title: Map settings
 
 Each map has its own size, grid and distance units. Open its settings by right-clicking an empty spot on the map and choosing **Map Settings**, or from the **Map Selector** (GM). You need **Edit** on the map.
 
-{/* SCREENSHOT: img/user-guide/map-settings.png — the Map Settings window, Settings tab */}
+![The Map Settings window](/img/user-guide/map-settings.png)
 
 ## Settings
 

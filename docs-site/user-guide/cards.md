@@ -7,7 +7,7 @@ title: Cards
 
 A **card** is a window with content of its own: a character sheet, a monster's stat block, a handout, a note. What a card looks like and does comes from its **template**, which an addon provides; e.g. the built-in [Basics](./basics.md) addon has the *Note* template, and a game-system addon has character sheets. The values on a card (hit points, notes, inventory) are saved with the game.
 
-{/* SCREENSHOT: img/user-guide/cards-panel.png — the Cards window with a folder and three cards, one card open */}
+![The Cards window with a Handouts folder](/img/user-guide/cards-panel.png)
 
 ## The Cards window
 

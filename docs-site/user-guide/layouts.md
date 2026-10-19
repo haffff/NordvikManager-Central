@@ -7,7 +7,7 @@ title: Layouts
 
 A **layout** is a saved arrangement of windows: which ones are open, where they're docked and how big they are. The **Layouts** menu holds the layouts you can use.
 
-{/* SCREENSHOT: img/user-guide/layouts-menu.png — the Layouts menu open */}
+![The Layouts menu](/img/user-guide/layouts-menu.png)
 
 ## Using layouts
 
@@ -31,7 +31,7 @@ The battle map in a saved layout remembers which map it was showing.
 - **Share with all players:** lets players see and use the layout from their Layouts menu. A **shared** badge marks it. **Advanced / per-player permissions** shares it with chosen players only.
 - **Force onto other players:** switches every connected player to this layout right away, e.g. to put everyone on the map for a fight. The layout must be shared first, or players couldn't load it.
 
-{/* SCREENSHOT: img/user-guide/layout-manager.png — the Layout Manager with a default and a shared layout */}
+![The Layout Manager with the default layout](/img/user-guide/layout-manager.png)
 
 ## Game settings for layouts
 

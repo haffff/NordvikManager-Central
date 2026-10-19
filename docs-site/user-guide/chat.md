@@ -7,7 +7,7 @@ title: Chat
 
 The **Chat** window (**View → Chat**) is where the table talks: messages, dice rolls, whispers, and results posted by character sheets and addons. Chat is saved with the game, so the history is still there next session.
 
-{/* SCREENSHOT: img/user-guide/chat.png — the chat with messages, a roll and a whisper */}
+![The chat with a roll and a whisper to the GM](/img/user-guide/chat.png)
 
 ## Sending messages
 

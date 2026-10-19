@@ -7,7 +7,7 @@ title: Using the battle map
 
 The **battle map** window shows a map: a background image, drawings, text and tokens on a grid. Everyone in the game sees the same map, and changes appear for everyone at once.
 
-{/* SCREENSHOT: img/user-guide/battle-map.png — a battle map with a room, a table and two tokens */}
+![A battle map with a room, a table and two tokens](/img/user-guide/battle-map.png)
 
 ## Maps and battle maps
 

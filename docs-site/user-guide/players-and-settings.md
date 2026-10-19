@@ -9,13 +9,13 @@ title: Players and your settings
 
 **View → Players** lists everyone in the game, with their avatar and colour. A green dot marks who's connected right now; connected players are listed first.
 
-{/* SCREENSHOT: img/user-guide/players.png — the Players window with one player online */}
-
 ### Managing players (GM)
 
 :::note[GM only]
 **View → Manage Players** is the same list with a **Settings** and a **Kick** button on each player.
 :::
+
+![The Manage Players window](/img/user-guide/players.png)
 
 - **Settings** opens that player's name, avatar and colour, so you can tidy them up.
 - **Kick** removes the player from the game. They can join again with the invite link; to keep someone out for good, ban them in the lobby (see [Inviting players](./getting-started-gm/inviting-players.md#managing-players)).

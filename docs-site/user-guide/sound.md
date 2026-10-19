@@ -15,7 +15,7 @@ Sounds are audio files from the game's [materials](./materials.md). Upload them 
 
 **View → Playlists** is for background music and ambience.
 
-{/* SCREENSHOT: img/user-guide/playlists.png — the Playlists window with two playlists, one playing */}
+![The Playlists window](/img/user-guide/playlists.png)
 
 - **New Playlist**, then set:
   - **Name** and **Description**.

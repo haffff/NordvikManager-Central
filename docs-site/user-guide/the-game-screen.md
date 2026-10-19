@@ -7,7 +7,7 @@ title: The game screen
 
 When you open a game you see the **menu bar** at the top, the **windows** in the middle (the battle map, chat, cards and so on) and the **status bar** at the bottom. The GM decides which windows a new player starts with; everyone can rearrange their own screen afterwards.
 
-{/* SCREENSHOT: img/user-guide/the-game-screen.png — the whole game screen with the default layout */}
+![The game screen: menu bar, battle map, chat and cards](/img/user-guide/the-game-screen.png)
 
 ## The menu bar
 

@@ -7,7 +7,7 @@ title: Tokens
 
 A **token** is a playing piece on the map: a character, a monster, an object. Most tokens belong to a [card](../cards.md), such as a character sheet, and show values from it, like hit points on a bar. A [generic token](../basics.md#generic-token) belongs to no card and keeps its values on itself.
 
-{/* SCREENSHOT: img/user-guide/token-selected.png — a selected token with its bars and settings button */}
+![A selected token with its handles](/img/user-guide/token-selected.png)
 
 ## Placing a token
 

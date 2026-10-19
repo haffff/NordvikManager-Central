@@ -9,7 +9,7 @@ title: Game settings
 **Settings → Game** holds the settings of the whole game. Changes apply for everyone; some (like the layout settings) take effect for players the next time they load the game.
 :::
 
-{/* SCREENSHOT: img/user-guide/game-settings.png — Game Settings, General Settings tab */}
+![Game Settings, General Settings tab](/img/user-guide/game-settings.png)
 
 ## General Settings
 
