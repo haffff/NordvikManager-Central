@@ -34,6 +34,10 @@ The game opens once your browser has connected to the GM's computer, usually wit
 
 {/* SCREENSHOT: img/player-first-view.png — A player's view right after joining. */}
 
+The first time you join a game, a short tour points out what is where: the map, the tools, chat and dice,
+cards, turn order, and how to arrange the windows. Steps for panels your GM hasn't put on screen are left
+out. Close it whenever you like; **Game → Show tutorial** plays it again.
+
 ## Next time
 
 You don't need the link again. Open [nordvikmanager.pl/client](https://nordvikmanager.pl/client) and log in. Your lobby shows:
