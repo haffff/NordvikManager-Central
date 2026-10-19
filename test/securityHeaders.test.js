@@ -46,7 +46,7 @@ test('the app itself runs no inline or data: scripts, and frames only its own pa
 });
 
 test('the card sandbox page lets cards run inline and data: scripts and styles', async () => {
-  for (const path of ['/client/sandbox.html', '/client/p3/sandbox.html']) {
+  for (const path of ['/client/sandbox.html', '/client/p3/sandbox.html', '/client/demo/sandbox.html']) {
     const csp = await cspOf(path);
 
     assert.match(csp, /script-src 'self' 'unsafe-inline' data: blob:/, path);
