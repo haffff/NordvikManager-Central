@@ -109,7 +109,7 @@ Tokens inside step arguments are replaced before the step runs. Each token is wr
 |---|---|
 | `%name%` | The variable's value as text. An unknown variable is left as it is. |
 | `%dto:name%` | The variable as JSON (objects, lists, quoted strings), for building a JSON argument. |
-| `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. |
+| `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. Missing parts give empty text. |
 | `%q:type[name].prop%` | Property `prop` of the game's entity of that type with that name, e.g. `%q:card[Goblin].hp%`. |
 | `%q:{varName}.prop%` | Property `prop` of the entity whose id is in the variable `varName`, e.g. `%q:{cardId}.hp%`. |
 | `%q:<id>.prop%` | Property `prop` of the entity with that id, written out. |
@@ -131,7 +131,7 @@ the entity in one of three ways, then the property after a dot:
 |---|---|---|
 | `card` | A card (templates included) | `%q:card[5E Monster Template].id%` |
 | `map` | A map | `%q:map[Dungeon].id%` |
-| `player` | A player, by display name | `%q:player[Alice].color%` |
+| `player` | A player, by display name | `%q:player[Alice].id%` |
 | `game` | The game itself | `%q:game[My Campaign].name%` |
 | `action` | An action. `prefix/name` picks one addon's action; a bare name matches any prefix. | `%q:action[dnd5e/Roll].id%` |
 | `resource` | A resource, by its key (an addon's resources are keyed `<addon key>_<file name>`), or else by its name | `%q:resource[myaddon_theme.css].id%` |
@@ -149,11 +149,14 @@ addon's JSON file nothing needs escaping:
 - `id`: the entity's id. Use it to hand the entity to a step, as above.
 - `name`: the entity's name.
 - anything else: the value of the entity's property with that name (the same values `GetPropertyValue`
-  reads). Properties of cards, maps, map elements and the game can be read this way.
+  reads). Only cards, maps, map elements and the game have properties; players, actions and resources
+  answer just `id` and `name`. For the player who triggered the action, use `%playerColor%` and the other
+  built-in variables.
 
 **Good to know:**
 
-- Names match **exactly**, including upper and lower case. The type (`card`, `Card`) doesn't care about case.
+- Write names **exactly** as they are. Depending on the server's database, a name in different upper and
+  lower case may or may not be found, so don't rely on either. The type (`card`, `Card`) doesn't care about case.
 - If two entities share a name, any one of them may be found. Give templates and other entities you look
   up unique names, or keep the id in a variable.
 - A property called `id` or `name` can't be read with `%q:`, because those words mean the entity's own id
