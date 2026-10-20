@@ -63,7 +63,7 @@ See [RunScript](./run-script.md).
     "Collection": "cards", "ItemName": "c", "Condition": "%v:c.hp% > 0", "OutputName": "alive" } }
 ```
 
-`%q:` / `%qn:` tokens don't work inside `Condition`. Read those values into a variable first.
+`%q:` tokens don't work inside `Condition`. Read those values into a variable first.
 
 ## Properties
 

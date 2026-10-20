@@ -103,16 +103,71 @@ The built-in values always win, so a caller can't fake `playerId` or `gameId` th
 
 ### Tokens
 
-Tokens inside step arguments are replaced before the step runs:
+Tokens inside step arguments are replaced before the step runs. Each token is written between two `%`.
 
 | Token | Replaced with |
 |---|---|
 | `%name%` | The variable's value as text. An unknown variable is left as it is. |
-| `%dto:name%` | The variable as JSON (objects, lists, quoted strings), for building a JSON argument |
-| `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. Missing parts give empty text. |
-| `%q:{varName}.prop%` / `%q:<guid>.prop%` | Property `prop` of the entity whose id is in `varName` (or the literal id). `.name` and `.id` also work. |
-| `%qn:card-"Goblin".hp%` | Property `hp` of the card named *Goblin*. Types: `card`, `map`, `player`, `game`, `action` |
-| `%qn:resource-"myaddon_theme.css".id%` | Id of a resource, found by its key (an addon's resources are keyed `<addon key>_<file name>`) or else by its name. Type `resource` |
+| `%dto:name%` | The variable as JSON (objects, lists, quoted strings), for building a JSON argument. |
+| `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. |
+| `%q:type[name].prop%` | Property `prop` of the game's entity of that type with that name, e.g. `%q:card[Goblin].hp%`. |
+| `%q:{varName}.prop%` | Property `prop` of the entity whose id is in the variable `varName`, e.g. `%q:{cardId}.hp%`. |
+| `%q:<id>.prop%` | Property `prop` of the entity with that id, written out. |
+
+### Reading properties with `%q:`
+
+A `%q:` token reads a property of one of the game's entities: a card, a map, a player and so on. It names
+the entity in one of three ways, then the property after a dot:
+
+```text
+%q:card[Goblin].hp%          by type and name
+%q:{cardId}.hp%              by an id held in a variable
+%q:3f2a…-…-….hp%             by an id written out
+```
+
+**By name**, the type is one of:
+
+| Type | Finds | Example |
+|---|---|---|
+| `card` | A card (templates included) | `%q:card[5E Monster Template].id%` |
+| `map` | A map | `%q:map[Dungeon].id%` |
+| `player` | A player, by display name | `%q:player[Alice].color%` |
+| `game` | The game itself | `%q:game[My Campaign].name%` |
+| `action` | An action. `prefix/name` picks one addon's action; a bare name matches any prefix. | `%q:action[dnd5e/Roll].id%` |
+| `resource` | A resource, by its key (an addon's resources are keyed `<addon key>_<file name>`), or else by its name | `%q:resource[myaddon_theme.css].id%` |
+
+Everything between `[` and `]` is the name, so names with spaces, dots, dashes or brackets work as they
+are: `%q:card[Mr. Smith].hp%`, `%q:card[Roll20 Sheet (internal)].id%`. A name can't contain `]`. In an
+addon's JSON file nothing needs escaping:
+
+```json
+{ "Type": "CreateCard", "Data": { "TemplateId": "%q:card[5E Monster Template].id%" } }
+```
+
+**The property** after the dot is:
+
+- `id`: the entity's id. Use it to hand the entity to a step, as above.
+- `name`: the entity's name.
+- anything else: the value of the entity's property with that name (the same values `GetPropertyValue`
+  reads). Properties of cards, maps, map elements and the game can be read this way.
+
+**Good to know:**
+
+- Names match **exactly**, including upper and lower case. The type (`card`, `Card`) doesn't care about case.
+- If two entities share a name, any one of them may be found. Give templates and other entities you look
+  up unique names, or keep the id in a variable.
+- A property called `id` or `name` can't be read with `%q:`, because those words mean the entity's own id
+  and name. Use `GetPropertyValue` for it.
+- Only the game's own entities are found, and protected properties are never read.
+- When nothing is found, the token becomes empty text. Try a token in the **Query Resolver** at the bottom of
+  the Actions panel: it shows the result, and lists the tokens that found nothing.
+
+### Tokens are filled in once
+
+All tokens in an argument are filled in together, in a single pass. What a token turns into is never read as
+tokens again. If a variable holds the text `%q:card[Goblin].hp%`, for example a chat message a player typed,
+`%message%` gives exactly that text; the query inside it isn't run. To read a property whose name or entity
+comes from a variable, use `%q:{varName}.prop%` or the `GetPropertyValue` step.
 
 A few arguments are **not** filled in before the step runs, because the step fills them in itself at the
 right moment:
