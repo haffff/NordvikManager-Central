@@ -33,7 +33,7 @@ Permissions are set per player, plus one row called **Everyone (default)**. *Eve
 
 The game itself has permissions too (**Game Settings → Permissions**). A player with **Edit** on the game is a co-GM: wherever this guide says "GM", it means them as well. They get the same menus and windows as the GM: game settings, addons, battle maps, playlists and the soundboard, layouts, managing players, GM-only layers, showing a battle map to players.
 
-Edit on the game is about the game's menus and settings. It doesn't by itself give rights on the game's maps, tokens or cards: those still follow their own permissions, so give a co-GM what they need there too. GM-only addon content (hidden templates, actions only the GM may run) is set up for the owner when the addon is installed.
+A co-GM also has at least the owner's rights on everything in the game: maps, tokens, cards and templates, layouts, and what addons set up for the GM (hidden templates, actions only the GM may run, hidden homebrew). Where the owner is restricted, so are they. Co-GMs also get `/gm` messages and `/gr` rolls, but not whispers between players.
 
 A few things stay with the game's **owner** (the player who created it):
 - The game's own **Permissions** tab, so only the owner decides who is a co-GM.

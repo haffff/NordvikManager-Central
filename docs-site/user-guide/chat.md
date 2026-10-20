@@ -22,9 +22,9 @@ Messages starting with `/` are commands. Type `/help` for the list.
 | Command | Does | Example |
 |---|---|---|
 | `/r` or `/roll` | Rolls dice for everyone to see. See [Rolling dice](./rolling-dice.md). | `/r 1d20+5` |
-| `/gr` | Rolls so that only you and the GM see the result. | `/gr 1d20+5` |
+| `/gr` | Rolls so that only you and the GM (and [co-GMs](./permissions.md#co-gms-edit-on-the-game)) see the result. | `/gr 1d20+5` |
 | `/w` | Whispers to a player. The GM sees it too. | `/w Alice meet me at the inn` |
-| `/gm` | A message only the GM sees. | `/gm can I search the room?` |
+| `/gm` | A message only the GM (and co-GMs) sees. | `/gm can I search the room?` |
 | `/help` | Lists the commands. Only you see the answer. | `/help` |
 | `/c` | Runs a client command (for addon makers), with suggestions as you type. | `/c Chat.SendMessage` |
 
