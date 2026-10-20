@@ -5,7 +5,7 @@ title: Permissions
 
 # Permissions
 
-Almost everything in a game (maps, battle maps, tokens and other map elements, cards, templates, layouts, materials) has **permissions**: who may see it and what they may do with it. The GM always has full rights to everything.
+Almost everything in a game (maps, battle maps, tokens and other map elements, cards, templates, layouts, materials) has **permissions**: who may see it and what they may do with it. The game's owner always has full rights to everything.
 
 ## Levels
 
@@ -28,6 +28,22 @@ Examples:
 ## Everyone and single players
 
 Permissions are set per player, plus one row called **Everyone (default)**. *Everyone* applies to every player who has no row of their own, including players who join later. **Not set** means "use the default".
+
+## Co-GMs: Edit on the game
+
+The game itself has permissions too (**Game Settings → Permissions**). A player with **Edit** on the game is a co-GM: wherever this guide says "GM", it means them as well. They get the same menus and windows as the GM: game settings, addons, battle maps, playlists and the soundboard, layouts, managing players, GM-only layers, showing a battle map to players.
+
+A few things stay with the game's **owner** (the player who created it):
+- The game's own **Permissions** tab, so only the owner decides who is a co-GM.
+- **Deleting** the game, and stopping its session.
+- Co-GMs can't kick the owner or change the owner's permissions on anything.
+- **Clear everyone's** sketches.
+
+## The server's admin
+
+The person who runs the server (its [admin](./getting-started-gm/installing-the-server.md#youre-the-servers-admin)) has two extra rights, whatever their role in a game:
+- **Linking files from the server's disk** into [Materials](./materials.md#gm-storage-and-local-files). Nobody else can browse the server's computer, not even a game's GM.
+- **Every game in the lobby:** the admin sees all games on the server and can rename or delete any of them, including games they aren't in.
 
 ## Where to set them
 

@@ -31,7 +31,8 @@ Choose **Create game**. The game appears in your lobby.
 
 - **Join** opens the game. This also **starts the session** that lets players connect.
 - The **lock** badge means the game needs a password.
-- The **gear** button opens the game's settings: rename it, change the description, copy the [invite link](./inviting-players.md), or delete the game.
+- The **gear** button opens the game's settings: rename it, change the description, copy the [invite link](./inviting-players.md), or delete the game. It's there for the game's owner and for the server's admin.
+- The server's admin sees **every** game on the server. Games they aren't in are marked **Not a member**: they can rename or delete them, but not join.
 
 :::danger[Deleting a game]
 **Delete Game** (then **Confirm Delete**) removes the game and everything in it for good. Make a backup first if you might want it back: **Application Settings → Backups**.

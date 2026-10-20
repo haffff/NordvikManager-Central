@@ -6,7 +6,7 @@ title: Game settings
 # Game settings
 
 :::note[GM only]
-**Settings → Game** holds the settings of the whole game. Changes apply for everyone; some (like the layout settings) take effect for players the next time they load the game.
+**Settings → Game** holds the settings of the whole game. Changes apply for everyone; some (like the layout settings) take effect for players the next time they load the game. Co-GMs (players with **Edit** on the game) have it too, but only the owner sees its **Permissions** tab; see [Permissions](./permissions.md#co-gms-edit-on-the-game).
 :::
 
 ![Game Settings, General Settings tab](/img/user-guide/game-settings.png)

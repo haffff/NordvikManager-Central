@@ -56,6 +56,8 @@ The **first account to log in** to a new server becomes its **admin**. The conso
 - **Application Settings**: server-wide settings, such as [backups](#back-up-your-games).
 - **User Management**: everyone who has joined a game on this server; see [Inviting players](./inviting-players.md#managing-players).
 
+The admin also sees every game on the server in the lobby (and can rename or delete any of them), and is the only one who can link files from the server's disk into a game's Materials. See [Permissions](../permissions.md#the-servers-admin).
+
 {/* SCREENSHOT: img/lobby-empty.png — The lobby of a fresh server: "Hello, <name>", Application Settings, User Management, Logout, and "Create new game". */}
 
 If the wrong account became the admin, stop the server, delete the hidden `.localadmin` file next to `DNDOnePlaceManager.exe`, start the server again and log in with the right account first.
