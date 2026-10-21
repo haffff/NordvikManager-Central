@@ -7,11 +7,11 @@ title: Step reference
 
 Each step is `{ "Type": "<step>", "Data": { ...arguments } }`. All arguments are text and accept
 [tokens](./overview.md#tokens) unless noted. The action editor shows the same list, with a description for
-every argument.
+every argument and what each step stores.
 
-## Conditions and expressions
+## Conditions
 
-*If*, *Calculate* and *FilterCollection* use .NET `DataTable` expression syntax:
+*If* uses .NET `DataTable` expression syntax:
 
 - Compare with `=`, `<>`, `<`, `>`, `<=`, `>=`.
 - Combine with `AND`, `OR`, `NOT`.
@@ -19,27 +19,55 @@ every argument.
 - Use `+ - * / %` for arithmetic.
 - The only functions are `IIF`, `LEN`, `ISNULL`, `SUBSTRING`, `TRIM` and `CONVERT`.
 
-If you need `floor`, `min`, `max`, lists or text handling, use [RunScript](./run-script.md).
+For anything else (`floor`, `min`, `max`, sums, lists, text handling) use [RunScript](./run-script.md).
 
 ## Control flow
 
 | Step | What it does | Arguments |
 |---|---|---|
-| **If** | Evaluates `Condition`, then runs `ActionTrue` or `ActionFalse` (either may be empty) | `Condition`, `ActionTrue`, `ActionFalse`, `OutputName` |
-| **ForEach** | Runs `Action` once per item of a list variable, with the item in `ItemName` | `Collection`, `ItemName`, `Action` |
-| **ExecuteAction** | Runs another action by name (`prefix/name`) | `Value` |
+| **If** | Evaluates `Condition`, then runs the steps in `Then` or in `Else` (either may be empty) | `Condition`, `Then`, `Else`, `OutputName` |
+| **ForEach** | Runs the steps in `Do` once per item of a list variable, with the item in `ItemName` | `Collection`, `ItemName`, `Do` |
+| **ExecuteAction** | Runs another action by name (`prefix/name`), on a copy of the variables | `Value` |
 | **SetVariable** | Sets a variable, optionally converted to `int`, `long`, `float`, `double` or `bool` | `Name`, `Value`, `DefaultValue`, `Type` |
-| **Assign Variables** (`QueryData`) | Sets several variables at once: one `name=value` per line | `Assignments` |
-| **RequestUserInput** | Asks one player for text and waits (default 1 minute) | `UserName` or `UserID`, `Message`, `ShowDialog`, `DefaultInput`, `Timeout`, `Output` |
 | **Delay** | Waits before the next step | `Milliseconds` (max 60000) |
-| **Exit** | Stops the current action | `Message` (optional, goes to the event log) |
+| **Exit** | Stops the action | `Message` (optional, goes to the event log) |
 | **Log** | Writes a message to the game event log | `Message`, `Level` (`Info`, `Warning`, `Error`) |
 
-**If → `OutputName`**: stores the condition's result (`True`/`False`) before the branch runs, so the branch
-action can read it too. Leave both branches empty to just compute the value.
+`Then`, `Else` and `Do` are lists of steps, written like `content`. They share the action's variables:
+see [Blocks](./overview.md#blocks).
 
-**Sub-actions** (If, ForEach, ExecuteAction) work on a copy of the variables. See
-[Sub-actions get a copy](./overview.md#sub-actions-get-a-copy).
+```json
+{ "Type": "If", "Data": { "Condition": "%playerIsGm% = true",
+  "Then": [ { "Type": "SendChat", "Data": { "Template": "Text", "Message": "Hello, GM" } } ],
+  "Else": [ { "Type": "Exit", "Data": { "Message": "GMs only" } } ] } }
+```
+
+**If → `OutputName`** stores the condition's result (`True`/`False`). Leave both blocks empty to just
+compute the value.
+
+## Asking players
+
+| Step | What it does | Arguments |
+|---|---|---|
+| **RequestTargets** | Lets a player pick tokens on the battle map, and waits (default 2 minutes) | `Player`, `Message`, `Min`, `Max`, `Candidates`, `Timeout`, `StopIfCancelled`, `Output` |
+| **RequestUserInput** | Asks a player for text, or to pick one of a few answers, and waits (default 1 minute) | `UserID` or `UserName`, `Message`, `ShowDialog`, `DefaultInput`, `Options`, `Timeout`, `StopIfCancelled`, `Output` |
+
+**RequestTargets**: the player sees a bar on the battle map with the message and *picked/needed*. They
+click tokens to pick them (again to unpick), then **Done**. `Player` empty means the player who ran the
+action.
+
+- `Min` / `Max` (both default 1): how many may be picked. **Done** works once `Min` are picked.
+- `Candidates`: only these tokens can be picked; the rest are dimmed. A list of tokens or of ids, e.g.
+  `%inRange%` from a *Find*. The server checks the answer too: a token that isn't a candidate is refused.
+- `Output` holds the picked tokens, in the order they were picked, with the same fields as *Find* tokens:
+  `[{ id, name, x, y, w, h, cardId, mapId }]`.
+
+**RequestUserInput → `Options`**: one answer per line (`yes`, `half`, `no`). The player gets a button for
+each instead of a text box, and `Output` holds the one they clicked.
+
+**`StopIfCancelled`** (both steps, on by default): when the player cancels, doesn't answer in time or
+isn't connected, the action stops quietly. Turn it off to carry on with an empty answer (an empty list
+for *RequestTargets*) and handle that yourself.
 
 ## Script
 
@@ -49,34 +77,30 @@ action can read it too. Leave both branches empty to just compute the value.
 
 See [RunScript](./run-script.md).
 
-## Math and collections
-
-| Step | What it does | Arguments |
-|---|---|---|
-| **Calculate** | Evaluates `Expression` and stores the result | `Expression`, `OutputName` |
-| **FilterCollection** | Keeps the list items for which `Condition` is true | `Collection`, `ItemName`, `Condition`, `OutputName` |
-
-**FilterCollection**: the condition is checked once per item, with the current item in `ItemName`:
-
-```json
-{ "Type": "FilterCollection", "Data": {
-    "Collection": "cards", "ItemName": "c", "Condition": "%v:c.hp% > 0", "OutputName": "alive" } }
-```
-
-`%q:` tokens don't work inside `Condition`. Read those values into a variable first.
-
 ## Properties
 
 | Step | What it does | Arguments |
 |---|---|---|
-| **SetProperty** | Creates or updates one property on an entity (card, element, map, game) | `ParentId`, `PropertyName`, `PropertyValue` |
-| **SetProperties** | Creates or updates several properties on one entity | `ParentId`, `Properties` |
-| **GetPropertyValue** | Reads one property, or `DefaultValue` when it doesn't exist | `ParentId`, `PropertyName`, `Output`, `DefaultValue` |
-| **QueryProperties** | Reads properties by parent ids and names, or by property ids | `ParentIds`, `PropertyNames`, `Ids`, `Output` |
-| **DeleteProperty** | Deletes a property by entity and name. Does nothing if it doesn't exist. | `ParentId`, `PropertyName` |
-| **AddPropertyListItem** | Adds a row to a list property | `ParentId`, `PropertyName`, `Fields`, `Output` |
-| **UpdatePropertyListItem** | Changes fields of one row | `ParentId`, `PropertyName`, `ItemId`, `Fields` |
-| **RemovePropertyListItem** | Removes one row | `ParentId`, `PropertyName`, `ItemId` |
+| **SetProperty** | Creates or updates one property | `Of`, `ParentId`, `PropertyName`, `PropertyValue` |
+| **SetProperties** | Creates or updates several properties on one entity | `Of`, `ParentId`, `Properties` |
+| **GetPropertyValue** | Reads one property, or `DefaultValue` when it doesn't exist | `Of`, `ParentId`, `PropertyName`, `Output`, `DefaultValue` |
+| **DeleteProperty** | Deletes a property by entity and name. Does nothing if it doesn't exist. | `Of`, `ParentId`, `PropertyName` |
+| **AddPropertyListItem** | Adds a row to a list property | `Of`, `ParentId`, `PropertyName`, `Fields`, `Output` |
+| **UpdatePropertyListItem** | Changes fields of one row | `Of`, `ParentId`, `PropertyName`, `ItemId`, `Fields` |
+| **RemovePropertyListItem** | Removes one row | `Of`, `ParentId`, `PropertyName`, `ItemId` |
+
+**`Of`** says whose property it is:
+
+| `Of` | The property of |
+|---|---|
+| empty | the entity whose id is in `ParentId`: a card, a map element, a map or the game |
+| `tokenCard` | the card of the token in `ParentId`. A token's hit points and stats usually live on its card, so this is the one to use with a token from *Find* or *RequestTargets*. |
+| `map` | the map in `ParentId`, or, when that's empty, the map the player is looking at |
+| `game` | the game (`ParentId` is not needed) |
+
+```json
+{ "Type": "SetProperty", "Data": { "Of": "tokenCard", "ParentId": "%target.id%", "PropertyName": "blessed", "PropertyValue": "true" } }
+```
 
 **SetProperties** takes one `propertyName=value` per line, split at the first `=`:
 
@@ -88,14 +112,51 @@ See [RunScript](./run-script.md).
 
 Lines are split **before** tokens are filled in, so a value may contain line breaks or `=` characters.
 
-## Data
+## Finding things
+
+**Find** looks things up in the game and stores what it found: a list, or with `First` a single one (or
+nothing). It replaces looking things up by hand: it is the step for "the tokens on this map", "the tokens
+within 4 squares", "the cards marked *monster*".
+
+| Argument | Used for | Meaning |
+|---|---|---|
+| `What` | all | `tokens`, `elements`, `cards`, `maps`, `battleMaps`, `players`, `actions` or `layouts` |
+| `Id`, `Name` | all | Only the one with this id / these with this name |
+| `Property` | cards, maps, tokens, elements | Only those that have a property with this name, e.g. `monster` |
+| `MapId` | tokens, elements | The map to look on. Empty: the map the player is looking at |
+| `AllMaps` | tokens, elements | Look on every map of the game instead |
+| `WithCard` | tokens | Only tokens linked to a card |
+| `Near` + `Radius` | tokens, elements | Only those within `Radius` squares of a point (`{x, y}`, e.g. `%position%`) or of a token (its id). Counted to the token's edge; the token itself isn't included. |
+| `IncludeTemplates` | cards | Card templates too |
+| `First` | all | Store the first one found (or nothing) instead of a list |
+| `Output` | all | The variable |
+
+What each item holds:
+
+| `What` | Fields |
+|---|---|
+| `tokens` | `id`, `name`, `x`, `y` (the centre, in map pixels), `w`, `h`, `cardId`, `mapId` |
+| `elements` | `id`, `name`, `type`, `isToken`, `x`, `y`, `w`, `h`, `cardId`, `mapId`, `object` (the element as drawn) |
+| `cards` | `id`, `name`, `key`, `isTemplate`, `isHidden` |
+| `maps` | `id`, `name`, `gridSize`, `width`, `height` |
+| `battleMaps` | `id`, `name`, `mapId` |
+| `players` | `id`, `name`, `color`, `isOwner` |
+| `actions` | `id`, `name`, `prefix`, `hook` |
+| `layouts` | `id`, `name` |
+
+*Find* runs as the system, so it also finds what the triggering player can't see (hidden elements, other
+players' cards). Check permissions with *RequirePermission* when that matters.
+
+```json
+{ "Type": "Find", "Data": { "What": "tokens", "Near": "%position%", "Radius": "4", "WithCard": true, "Output": "inBlast" } }
+```
+
+## Cards and resources
 
 | Step | What it does | Arguments |
 |---|---|---|
 | **CreateCard** | Creates a card from a template and stores its id | `Name`, `TemplateId`, `Owner`, `IsTemplate`, `Output` |
 | **DeleteCard** | Permanently deletes a card and its properties | `CardId` |
-| **GetData** | Finds entities of one type by `Id`, else by having a property named `PropertyName`, else by `Name`; stores a list, or the first match with `SingleElement` | `Type`, `Name`, `Id`, `PropertyName`, `SingleElement`, `Output` |
-| **GetDetail** / **SetDetail** | Reads or writes a field of an object variable (case-sensitive, e.g. `Name`) or, with `IsElement`, a canvas key of a map element (e.g. `left`). SetDetail changes only the variable; `Type` is `string`, `int`, `long`, `float`, `double` or `bool` | `Input`, `DetailName`, `Value`, `Type`, `IsElement`, `Output` |
 | **GetConnectedPlayers** | Stores the list of connected players | `Value` (variable name) |
 | **SetResource** | Creates or overwrites a text resource by key | `Key`, `Name`, `Content`, `MimeType`, `FolderId`, `OutputVariable` |
 | **ReadResource** | Reads a text resource | `Key` or `ResourceId`, `OutputVariable` |
@@ -104,20 +165,34 @@ Lines are split **before** tokens are filled in, so a value may contain line bre
 
 ## Map
 
-These run on the server, so they work from hooks even when no one has the map open. Players see the
-change right away.
+These run on the server, so they work from hooks even when no one has the map open (the GM included).
+Players see the change right away. A `MapId` left empty means the map the player is looking at (see
+[the map the player is looking at](./overview.md#variables)).
 
 | Step | What it does | Arguments |
 |---|---|---|
+| **SpawnToken** | Places a token of a card, or a plain token, on a map | `CardId` or `Token` + `Image`, `X`, `Y`, `MapId`, `Output` (the token's id) |
+| **AddElement** | Adds a shape to a map, saved like one drawn by hand | `Shape`, `X`, `Y`, `Radius` / `Width` + `Height`, `Color`, `Text`, `Layer`, `MapId`, `Output` (the element's id) |
+| **ShowMarker** | Shows a shape on a map for a while, to everyone; never saved | `Shape`, `X`, `Y`, `Radius` / `Width` + `Height`, `Color`, `Text`, `Duration`, `UntilActionEnds`, `MapId`, `Output` |
 | **MoveElement** | Moves an element (e.g. a token); players see it glide like a drag | `ElementId`, `X`, `Y` |
 | **DeleteElement** | Removes an element from its map | `ElementId` |
 | **ChangeMap** | Switches a battle map view to another map, for everyone | `MapId`, `BattleMapId` |
 
-- `X` / `Y` are canvas pixels (the element's left/top), written with a dot for decimals: `12.5`.
+- `X` / `Y` are map pixels, written with a dot for decimals: `12.5`. *AddElement* and *ShowMarker* put
+  the shape's **centre** there (like `%position%` or a *Find* token's `x`/`y`); *SpawnToken* and
+  *MoveElement* the **top-left corner**.
+- Sizes (`Radius`, `Width`, `Height`) are in **squares** of the map's grid: a 20 ft Fireball on a 5 ft
+  grid is `Radius` = `4`.
+- `Shape` is `circle`, `rect` or `text`; `Color` any CSS colour, e.g. `rgba(255,80,0,0.35)`.
+- **SpawnToken** with a `CardId` uses the card's `token` property (its token file) and picture, sized
+  from the card, like dragging the card onto the map. Without a card, give a token file in `Token` (e.g.
+  `basics_token_generic.json`) and a picture in `Image`.
+- **ShowMarker** stays for `Duration` seconds (default 10), or with `UntilActionEnds` until the action
+  ends, e.g. while the GM decides on a *RequestUserInput*.
 - *MoveElement* fires the **Element Moved** and **Element Updated** hooks. See the
   [loop warning](./hooks.md#element-moved).
-- *ChangeMap*: leave `BattleMapId` empty when the game has a single battle map view. Otherwise pass the
-  view's id, e.g. `%v:Data.id%` from a **Map Changed** hook.
+- *ChangeMap*: leave `BattleMapId` empty to use the view the player is looking at (or the game's only
+  one). Otherwise pass the view's id, e.g. `%Data.id%` from a **Map Changed** hook.
 
 ## Dice
 
@@ -144,15 +219,18 @@ Supported notation:
 |---|---|---|
 | **SendChat** | Posts a card to chat: `Text`, `BigNumber`, or `Roll` (after a RollDice) | `Template`, `Title`, `Message`, `Number`, `RollVariable`, `Color`, `BorderColor`, `Player` |
 | **ShowView** | Shows a view (hidden panel) to one player or everyone | `ViewKey`, `Player`, `Data` |
-| **AddMenuItem** | Adds a menu entry that runs an action, in the menu named by `Location` (see [Menu locations](#menu-locations)) | `Name`, `UiName`, `Action`, `Location`, `OnlyOwner`, `SubMenuId`, `SubMenuName`, `ActionArgs` |
-| **AddToolbarButton** | Adds a button at the end of the main toolbar that runs an action, or with `MenuId` a dropdown menu | `Name`, `UiName`, `Action`, `OnlyOwner`, `MenuId`, `MenuName`, `ActionArgs` |
-| **AddMapTool** | Adds a tool to the Tools panel; clicking the map with it runs an action (see [Map tools](#map-tools)) | `Name`, `UiName`, `Action`, `Hint`, `Target`, `StayActive`, `OnlyOwner`, `ActionArgs` |
+| **AddMenuItem** | Adds a menu entry that runs an action, in the menu named by `Location` (see [Menu locations](#menu-locations)) | `Name`, `UiName`, `Action`, `Location`, `OnlyTriggeringPlayer`, `GmOnly`, `SubMenuId`, `SubMenuName`, `ActionArgs` |
+| **AddToolbarButton** | Adds a button at the end of the main toolbar that runs an action, or with `MenuId` a dropdown menu | `Name`, `UiName`, `Action`, `OnlyTriggeringPlayer`, `GmOnly`, `MenuId`, `MenuName`, `ActionArgs` |
+| **AddMapTool** | Adds a tool to the Tools panel; clicking the map with it runs an action (see [Map tools](#map-tools)) | `Name`, `UiName`, `Action`, `Hint`, `Target`, `StayActive`, `OnlyTriggeringPlayer`, `GmOnly`, `ActionArgs` |
 | **FireClientMediator** | Sends an event to the players' browsers | `EventName`, `Payload`, `Player` |
 | **RunClientCommand** | Runs a panel command in one player's browser | `Panel`, `Command`, `Player`, `Data` |
-| **SendCommand** | Sends a raw lobby command (advanced) | The command itself |
 
 **SendChat → `Player`** (whisper): set a player's name, id or `%playerId%` to send the message to that
 player only. Whispers aren't saved in the chat history. Leave it empty to post to everyone.
+
+**Who gets it** (AddMenuItem, AddToolbarButton, AddMapTool): every connected player, unless
+`OnlyTriggeringPlayer` (just the player who triggered the action, e.g. the one whose game just loaded) or
+`GmOnly` (just the GMs: the game's owner and players with Edit on the game) is on.
 
 `Icon` (both steps) and AddToolbarButton's `Location` are accepted but not used yet: menu items and
 toolbar buttons are text only, and buttons always go at the end of the main toolbar.
@@ -180,8 +258,8 @@ Right-click menus pass what was clicked to the action as variables:
 
 | Location | Variables |
 |---|---|
-| `battlemap_add`, `battlemap` | `battleMapId`, `position` (`{ x, y }` on the map) |
-| `battlemap_element` | `battleMapId`, `position`, `elementId` |
+| `battlemap_add`, `battlemap` | `battleMapId`, `mapId`, `position` (`{ x, y }` on the map) |
+| `battlemap_element` | `battleMapId`, `mapId`, `position`, `elementId`, `elementIds` (every selected element's id) |
 | `cards_item` | `cardId` |
 
 Players can open these menus too, and a player's click runs the action as that player. If the action
@@ -233,7 +311,7 @@ and in `myaddon/teleport`, move the clicked token:
 
 ## Turn order
 
-Each map has its own turn order. `MapId` may be left empty when the game has a single battle map view; its current map is used. The steps act as the system, then tell everyone and fire **Turn Changed** like a player's change would.
+Each map has its own turn order. Leave `MapId` empty for the map the player is looking at (or the game's only battle map view's). The steps act as the system, then tell everyone and fire **Turn Changed** like a player's change would.
 
 | Step | What it does | Arguments |
 |---|---|---|
@@ -255,5 +333,23 @@ For example, roll initiative for a token with **RollDice**, then **SetInitiative
 | **SendRequest** | Calls a web API. Protected properties can go in the body or as a Bearer token, and are never returned. | `TargetUrl`, `HttpMethod`, `ParentId`, `IncludeProtectedPropertyNames`, `BearerTokenPropertyName`, `ExtraBodyVariable`, `Output` |
 | **RequirePermission** | Checks that the triggering player has a permission on an entity. Stores the result or stops the action. | `EntityId`, `Permission`, `Output`, `StopIfDenied` |
 
-*SendRequest* stores `Success`, `StatusCode` and `ResponseBody`. Read into a JSON response with `%v:`:
-`%v:output.ResponseBody.results[0].name%`.
+*SendRequest* stores `Success`, `StatusCode` and `ResponseBody`. Read into a JSON response with a path:
+`%output.ResponseBody.results[0].name%`.
+
+## Removed steps
+
+These steps are gone. An action that still uses one skips that step and logs "Unknown step type" in the
+event log (and as ✗ in the editor).
+
+| Step | Use instead |
+|---|---|
+| **GetData** | *Find* |
+| **GetDetail** / **SetDetail** | A path token (`%target.name%`) / *RunScript* |
+| **Calculate** | *SetVariable* with `Type`, or *RunScript* |
+| **FilterCollection** | *Find* with its filters, or *RunScript* (`vars.list.filter(...)`) |
+| **Assign Variables** (`QueryData`) | One *SetVariable* per value, or *RunScript* returning an object |
+| **QueryProperties** | *GetPropertyValue*, or `%q:` tokens |
+| **SendCommand** | The step for what you want to do |
+
+*If* and *ForEach* no longer take an action name (`ActionTrue`, `ActionFalse`, `Action`): put the steps in
+`Then`, `Else` and `Do`, or an *ExecuteAction* step there.

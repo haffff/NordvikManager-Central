@@ -52,7 +52,8 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 - `hook` is the number of the hook that triggers it, or `0` for none (see the [hook table](./hooks.md)).
 - `isEnabled` only matters for hooks. Actions called by name run either way.
 - `content` holds the steps, run top to bottom. `Type` picks the step and `Data` holds its arguments.
-  Every step is listed in the [step reference](./steps.md).
+  Every step is listed in the [step reference](./steps.md). *If* and *For Each* hold steps of their own
+  (see [Blocks](#blocks)).
 - In an addon's files, `prefix` is replaced with the addon's key and `isEnabled` is ignored: addon actions
   are always enabled.
 - The `$schema` line lets editors check the file: an unknown field, a misspelt `Type` key or a missing
@@ -62,16 +63,23 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 
 Open *Addons → Actions*. Actions are listed by prefix on the left; a ⚡ marks actions with a trigger.
 
+- **New action.** Start empty, or from a template: an action on picked targets, an area effect the GM
+  confirms, a random card placed on the map, or damage to every token on the map. Change it from there.
 - **Steps tab.** Each step is one line that reads like a sentence, e.g. *Roll 1d20+(%modifier%) → roll*.
   Variables are highlighted, and a missing required value shows in red.
+  - Under a step that stores something, you see what it will hold before anything runs, e.g.
+    *→ targets: list of: id, name, x, y, cardId, mapId*.
+  - *If* and *For Each* show their blocks (**Then**, **Else**, **Do**) under them, each with its own steps.
   - Click a step to edit it in the panel beside the list (or below it, when the panel is narrow).
-  - Drag the grip to reorder. Hover a step to duplicate or delete it.
-  - Click **+** between steps, or **Add step** at the end, and type to search for a step.
-  - Steps that run another action (If, For Each, Execute Action) show the target under the step, with a link
-    that opens it.
-- **Writing values.** Type `%` in a field to pick from the variables available at that step: built-ins,
-  the trigger's variables, and values created by earlier steps. A variable that isn't defined anywhere
-  before the step is pointed out under the field. RunScript's script gets a code editor.
+  - Drag the grip to reorder within a list. Hover a step to duplicate or delete it.
+  - Click **+** between steps, or **Add step**, and type what you want to do: "tokens", "ask",
+    "damage", "monster"… finds the steps for it, not just by name.
+  - *Execute Action* shows the action it runs, with a link that opens it.
+- **Writing values.** Under the step's fields, **Variables here** lists every variable the step can use:
+  built-ins, the trigger's, the inputs and what earlier steps (blocks included) set, with their fields.
+  Click a field you're editing, then a variable or one of its fields to put its token in, e.g.
+  `%targets[0].name%`. After a run, the values from that run are shown next to them. Typing `%` in a field
+  offers the variables too. RunScript's script gets a code editor.
 - **Inputs.** For an action without a trigger, names it uses but never sets (like `%cardId%`) are listed
   as its *inputs*: values the caller passes in.
 - **Settings tab.** Name, prefix, description, trigger, permission, export and delete.
@@ -79,10 +87,11 @@ Open *Addons → Actions*. Actions are listed by prefix on the left; a ⚡ marks
   unsaved changes asks first. If the panel is closed or the page reloads, the changes are kept and offered
   back the next time you open the action.
 - **Running.** The run bar above the steps holds the values to run with (pre-filled from the inputs).
-  **Run** (or **Save & run**) runs the action and marks each step ✓ or ✗ as it goes; hover ✗ for the error.
-  Select a step afterwards to see the variables as they were after it ran. If a step runs another action
-  and that action fails, the step shows ✗ with that action's error. Only the GM and players who may edit
-  the game see this; it doesn't pause anything, unlike debug mode.
+  **Run** (or **Save & run**) runs the action and marks each step ✓ or ✗ as it goes, steps in blocks too;
+  hover ✗ for the error. **From map** lets you click a point and pick tokens on the battle map first, then
+  runs the action as a map tool or menu click would (with `position`, `elementId`, `elementIds`,
+  `battleMapId` and `mapId`). Select a step afterwards to see the variables as they were. Only the GM and
+  players who may edit the game see this; it doesn't pause anything, unlike debug mode.
 
 ## Variables
 
@@ -96,23 +105,32 @@ Every action starts with these variables:
 | `gameId`, `gmId` | The game and the GM's player id |
 | `actionId`, `actionName`, `actionPrefix` | The running action |
 | `playerId`, `playerName`, `playerColor`, `playerIsOwner` | The player who triggered it, when there is one |
+| `playerIsGm` | `true` when that player is a GM: the owner, or a player with Edit on the game |
+| `battleMapId`, `mapId` | The battle map view the player is looking at and the map it shows, when the action was run from a player's screen (a menu, a tool, a button, a card) |
 | Hook variables | Depend on the hook, e.g. `Data`, `Player`, `ChatArgs`. See [Hooks](./hooks.md) |
 | Arguments | Anything the caller passed, e.g. a card button's arguments |
 
 The built-in values always win, so a caller can't fake `playerId` or `gameId` through its arguments.
 
+**The map the player is looking at.** Steps that work on a map (*Find* tokens, the turn order steps,
+*Show Marker*, *Add Element*, *Spawn Token*, *Change Map*) use it when you leave their map empty. With no
+player's screen behind the action (a hook), they use the game's only battle map view, or else its first.
+
 ### Tokens
 
 Tokens inside step arguments are replaced before the step runs. Each token is written between two `%`.
+There are two kinds: **variables**, and **`%q:` queries** that read the game.
 
 | Token | Replaced with |
 |---|---|
-| `%name%` | The variable's value as text. An unknown variable is left as it is. |
-| `%dto:name%` | The variable as JSON (objects, lists, quoted strings), for building a JSON argument. |
-| `%v:name.path%` | A value inside an object variable. The path can go several levels deep and use list indexes: `%v:output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. Missing parts give empty text. |
+| `%name%` | The variable's value. Text and numbers as they are; a list or object as JSON. An unknown variable is left as it is. |
+| `%name.path%` | A value inside a variable. The path can go several levels deep and use list indexes: `%targets[0].name%`, `%output.ResponseBody.results[0].name%`. Text that holds JSON (like a web response body) is read as JSON. A missing part gives empty text. |
 | `%q:type[name].prop%` | Property `prop` of the game's entity of that type with that name, e.g. `%q:card[Goblin].hp%`. |
-| `%q:{varName}.prop%` | Property `prop` of the entity whose id is in the variable `varName`, e.g. `%q:{cardId}.hp%`. |
+| `%q:{varName}.prop%` | Property `prop` of the entity whose id is in a variable, or in a field of one: `%q:{cardId}.hp%`, `%q:{target.cardId}.hp%`. |
 | `%q:<id>.prop%` | Property `prop` of the entity with that id, written out. |
+
+To put text into a JSON argument, write its quotes yourself: `{"name": "%name%"}`. A list or object goes in
+without quotes: `{"position": %position%}`.
 
 ### Reading properties with `%q:`
 
@@ -121,7 +139,7 @@ the entity in one of three ways, then the property after a dot:
 
 ```text
 %q:card[Goblin].hp%          by type and name
-%q:{cardId}.hp%              by an id held in a variable
+%q:{cardId}.hp%              by an id held in a variable (or a field: {target.cardId})
 %q:3f2a…-…-….hp%             by an id written out
 ```
 
@@ -176,20 +194,37 @@ A few arguments are **not** filled in before the step runs, because the step fil
 right moment:
 
 - `DefaultValue` (SetVariable, GetPropertyValue): only used when the value comes out empty.
-- `Condition` in *FilterCollection*: filled in once per item. `%q:` tokens are not supported there.
+- `Then` / `Else` / `Do` in *If* and *For Each*: their steps are filled in when they run, with the
+  variables of that moment (a loop's item, what earlier steps of the block set).
 - `Properties` in *SetProperties*: split into lines first, so a value with line breaks stays one value.
 - `Script` in *RunScript*: never filled in. Scripts read variables through `vars`.
 
-### Sub-actions get a copy
+### Blocks
 
-*If*, *ForEach* and *ExecuteAction* run another action. That action gets a **copy** of the current
-variables. It can read everything, but nothing it sets comes back to the caller. For calculations that
-need to hand results back, use a [RunScript](./run-script.md) step instead.
+*If* holds the steps to run in **Then** and **Else**, *For Each* the steps to run for each item in **Do**.
+They are part of the action:
+
+- They read and change the action's own variables: what a block sets is there after it. A loop can add up
+  a total, a branch can set a value the steps after the *If* use.
+- An *Exit* in a block stops the whole action.
+- A step failing in a block fails the action.
+
+```json
+{ "Type": "ForEach", "Data": { "Collection": "targets", "ItemName": "target", "Do": [
+    { "Type": "SetProperty", "Data": { "ParentId": "%target.id%", "PropertyName": "blessed", "PropertyValue": "true" } }
+] } }
+```
+
+To run another action, use *Execute Action*. That action gets a **copy** of the variables: it reads
+everything, but what it sets doesn't come back. Use it for actions several others share; keep the rest in
+blocks.
 
 ## Stopping and errors
 
-- The **Exit** step stops the current action; any later steps don't run. Inside a sub-action it stops only
-  that sub-action. Give it a `Message` to leave a note in the event log.
+- The **Exit** step stops the action; any later steps don't run. In an action run by *Execute Action* it
+  stops only that one. Give it a `Message` to leave a note in the event log.
+- *Request User Input* and *Request Targets* stop the action quietly when the player cancels, doesn't
+  answer or isn't connected, unless their **Stop If Cancelled** is off.
 - If a step fails (bad argument, missing variable, script error), the action stops and the error goes to
   the game **event log**, together with the action name and the step that failed.
 - The **Log** step writes your own message to the event log. It's the quickest way to see a variable's value.

@@ -14,7 +14,7 @@ Most hooks come from a change someone made (a player, or another action). They g
 - `Player`: who made the change (so `playerId`, `playerName`, … are filled in)
 - `Command`: the full command, for advanced use
 
-Read fields inside `Data` with `%v:`, e.g. `%v:Data.id%` or `%v:Data.name%`.
+Read fields inside `Data` with a path, e.g. `%Data.id%` or `%Data.name%`.
 
 | # | Hook | Fires when | Extra variables |
 |---|---|---|---|
@@ -46,12 +46,12 @@ Read fields inside `Data` with `%v:`, e.g. `%v:Data.id%` or `%v:Data.name%`.
 ## Element Moved
 
 `Data` holds the element id and its new position. The position sits inside the element's `object` text,
-and `%v:` reads it for you:
+and a path reads it for you:
 
 ```json
 { "Type": "SendChat", "Data": {
     "Template": "Text", "Title": "Token moved",
-    "Message": "%v:Data.id% is now at %v:Data.object.left%, %v:Data.object.top%" } }
+    "Message": "%Data.id% is now at %Data.object.left%, %Data.object.top%" } }
 ```
 
 Moving an element also fires **Element Updated**. An action on either hook that moves the **same** element
@@ -68,7 +68,7 @@ Fires when **Next**, **Previous**, jumping to an entry, *End my turn*, a reset, 
 | `currentEntryId` | whose turn it is, empty when that entry is hidden from players |
 | `elementId` | the current token, empty for a free or hidden entry |
 
-To start a token's turn, e.g. tick down a status: read `%v:Data.elementId%`, and use **GetTurnOrder** for the rest.
+To start a token's turn, e.g. tick down a status: read `%Data.elementId%`, and use **GetTurnOrder** for the rest.
 
 ## Game Updated
 
@@ -91,23 +91,16 @@ Players can type their own commands in chat, e.g. `/cast fireball 3`:
   The typed text is shown only to its sender and isn't saved in the chat history.
 - Reply privately with *SendChat* and `Player` set to `%playerId%`.
 
-An *If* branch runs a separate action, so put the real work in the branch:
+Put the work for each command in the *If*'s `Then`:
 
 ```json
 {
   "name": "on_command", "prefix": "myaddon", "hook": 19, "isEnabled": true,
   "content": [
-    { "Type": "If", "Data": { "Condition": "'%ChatCommand%' = 'cast'", "ActionTrue": "myaddon/cast" } }
-  ]
-}
-```
-
-```json
-{
-  "name": "cast", "prefix": "myaddon", "hook": 0,
-  "content": [
-    { "Type": "SendChat", "Data": { "Template": "Text", "Title": "Casting",
-        "Message": "%playerName% casts %ChatArgs%", "Player": "%playerId%" } }
+    { "Type": "If", "Data": { "Condition": "'%ChatCommand%' = 'cast'", "Then": [
+        { "Type": "SendChat", "Data": { "Template": "Text", "Title": "Casting",
+            "Message": "%playerName% casts %ChatArgs%", "Player": "%playerId%" } }
+    ] } }
   ]
 }
 ```
