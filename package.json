@@ -2,7 +2,7 @@
   "name": "nordvikmanager-central",
   "version": "1.0.0",
   "description": "central authentication server and webrtcsessions management for nordvik manager",
-  "license": "ISC",
+  "license": "AGPL-3.0-only",
   "author": "",
   "type": "commonjs",
   "main": "index.js",
