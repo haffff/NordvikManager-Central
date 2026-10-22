@@ -118,7 +118,8 @@ img.src = blob ? URL.createObjectURL(blob) : placeholder;
 | Panel | Command | Returns |
 |---|---|---|
 | `Game` | `GetGameId` | The game's id. |
-| `Game` | `GetIsGM` | `true` for the GM. Use it to keep GM-only things out of players' lists. |
+| `Game` | `GetIsGM` | `true` for a GM: the game's owner, or a co-GM (a player given **Edit** on the game). Use it to keep GM-only things out of players' lists. |
+| `Game` | `GetCanEditGame` | The same as `GetIsGM`. |
 | `Game` | `GetPlayers` | The game's players. |
 | `Game` | `GetCurrentPlayer` | The player viewing the card. |
 | `BattleMap` | `GetSelectedMap` | The open map. With several maps open, pass `{ contextId }` or you get a list. |

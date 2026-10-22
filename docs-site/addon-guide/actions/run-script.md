@@ -9,8 +9,8 @@ title: RunScript
 take a long chain of steps: arithmetic with rounding, min/max, filtering and sorting lists, building text,
 or reading JSON.
 
-A script can only **compute**. It can't change the game, read files or reach the network. Pass its results
-to the other steps (SetProperty, SendChat, MoveElement, …) to act on them.
+A script computes, and acts on the game through [`game`](#the-game-object): find tokens, read and change
+properties, roll, post to chat, place tokens. It can't read files or reach the network.
 
 ## How it works
 
@@ -19,8 +19,9 @@ to the other steps (SetProperty, SendChat, MoveElement, …) to act on them.
   - **Without `Output`**: return an object, and each key becomes a variable.
   - **With `Output`**: the whole return value is stored in that one variable.
   - **No `return`**: nothing changes.
-- Numbers, text and true/false come back as plain values, so `%name%`, *If* and *Calculate* work with
-  them. Lists and objects come back as JSON; read them with `%v:`, *ForEach* or *FilterCollection*.
+- Numbers, text and true/false come back as plain values, so `%name%` and *If* work with them. Lists and
+  objects stay lists and objects: read them with a path (`%result.total%`, `%list[0].name%`) or loop
+  over them with *ForEach*.
 - `%name%` tokens are **not** filled into the script. Use `vars.name` instead. (`%` is the remainder
   operator here: `17 % 5` is `2`.)
 
@@ -62,13 +63,69 @@ return { spellList: names.join(', '), spellCount: names.length };
 return { names: vars.players.map(p => p.Name).sort().join(', ') };
 ```
 
+## The `game` object
+
+`game` runs the action's steps for the script: the same steps as in the editor, with the same results.
+Like the steps, it acts **as the system**: it finds what the triggering player can't see and changes what
+they couldn't. Check with *RequirePermission* before the script when that matters.
+
+| Function | Does | Returns |
+|---|---|---|
+| `game.find(what, options)` | *Find*. `options` takes the step's arguments in camelCase: `{ name, property, mapId, allMaps, withCard, near, radius, includeTemplates, first }` | The list (or with `first`, one item or `null`), with the fields of [Find](./steps.md#finding-things) |
+| `game.getProperty(id, name, fallback)` | *GetPropertyValue* | The value, or `fallback` |
+| `game.setProperty(id, name, value)` | *SetProperty* | — |
+| `game.roll(formula)` | *RollDice* (not posted to chat) | The roll: `{ result, … }` |
+| `game.chat(text, { title, to })` | *SendChat* with the Text template; `to` whispers to a player | — |
+| `game.log(message)` | *Log* | — |
+| `game.moveElement(id, x, y)` / `game.deleteElement(id)` | *MoveElement* / *DeleteElement* | — |
+| `game.spawnToken({ cardId, x, y, mapId })` | *SpawnToken* | The new token's id |
+| `game.showMarker({ shape, x, y, radius, color, duration })` | *ShowMarker* | The marker's id |
+| `game.addElement({ shape, x, y, radius, color, text })` | *AddElement* | The new element's id |
+| `game.createCard({ name, templateId })` | *CreateCard* | The new card's id |
+| `game.step(type, data)` | Any other step, e.g. `game.step('NextTurn', {})` | The variables the step set: `game.step('GetTurnOrder', { Output: 'o' }).o` |
+
+The `options` objects take the step's argument names, starting with a small or capital letter. `%`
+tokens in them are not filled in: build the values in JavaScript.
+
+Steps that ask a player or run other steps (*RequestUserInput*, *RequestTargets*, *If*, *ForEach*,
+*ExecuteAction*, *RunScript*, *Exit*, *Delay*) can't be called: put them before or after the script.
+
+Protected property values (API keys and the like) are never returned to a script.
+
+```js
+// Damage every creature within 4 squares of the clicked point, half on a save.
+const hit = game.find('tokens', { near: vars.position, radius: 4, withCard: true });
+const damage = Number(vars.damage);
+for (const t of hit) {
+  const hp = Number(game.getProperty(t.cardId, 'hp', 0));
+  const save = game.roll('1d20+' + game.getProperty(t.cardId, 'dex_save', 0)).result;
+  const taken = save >= 15 ? Math.floor(damage / 2) : damage;
+  game.setProperty(t.cardId, 'hp', Math.max(0, hp - taken));
+}
+game.chat(hit.length + ' creatures caught in the blast', { title: 'Fireball' });
+return { hitCount: hit.length };
+```
+
+## Shared code: `Include`
+
+Functions several actions use can live in a JavaScript resource, e.g. an addon's `Resources/rules.js`
+(key `myaddon_rules.js`). List its key in `Include` (several: one per line or separated by commas), and
+it is put before the script:
+
+```json
+{ "Type": "RunScript", "Data": { "Include": "myaddon_rules.js", "Script": "return { mod: abilityMod(vars.str) };" } }
+```
+
+A key that doesn't exist stops the action with `RunScript: no script file '…' to include.`
+
 ## Limits
 
 Scripts run on the GM's server, so they are kept small and safe:
 
 | Limit | Value |
 |---|---|
-| Run time | 2 seconds |
+| Run time | 5 seconds, `game` calls included |
+| `game` calls | 200 per script |
 | Memory | 16 MB |
 | Statements | 100,000 |
 | Nesting (recursion) | 64 calls |
