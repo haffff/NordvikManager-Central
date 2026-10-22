@@ -32,6 +32,22 @@ The guide changes when the platform does. Its first line links back here: downlo
 especially after a NordvikManager update.
 :::
 
+## Writing single actions
+
+To get just an action (a spell, a chat command, a GM tool) without building an addon, use
+**[ACTIONS.md](pathname:///ai/ACTIONS.md)** with any AI chat assistant:
+
+1. Download [ACTIONS.md](pathname:///ai/ACTIONS.md) and attach it to the chat (or paste its text), then
+   describe the action: what starts it, what it asks, what it changes. Tell it your sheet's property names
+   (`hp`, `ac`…), so it doesn't have to guess them.
+2. It answers with one JSON block per action. In the game open *Addons → Actions*, click **+**, set
+   **Start from** to **Paste JSON…**, paste the block and click **Create**.
+3. An action with a trigger (a hook) starts switched off: turn on the switch next to its name and **Save**.
+
+If a step doesn't exist, the paste names it and creates nothing: tell the assistant, and it can fix it.
+ACTIONS.md lists every step with every argument, so it also helps an assistant working on an addon's
+actions.
+
 ## Getting good results
 
 - **Start from the template.** It has the folder layout, a working card, an action, the pack script, the
