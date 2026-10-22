@@ -79,15 +79,15 @@ they couldn't. Check with *RequirePermission* before the script when that matter
 | `game.log(message)` | *Log* | — |
 | `game.moveElement(id, x, y)` / `game.deleteElement(id)` | *MoveElement* / *DeleteElement* | — |
 | `game.spawnToken({ cardId, x, y, mapId })` | *SpawnToken* | The new token's id |
-| `game.showMarker({ shape, x, y, radius, color, duration })` | *ShowMarker* | The marker's id |
-| `game.addElement({ shape, x, y, radius, color, text })` | *AddElement* | The new element's id |
+| `game.showMarker({ shape, at, toward, radius, width, height, angle, color, duration })` | *ShowMarker* | The marker's id |
+| `game.addElement({ shape, at, toward, radius, width, height, angle, color, text })` | *AddElement* | The new element's id |
 | `game.createCard({ name, templateId })` | *CreateCard* | The new card's id |
 | `game.step(type, data)` | Any other step, e.g. `game.step('NextTurn', {})` | The variables the step set: `game.step('GetTurnOrder', { Output: 'o' }).o` |
 
 The `options` objects take the step's argument names, starting with a small or capital letter. `%`
 tokens in them are not filled in: build the values in JavaScript.
 
-Steps that ask a player or run other steps (*RequestUserInput*, *RequestTargets*, *If*, *ForEach*,
+Steps that ask a player or run other steps (*RequestUserInput*, *RequestTargets*, *RequestPoint*, *If*, *ForEach*,
 *ExecuteAction*, *RunScript*, *Exit*, *Delay*) can't be called: put them before or after the script.
 
 Protected property values (API keys and the like) are never returned to a script.

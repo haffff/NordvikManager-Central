@@ -21,7 +21,7 @@ The addon's own description, at the root of the zip:
   "version": "0.0.4",
   "author": "haffff",
   "license": "MIT",
-  "repositoryUrl": "https://github.com/haffff/NordvikManager-DND"
+  "repositoryUrl": "https://github.com/haffff/NordvikManager-5E"
 }
 ```
 

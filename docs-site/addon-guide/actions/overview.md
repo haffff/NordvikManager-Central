@@ -65,6 +65,10 @@ Open *Addons → Actions*. Actions are listed by prefix on the left; a ⚡ marks
 
 - **New action.** Start empty, or from a template: an action on picked targets, an area effect the GM
   confirms, a random card placed on the map, or damage to every token on the map. Change it from there.
+  Or pick **Paste JSON…** and paste an action: one exported with **Export JSON**, an action file from an
+  addon, or one an AI assistant wrote (see [Developing with AI](../ai-guide.md#writing-single-actions)).
+  The prefix and name come from the JSON unless you type them; a step that doesn't exist is named and
+  nothing is created. A new action starts switched off: turn it on for its trigger to run it.
 - **Steps tab.** Each step is one line that reads like a sentence, e.g. *Roll 1d20+(%modifier%) → roll*.
   Variables are highlighted, and a missing required value shows in red.
   - Under a step that stores something, you see what it will hold before anything runs, e.g.
@@ -223,7 +227,7 @@ blocks.
 
 - The **Exit** step stops the action; any later steps don't run. In an action run by *Execute Action* it
   stops only that one. Give it a `Message` to leave a note in the event log.
-- *Request User Input* and *Request Targets* stop the action quietly when the player cancels, doesn't
+- *Request User Input*, *Request Targets* and *Request Point* stop the action quietly when the player cancels, doesn't
   answer or isn't connected, unless their **Stop If Cancelled** is off.
 - If a step fails (bad argument, missing variable, script error), the action stops and the error goes to
   the game **event log**, together with the action name and the step that failed.
