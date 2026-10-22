@@ -17,7 +17,7 @@ begin.
 |---|---|---|
 | `setup` | Adding tools and menus for a player when they load the game; GM-only entries | Hook **Player Load** |
 | `bless` | Letting a player pick tokens, then doing something to each | *Sanity → Bless* in the toolbar |
-| `fireball` | Tokens in an area, a marker on the map, asking the GM, applying it | The *Fireball* map tool |
+| `fireball` | Aiming an area on the map, the tokens in it, asking the GM, applying it | *Sanity → Fireball* in the toolbar |
 | `random_enemy` | Picking a random card, copying it and placing its token, from the server | Map right-click → *Random monster here* (GM) |
 | `damage_all` | Every token on the map the GM is looking at | *Sanity → Random damage* (GM) |
 | `damage_target` | Shared by `fireball` and `damage_all`: lowers one token's HP | Run by the other two |
@@ -27,9 +27,9 @@ Steps are shown below as the editor shows them, one line each. Indented lines ar
 ## Setup: tools and menus
 
 ```text
-Add map tool Fireball → sanity/fireball           (Only the triggering player)
 Add toolbar button Sanity (menu sanity_menu)      (Only the triggering player)
 Add menu item Bless → sanity/bless                (Only the triggering player)
+Add menu item Fireball → sanity/fireball          (Only the triggering player)
 Add menu item Random damage → sanity/damage_all   (Only the triggering player, GM only)
 Add menu item Random monster here → sanity/random_enemy, in battlemap  (Only the triggering player, GM only)
 ```
@@ -40,8 +40,8 @@ Add menu item Random monster here → sanity/random_enemy, in battlemap  (Only t
 - **Why GM only.** It hides the entry from players. It doesn't protect the action: anyone who knows its
   name can still run it. So `damage_all` and `random_enemy` start with *RequirePermission* (Edit on
   `%gameId%`, which only GMs have).
-- The map tool passes `ActionArgs` (`radiusSquares` = `4`, `dice` = `8d6`), so the same Fireball action
-  could be a 30 ft one from another tool.
+- The Fireball menu item passes `ActionArgs` (`radiusSquares` = `4`, `dice` = `8d6`), so the same
+  Fireball action could be a 30 ft one from another menu item.
 
 ## Bless: the player picks targets
 
@@ -63,11 +63,12 @@ Send chat: %playerName%: Bless on %names%
 - **RunScript** makes the list of names: `vars.targets.map(t => t.name).join(", ")`. Text handling like
   this is what scripts are for.
 
-## Fireball: an area, a marker and the GM's say
+## Fireball: aiming an area, and the GM's say
 
 ```text
-Find tokens near %position% within %radiusSquares% → hit
-Show marker circle at %position.x%, %position.y%, radius %radiusSquares% (until the action ends)
+Ask to point a circle: Where does the Fireball go off? → point   (snap to grid corners)
+Find tokens near %point% within %radiusSquares% → hit
+Show marker circle at %point.x%, %point.y%, radius %radiusSquares% (until the action ends)
 Roll %dice% → fireDamage   (posted to chat)
 Run script → hitCount, hitNames
 Request user input from %gmId%: … Apply it?  [yes / half / no] → answer   (Stop If Cancelled: off)
@@ -78,8 +79,12 @@ If %apply% = 1
 Send chat: %result%
 ```
 
-- **Find** with **Near** and **Radius** gives the tokens in the blast: within 4 squares of the clicked
-  point, counted to each token's edge. The map is the one the player clicked.
+- **Request Point** lets the player aim: the 20 ft circle follows the cursor, snapped to where grid lines
+  cross, everyone at the table sees it move, and the tokens it would hit glow. A click chooses the place;
+  cancelling stops the action. For a range limit (Fireball's 150 ft), add **From** (the caster's token)
+  and **Max Distance** `30`.
+- **Find** with **Near** and **Radius** gives the tokens in the blast: within 4 squares of the chosen
+  point, counted to each token's edge. These are the tokens that glowed while aiming.
 - **Show Marker** with **Until Action Ends** shows everyone the blast for as long as the GM takes to
   decide, and removes it when the action ends. Nothing is saved on the map.
 - **Request User Input** with **Options** gives the GM three buttons. **Stop If Cancelled** is off here on
@@ -149,10 +154,10 @@ Send chat to %gmId%: %report%
 ## The same with a script
 
 When an action is mostly maths over lists, a single **RunScript** with [`game`](./run-script.md#the-game-object)
-can be shorter than a chain of steps. Fireball without asking the GM:
+can be shorter than a chain of steps. Fireball without asking the GM, after a *Request Point* step:
 
 ```js
-const hit = game.find('tokens', { near: vars.position, radius: Number(vars.radiusSquares), withCard: true });
+const hit = game.find('tokens', { near: vars.point, radius: Number(vars.radiusSquares), withCard: true });
 const damage = game.roll(vars.dice).result;
 for (const t of hit) {
   const hp = Number(game.getProperty(t.cardId, 'hp', 0));
@@ -162,5 +167,5 @@ game.chat(`${damage} fire damage to ${hit.length} creature(s)`, { title: 'Fireba
 return {};
 ```
 
-Steps that ask someone (*Request Targets*, *Request User Input*) can't run inside a script: keep them as
+Steps that ask someone (*Request Targets*, *Request Point*, *Request User Input*) can't run inside a script: keep them as
 steps before or after it.

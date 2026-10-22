@@ -223,7 +223,7 @@ blocks.
 
 - The **Exit** step stops the action; any later steps don't run. In an action run by *Execute Action* it
   stops only that one. Give it a `Message` to leave a note in the event log.
-- *Request User Input* and *Request Targets* stop the action quietly when the player cancels, doesn't
+- *Request User Input*, *Request Targets* and *Request Point* stop the action quietly when the player cancels, doesn't
   answer or isn't connected, unless their **Stop If Cancelled** is off.
 - If a step fails (bad argument, missing variable, script error), the action stops and the error goes to
   the game **event log**, together with the action name and the step that failed.

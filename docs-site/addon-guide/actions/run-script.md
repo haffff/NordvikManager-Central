@@ -87,7 +87,7 @@ they couldn't. Check with *RequirePermission* before the script when that matter
 The `options` objects take the step's argument names, starting with a small or capital letter. `%`
 tokens in them are not filled in: build the values in JavaScript.
 
-Steps that ask a player or run other steps (*RequestUserInput*, *RequestTargets*, *If*, *ForEach*,
+Steps that ask a player or run other steps (*RequestUserInput*, *RequestTargets*, *RequestPoint*, *If*, *ForEach*,
 *ExecuteAction*, *RunScript*, *Exit*, *Delay*) can't be called: put them before or after the script.
 
 Protected property values (API keys and the like) are never returned to a script.

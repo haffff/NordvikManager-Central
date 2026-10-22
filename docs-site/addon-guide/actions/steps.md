@@ -49,25 +49,47 @@ compute the value.
 
 | Step | What it does | Arguments |
 |---|---|---|
-| **RequestTargets** | Lets a player pick tokens on the battle map, and waits (default 2 minutes) | `Player`, `Message`, `Min`, `Max`, `Candidates`, `Timeout`, `StopIfCancelled`, `Output` |
+| **RequestTargets** | Lets a player pick tokens (or any elements) on the battle map, and waits (default 2 minutes) | `Player`, `Message`, `Target`, `Min`, `Max`, `Candidates`, `Timeout`, `StopIfCancelled`, `Output` |
+| **RequestPoint** | Lets a player point at a place on the battle map, with a marker following the cursor, and waits (default 2 minutes) | `Player`, `Message`, `Shape`, `Radius`, `Width`, `Height`, `Color`, `Text`, `SnapToGrid`, `From`, `MaxDistance`, `HighlightTokens`, `ShowToOthers`, `MapId`, `Timeout`, `StopIfCancelled`, `Output` |
 | **RequestUserInput** | Asks a player for text, or to pick one of a few answers, and waits (default 1 minute) | `UserID` or `UserName`, `Message`, `ShowDialog`, `DefaultInput`, `Options`, `Timeout`, `StopIfCancelled`, `Output` |
 
 **RequestTargets**: the player sees a bar on the battle map with the message and *picked/needed*. They
 click tokens to pick them (again to unpick), then **Done**. `Player` empty means the player who ran the
 action.
 
+- `Target`: `token` (default) or `element`: any element on the map (a shape, a picture, a wall, a token),
+  never a token's bars or icons. Picked elements come in the same shape as tokens.
 - `Min` / `Max` (both default 1): how many may be picked. **Done** works once `Min` are picked.
 - `Candidates`: only these tokens can be picked; the rest are dimmed. A list of tokens or of ids, e.g.
   `%inRange%` from a *Find*. The server checks the answer too: a token that isn't a candidate is refused.
 - `Output` holds the picked tokens, in the order they were picked, with the same fields as *Find* tokens:
   `[{ id, name, x, y, w, h, cardId, mapId }]`.
 
+**RequestPoint**: the player gets a crosshair and a bar with the message and **Cancel** (or Esc). The
+marker follows the cursor, and a click chooses the place. Use it to aim an area (a Fireball, a wall of
+fire), to pick where something appears, or wherever a map tool would otherwise be needed.
+
+- `Shape`, `Radius` / `Width` / `Height` (in squares), `Color`, `Text`: the marker, as in *ShowMarker*.
+  `none` asks for a bare point.
+- `SnapToGrid`: `none` (default), `center` (the middle of a square) or `corner` (where grid lines cross,
+  as for a D&D spell's point of origin).
+- `From` and `MaxDistance` (in squares): how far the point may be. `From` is a token (its id, or a token
+  from *Find* or *RequestTargets*) or a point (`%position%`). From a token the range counts from its edge,
+  like *Find*'s **Near**. The range shows as a dashed ring, and the marker turns red outside it, where a
+  click does nothing. The server checks the answer too.
+- `HighlightTokens` (on by default): tokens the marker covers glow while the player aims. They are the ones
+  *Find* with **Near** `%point%` and the same **Radius** gives.
+- `ShowToOthers` (on by default): everyone looking at the map sees the marker and the range move.
+- `Output` holds `{ x, y, mapId }` (map pixels). The marker goes away once the player clicks; to keep
+  showing the area while the GM decides, add *ShowMarker* with **Until Action Ends** at `%point.x%`,
+  `%point.y%`.
+
 **RequestUserInput → `Options`**: one answer per line (`yes`, `half`, `no`). The player gets a button for
 each instead of a text box, and `Output` holds the one they clicked.
 
-**`StopIfCancelled`** (both steps, on by default): when the player cancels, doesn't answer in time or
+**`StopIfCancelled`** (all three steps, on by default): when the player cancels, doesn't answer in time or
 isn't connected, the action stops quietly. Turn it off to carry on with an empty answer (an empty list
-for *RequestTargets*) and handle that yourself.
+for *RequestTargets*, nothing for *RequestPoint*) and handle that yourself.
 
 ## Script
 
