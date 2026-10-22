@@ -66,23 +66,28 @@ action.
   `[{ id, name, x, y, w, h, cardId, mapId }]`.
 
 **RequestPoint**: the player gets a crosshair and a bar with the message and **Cancel** (or Esc). The
-marker follows the cursor, and a click chooses the place. Use it to aim an area (a Fireball, a wall of
-fire), to pick where something appears, or wherever a map tool would otherwise be needed.
+area follows the cursor, and a click chooses the place. Use it to aim an area (a Fireball, Burning
+Hands, a Lightning Bolt), to pick where something appears, or wherever a map tool would otherwise be
+needed.
 
-- `Shape`, `Radius` / `Width` / `Height` (in squares), `Color`, `Text`: the marker, as in *ShowMarker*.
-  `none` asks for a bare point.
+- `Shape`, `Radius`, `Width`, `Height`, `Angle` (an [area](#areas)), `Color`, `Text`: what follows the
+  cursor. `none` asks for a bare point.
+- A `line` or `cone` starts at `From` (the caster's token, e.g. `%caster%`) and is `Radius` long: the
+  player only aims it. `Output`'s `x`, `y` is then the end of its axis and `from` its start, so the
+  next steps are *Find* with **Near** `%caster%`, **Toward** `%point%`, and *ShowMarker* with **At**
+  `%point.from%`, **Toward** `%point%`.
 - `SnapToGrid`: `none` (default), `center` (the middle of a square) or `corner` (where grid lines cross,
   as for a D&D spell's point of origin).
-- `From` and `MaxDistance` (in squares): how far the point may be. `From` is a token (its id, or a token
-  from *Find* or *RequestTargets*) or a point (`%position%`). From a token the range counts from its edge,
-  like *Find*'s **Near**. The range shows as a dashed ring, and the marker turns red outside it, where a
-  click does nothing. The server checks the answer too.
-- `HighlightTokens` (on by default): tokens the marker covers glow while the player aims. They are the ones
-  *Find* with **Near** `%point%` and the same **Radius** gives.
-- `ShowToOthers` (on by default): everyone looking at the map sees the marker and the range move.
-- `Output` holds `{ x, y, mapId }` (map pixels). The marker goes away once the player clicks; to keep
-  showing the area while the GM decides, add *ShowMarker* with **Until Action Ends** at `%point.x%`,
-  `%point.y%`.
+- Circle and rect: `From` and `MaxDistance` (in squares) limit how far the point may be. `From` is a
+  token or a point; from a token the range counts from its edge, like *Find*'s **Near**. The range shows
+  as a dashed ring; outside it the area is faded and dashed with a red outline, and a click does nothing.
+  The server checks the answer too.
+- `HighlightTokens` (on by default): tokens the area covers glow while the player aims. They are the ones
+  *Find* gives for the same area.
+- `ShowToOthers` (on by default): everyone looking at the map sees the area and the range move.
+- `Output` holds `{ x, y, mapId, from }` (map pixels; `from` only for a line or cone). The area goes away
+  once the player clicks; to keep showing it while the GM decides, add *ShowMarker* with **Until Action
+  Ends** at `%point%`.
 
 **RequestUserInput → `Options`**: one answer per line (`yes`, `half`, `no`). The player gets a button for
 each instead of a text box, and `Output` holds the one they clicked.
@@ -148,7 +153,8 @@ within 4 squares", "the cards marked *monster*".
 | `MapId` | tokens, elements | The map to look on. Empty: the map the player is looking at |
 | `AllMaps` | tokens, elements | Look on every map of the game instead |
 | `WithCard` | tokens | Only tokens linked to a card |
-| `Near` + `Radius` | tokens, elements | Only those within `Radius` squares of a point (`{x, y}`, e.g. `%position%`) or of a token (its id). Counted to the token's edge; the token itself isn't included. |
+| `Near` + `Radius` | tokens, elements | Only those within `Radius` squares of a point (`{x, y}`, e.g. `%point%`) or of a token (its id, or `%target%`). Counted to the token's edge; the token itself isn't included. |
+| `Shape`, `Width`, `Height`, `Angle`, `Toward` | tokens, elements | Only those in another [area](#areas): a rect, a line or a cone at `Near` |
 | `IncludeTemplates` | cards | Card templates too |
 | `First` | all | Store the first one found (or nothing) instead of a list |
 | `Output` | all | The variable |
@@ -170,8 +176,33 @@ What each item holds:
 players' cards). Check permissions with *RequirePermission* when that matters.
 
 ```json
-{ "Type": "Find", "Data": { "What": "tokens", "Near": "%position%", "Radius": "4", "WithCard": true, "Output": "inBlast" } }
+{ "Type": "Find", "Data": { "What": "tokens", "Near": "%point%", "Radius": "4", "WithCard": true, "Output": "inBlast" } }
+{ "Type": "Find", "Data": { "What": "tokens", "Near": "%caster%", "Shape": "cone", "Radius": "3", "Toward": "%point%", "Output": "burnt" } }
 ```
+
+### Areas
+
+*Find*, *ShowMarker*, *AddElement* and *RequestPoint* describe an area the same way, so an area shown on
+the map and the tokens found in it always match:
+
+| Argument | circle | rect | line | cone |
+|---|---|---|---|---|
+| `Shape` | `circle` (default) | `rect` | `line` | `cone` |
+| the place: `Near` (*Find*), `At` (markers), `From` (*RequestPoint*) | centre | centre | start | tip |
+| `Radius` (squares) | radius | — | length | length |
+| `Width` / `Height` (squares) | — | width / height | width (default 1) | — |
+| `Angle` (degrees) | — | — | — | how wide it spreads (default 53, as the ruler) |
+| `Toward` | — | — | the point or token it points at | the point or token it points at |
+
+- A place is a point (`{x, y}`, `"x,y"`, `%point%`, `%position%`) or a token: its id, a token from *Find*
+  (`%target%`), or the list of one that *RequestTargets* with **Max** 1 gives (`%caster%`).
+- **What an area covers**: a token counts when it touches the area, counted to its edge (for a circle:
+  within the radius plus half the token). It's the same rule on the server (*Find*) and on the map (the
+  tokens that glow while aiming or measuring).
+- **Colours**: a marker's `Color` is its fill. Without one it takes the colour of the player whose action
+  it is, see-through inside, as their measuring does. Areas being aimed or measured, and the tokens they
+  light up, are in the player's colour too; a theme can set the default with the CSS variable
+  `--nm-area-color`, else it is orange.
 
 ## Cards and resources
 
@@ -194,18 +225,19 @@ Players see the change right away. A `MapId` left empty means the map the player
 | Step | What it does | Arguments |
 |---|---|---|
 | **SpawnToken** | Places a token of a card, or a plain token, on a map | `CardId` or `Token` + `Image`, `X`, `Y`, `MapId`, `Output` (the token's id) |
-| **AddElement** | Adds a shape to a map, saved like one drawn by hand | `Shape`, `X`, `Y`, `Radius` / `Width` + `Height`, `Color`, `Text`, `Layer`, `MapId`, `Output` (the element's id) |
-| **ShowMarker** | Shows a shape on a map for a while, to everyone; never saved | `Shape`, `X`, `Y`, `Radius` / `Width` + `Height`, `Color`, `Text`, `Duration`, `UntilActionEnds`, `MapId`, `Output` |
+| **AddElement** | Adds a shape to a map, saved like one drawn by hand | `Shape`, `At`, `Toward`, `Radius`, `Width`, `Height`, `Angle`, `Color`, `Text`, `Layer`, `MapId`, `Output` (the element's id) |
+| **ShowMarker** | Shows a shape on a map for a while, to everyone; never saved | `Shape`, `At`, `Toward`, `Radius`, `Width`, `Height`, `Angle`, `Color`, `Text`, `Duration`, `UntilActionEnds`, `MapId`, `Output` |
 | **MoveElement** | Moves an element (e.g. a token); players see it glide like a drag | `ElementId`, `X`, `Y` |
 | **DeleteElement** | Removes an element from its map | `ElementId` |
 | **ChangeMap** | Switches a battle map view to another map, for everyone | `MapId`, `BattleMapId` |
 
-- `X` / `Y` are map pixels, written with a dot for decimals: `12.5`. *AddElement* and *ShowMarker* put
-  the shape's **centre** there (like `%position%` or a *Find* token's `x`/`y`); *SpawnToken* and
-  *MoveElement* the **top-left corner**.
+- *AddElement* and *ShowMarker* take an [area](#areas) (or `text`): `At` is a point or a token, e.g.
+  `%point%`, the centre of a circle, rect or text, where a line or cone starts. *SpawnToken* and
+  *MoveElement* take `X` / `Y`, map pixels of the **top-left corner**, written with a dot for decimals:
+  `12.5`.
 - Sizes (`Radius`, `Width`, `Height`) are in **squares** of the map's grid: a 20 ft Fireball on a 5 ft
   grid is `Radius` = `4`.
-- `Shape` is `circle`, `rect` or `text`; `Color` any CSS colour, e.g. `rgba(255,80,0,0.35)`.
+- `Color` is any CSS colour, e.g. `rgba(255,80,0,0.35)`; empty, the player's colour (see [areas](#areas)).
 - **SpawnToken** with a `CardId` uses the card's `token` property (its token file) and picture, sized
   from the card, like dragging the card onto the map. Without a card, give a token file in `Token` (e.g.
   `basics_token_generic.json`) and a picture in `Image`.

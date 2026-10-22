@@ -79,8 +79,8 @@ they couldn't. Check with *RequirePermission* before the script when that matter
 | `game.log(message)` | *Log* | — |
 | `game.moveElement(id, x, y)` / `game.deleteElement(id)` | *MoveElement* / *DeleteElement* | — |
 | `game.spawnToken({ cardId, x, y, mapId })` | *SpawnToken* | The new token's id |
-| `game.showMarker({ shape, x, y, radius, color, duration })` | *ShowMarker* | The marker's id |
-| `game.addElement({ shape, x, y, radius, color, text })` | *AddElement* | The new element's id |
+| `game.showMarker({ shape, at, toward, radius, width, height, angle, color, duration })` | *ShowMarker* | The marker's id |
+| `game.addElement({ shape, at, toward, radius, width, height, angle, color, text })` | *AddElement* | The new element's id |
 | `game.createCard({ name, templateId })` | *CreateCard* | The new card's id |
 | `game.step(type, data)` | Any other step, e.g. `game.step('NextTurn', {})` | The variables the step set: `game.step('GetTurnOrder', { Output: 'o' }).o` |
 

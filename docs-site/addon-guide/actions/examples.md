@@ -18,9 +18,10 @@ begin.
 | `setup` | Adding tools and menus for a player when they load the game; GM-only entries | Hook **Player Load** |
 | `bless` | Letting a player pick tokens, then doing something to each | *Sanity → Bless* in the toolbar |
 | `fireball` | Aiming an area on the map, the tokens in it, asking the GM, applying it | *Sanity → Fireball* in the toolbar |
+| `burning_hands` | A cone aimed from the caster's token | *Sanity → Burning Hands* in the toolbar |
 | `random_enemy` | Picking a random card, copying it and placing its token, from the server | Map right-click → *Random monster here* (GM) |
 | `damage_all` | Every token on the map the GM is looking at | *Sanity → Random damage* (GM) |
-| `damage_target` | Shared by `fireball` and `damage_all`: lowers one token's HP | Run by the other two |
+| `damage_target` | Shared by `fireball`, `burning_hands` and `damage_all`: lowers one token's HP | Run by the others |
 
 Steps are shown below as the editor shows them, one line each. Indented lines are inside a block.
 
@@ -30,6 +31,7 @@ Steps are shown below as the editor shows them, one line each. Indented lines ar
 Add toolbar button Sanity (menu sanity_menu)      (Only the triggering player)
 Add menu item Bless → sanity/bless                (Only the triggering player)
 Add menu item Fireball → sanity/fireball          (Only the triggering player)
+Add menu item Burning Hands → sanity/burning_hands (Only the triggering player)
 Add menu item Random damage → sanity/damage_all   (Only the triggering player, GM only)
 Add menu item Random monster here → sanity/random_enemy, in battlemap  (Only the triggering player, GM only)
 ```
@@ -68,7 +70,7 @@ Send chat: %playerName%: Bless on %names%
 ```text
 Ask to point a circle: Where does the Fireball go off? → point   (snap to grid corners)
 Find tokens near %point% within %radiusSquares% → hit
-Show marker circle at %point.x%, %point.y%, radius %radiusSquares% (until the action ends)
+Show marker circle at %point%, radius %radiusSquares% (until the action ends)
 Roll %dice% → fireDamage   (posted to chat)
 Run script → hitCount, hitNames
 Request user input from %gmId%: … Apply it?  [yes / half / no] → answer   (Stop If Cancelled: off)
@@ -94,6 +96,27 @@ Send chat: %result%
   variables, so `damage` set by the script is there inside the loop.
 - **Execute Action** runs `damage_target` for each token. It's a separate action because `damage_all`
   uses it too. It gets a copy of the variables, `target` and `damage` included.
+
+## Burning Hands: a cone from the caster
+
+```text
+Request targets: Pick your character (max 1) → caster
+Ask to point a cone from %caster%: Which way? (15 ft cone) → point
+Find tokens in a cone near %caster% toward %point%, length %lengthSquares% → hit
+Show marker cone at %point.from% toward %point%, length %lengthSquares% (until the action ends)
+…then as Fireball: roll, ask the GM, damage each token hit
+```
+
+- **Request Targets** with **Max** 1 asks the player which token is theirs. A list of one is a place
+  wherever a token is: **From**, **Near**, **At**.
+- **Request Point** with **Shape** `cone` and **From** `%caster%`: the cone starts at the caster's token
+  and is 3 squares (15 ft) long; the player only turns it. `%point%` is the end of its axis and
+  `%point.from%` its tip.
+- **Find** with the same area (**Shape** `cone`, **Near**, **Toward**, **Radius**) gives the tokens the
+  cone covers — the ones that glowed while aiming. **Near** is the caster's token, so the caster isn't
+  among them.
+- A line (Lightning Bolt: 100 ft long, 5 ft wide) is the same with **Shape** `line`, **Radius** `20` and
+  **Width** `1`.
 
 ## Random monster: a card copy, placed by the server
 
