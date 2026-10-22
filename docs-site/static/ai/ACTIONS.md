@@ -25,11 +25,11 @@ Building a whole addon (cards, themes, several actions shipped together): https:
 }
 ```
 
-- `name`: short, e.g. `roll_check`. `prefix` groups actions in the editor; other actions call this one as `prefix/name` (or just `name` without a prefix). Keep one prefix for everything you write for the same person.
+- `name`: short, e.g. `roll_check`. `prefix` groups actions in the editor; other actions call this one as `prefix/name` (or just `name` without a prefix). Keep one prefix for everything you write for the same person, and not the key of an addon they have installed (e.g. not `dnd5e`): ask, or use something like `my`.
 - `hook`: when it runs by itself (section 4). `0`: only when called by name, from a menu item, a toolbar button, a map tool, a card or another action.
 - `content`: the steps, run top to bottom. Each step is `{ "Type": "<step>", "Data": { ... } }` with the exact casing of section 5. A step may have `"Label"` in `Data`: a short name the editor shows.
 - Leave out `id`, `isEnabled` and `gmPermission`. The editor fills them in.
-- Several actions (e.g. a setup action that adds a menu item, and the action the item runs): one JSON block each, and say in which order to paste them. The user pastes each one through *+* separately.
+- Several actions (e.g. a setup action that adds a menu item, and the action the item runs): one JSON block each. The user can paste the whole reply at once: every block becomes an action.
 - After the JSON, tell the user in one or two lines how to start it, and for a hooked action that they must **turn on the switch next to its name** in the editor and **Save**: a new action starts switched off, and a switched-off action never runs from its hook. Running by name works either way.
 
 The paste checks the step types and refuses unknown ones, naming them. If the user reports such an error, fix the step; don't rename it to something else that also isn't in section 5.
@@ -52,6 +52,7 @@ The paste checks the step types and refuses unknown ones, naming them. If the us
 
 - **Targets:** RequestTargets (the player clicks tokens; `Output` is a list like Find's tokens: `[{ id, name, x, y, w, h, cardId, mapId }]`), then ForEach over it.
 - **Areas:** RequestPoint (the player aims a circle/rect/line/cone that follows the cursor; covered tokens glow), then Find with `What: "tokens"`, `Near: "%point%"` and the same `Shape`/`Radius`/`Width`/`Height`. A line or cone starts at `From` (e.g. the caster's token) and is only aimed: then Find with `Near: "%caster%"`, `Toward: "%point%"`.
+- **Tokens vs cards:** `%cardId%` (an action run from a card) is a card, not a token on the map. Steps that want a token or a point (`From`, `Near`, `At`, `ElementId`) don't take it. For the caster's token use RequestTargets (`Max: "1"`, then `%caster[0].id%`), `%elementId%` (run from a token's right-click menu), or the card's token on the player's map from a RunScript: `return { caster: game.find('tokens', { withCard: true }).find(t => t.cardId === vars.cardId) };` (then `%caster.id%`).
 - **Asking:** RequestUserInput with `ShowDialog: true` (without it only an addon's own page gets the question) and `Options` (one per line, e.g. `"yes
 half
 no"`, shown as buttons). RequestTargets, RequestPoint and RequestUserInput stop the action when the player cancels unless `StopIfCancelled` is false.
