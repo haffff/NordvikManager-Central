@@ -43,9 +43,10 @@ A few things stay with the game's **owner** (the player who created it):
 
 ## The server's admin
 
-The person who runs the server (its [admin](./getting-started-gm/installing-the-server.md#youre-the-servers-admin)) has two extra rights, whatever their role in a game:
+The person who runs the server (its [admin](./getting-started-gm/installing-the-server.md#youre-the-servers-admin)) has three extra rights, whatever their role in a game:
 - **Linking files from the server's disk** into [Materials](./materials.md#gm-storage-and-local-files). Nobody else can browse the server's computer, not even a game's GM.
 - **Every game in the lobby:** the admin sees all games on the server and can rename or delete any of them, including games they aren't in.
+- **Server settings** (**Application Settings → Server**): which hosts on the local network actions may reach, the card sandbox and the addon registry. See [Server settings](./getting-started-gm/installing-the-server.md#server-settings).
 
 ## Where to set them
 

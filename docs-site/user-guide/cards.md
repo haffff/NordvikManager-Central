@@ -38,6 +38,7 @@ The GM (anyone with Edit on the game) can organise the list into folders: **Add 
 
 - **The owner and the GM** always have full rights.
 - **Other players** see a card only if they're given **See** on it (or on *Everyone*). Cards they can't see never reach their browser.
+- **A card's files** (its page and scripts) come from its template. Only the GM changes them; a player who owns a card can rename it, fill it in and use **Update from template**.
 - A **Note** is private to its author and the GM.
 
 ## Templates (GM)
