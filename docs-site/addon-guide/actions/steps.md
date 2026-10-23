@@ -108,7 +108,7 @@ See [RunScript](./run-script.md).
 
 | Step | What it does | Arguments |
 |---|---|---|
-| **SetProperty** | Creates or updates one property | `Of`, `ParentId`, `PropertyName`, `PropertyValue` |
+| **SetProperty** | Creates or updates one property; with `Protected`, a secret nothing can read back | `Of`, `ParentId`, `PropertyName`, `PropertyValue`, `Protected` |
 | **SetProperties** | Creates or updates several properties on one entity | `Of`, `ParentId`, `Properties` |
 | **GetPropertyValue** | Reads one property, or `DefaultValue` when it doesn't exist | `Of`, `ParentId`, `PropertyName`, `Output`, `DefaultValue` |
 | **DeleteProperty** | Deletes a property by entity and name. Does nothing if it doesn't exist. | `Of`, `ParentId`, `PropertyName` |
@@ -138,6 +138,25 @@ See [RunScript](./run-script.md).
 ```
 
 Lines are split **before** tokens are filled in, so a value may contain line breaks or `=` characters.
+
+### Protected properties
+
+**SetProperty** with `Protected` = `true` stores a secret, such as an API token a settings view saves. After
+that, nothing reads it back: not players, cards, `%q:` tokens, *GetPropertyValue* or *RunScript*, and its
+value is never sent to anyone's browser. Only *SendRequest* and *DownloadResource* use it, as the bearer token
+(`BearerTokenPropertyName`) or in the request body (`IncludeProtectedPropertyNames`).
+
+A protected property stays protected: a later *SetProperty* on it (with or without `Protected`) changes the
+value and keeps it secret.
+
+```json
+[
+  { "Type": "RequirePermission", "Data": { "EntityId": "%gameId%", "Permission": "Edit", "StopIfDenied": true } },
+  { "Type": "SetProperty", "Data": { "ParentId": "%gameId%", "PropertyName": "myaddon_token", "PropertyValue": "%token%", "Protected": true } }
+]
+```
+
+Start such an action with *RequirePermission*: any player can fire an action by name.
 
 ## Finding things
 
@@ -385,10 +404,54 @@ For example, roll initiative for a token with **RollDice**, then **SetInitiative
 | Step | What it does | Arguments |
 |---|---|---|
 | **SendRequest** | Calls a web API. Protected properties can go in the body or as a Bearer token, and are never returned. | `TargetUrl`, `HttpMethod`, `ParentId`, `IncludeProtectedPropertyNames`, `BearerTokenPropertyName`, `ExtraBodyVariable`, `Output` |
+| **DownloadResource** | Downloads a URL (e.g. an image) and saves it as a game resource. A protected property can be the Bearer token. | `TargetUrl`, `Key`, `Name`, `MimeType`, `FolderId`, `ParentId`, `BearerTokenPropertyName`, `Output` |
 | **RequirePermission** | Checks that the triggering player has a permission on an entity. Stores the result or stops the action. | `EntityId`, `Permission`, `Output`, `StopIfDenied` |
+| **SetPermission** | Shares a card, token or map with a player or everyone, or lets a player move a token; or takes it back | `EntityId`, `Player`, `Permission`, `Revoke` |
 
 *SendRequest* stores `Success`, `StatusCode` and `ResponseBody`. Read into a JSON response with a path:
 `%output.ResponseBody.results[0].name%`.
+
+*DownloadResource* saves the file under `Key`, replacing a resource with that key, and stores `success`,
+`statusCode`, `resourceId`, `mimeType` and `size` (bytes). Nothing is saved when the download fails. Cards
+read the file with `Resources.Global.Read('<key>')`.
+
+### Private and local hosts
+
+*SendRequest* and *DownloadResource* can't reach the server's own computer or its network (`localhost`,
+`192.168.x.x`, `10.x.x.x` and the like) unless the server's admin allows that host in
+**Application Settings → Server → Local network access**, as a host or `host:port` (for example
+`localhost:8080`). Everything else private stays blocked, also after a redirect. A response may be at most
+20 MB and take at most 30 seconds.
+
+An addon that talks to something on the GM's own network should say in its description which host to
+allow.
+
+### SetPermission
+
+*SetPermission* lets an action share something with players, for example a handout the story has reached.
+It is deliberately narrow, so it can't do more than its caller could in the Permissions dialog:
+
+- **`Permission`** is `Read` (see it) or `Control` (move a token). Nothing else: never Edit, Remove or
+  Execute. Empty means Read.
+- **`EntityId`** is a card, a token or other map element, or a map of this game. Templates, views, actions,
+  properties, resources and the game itself are refused.
+- **`Player`** is one player (name, id or `%variable%`). Empty means everyone, and everyone can only get
+  Read.
+- **`Revoke`** = `true` takes the right back. It never lowers a player who can edit the entity, and never
+  touches the game owner's rights.
+- The player who triggered the action must have **Edit** on the entity and hold the right they give. An
+  action run by a hook with no player is refused.
+
+Sharing a card puts it in the players' Cards panel at once, and taking it back removes it. Every change is
+written to the game's event log.
+
+```json
+[
+  { "Type": "RequirePermission", "Data": { "EntityId": "%gameId%", "Permission": "Edit", "StopIfDenied": true } },
+  { "Type": "SetPermission", "Data": { "EntityId": "%cardId%", "Permission": "Read" } },
+  { "Type": "ShowView", "Data": { "ViewKey": "myaddon_handout", "Data": "{ \"cardId\": \"%cardId%\" }" } }
+]
+```
 
 ## Removed steps
 

@@ -280,6 +280,7 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 - `ParentId`: GUID of the parent entity whose property will be set. Supports %variable% substitution (e.g. %playerId%, %q:card[My card].id%).
 - `PropertyName`: Name of the property to set on the entity.
 - `PropertyValue`: Value to assign to the property. Supports %variable% substitution.
+- `Protected` (true/false): Store it as a protected property, e.g. an API key a settings view saves for Send Request's bearer token: no player, card or later step can read it back. A protected property stays protected.
 
 **SetResource**: Creates or updates a text resource identified by a unique key. If the key already exists the content is overwritten; otherwise a new resource is created.
 
@@ -513,9 +514,20 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 
 ### Network
 
+**DownloadResource**: Downloads a URL (e.g. an image) and saves it as a game resource. A protected property can be sent as the Bearer token; it is never returned.
+
+- `TargetUrl`: The URL to download, e.g. an image. Private or local addresses (localhost, 192.168.x.x) work only when the server's owner allows the host in Application Settings → Local network access (or Security:ProxyAllowedPrivateHosts in appsettings).
+- `ParentId`: Parent entity ID used to scope the protected-property lookup. Accepts a literal Guid or a variable name holding a Guid. Defaults to the current game ID when not provided.
+- `BearerTokenPropertyName`: Name of a protected property whose value is sent as the Bearer token in the Authorization header (e.g. an API token). It is never returned.
+- `Key`: Key of the resource to save it as (e.g. 'myaddon_map.png'). An existing resource with this key is replaced.
+- `Name`: Display name for a new resource. Empty: the key.
+- `MimeType`: MIME type to save it with, e.g. image/png. Empty: the type the server sends.
+- `FolderId` (id): ID of the folder tree entry to place a new resource in. Created at root when not set.
+- `Output` (variable name): Variable for the result: success, statusCode, resourceId (the saved resource), mimeType (empty when resources don't know the type, e.g. SVG) and size in bytes. Nothing is saved when the download fails.
+
 **SendRequest**: Sends an HTTP request to an external URL. Protected properties can be injected into the body or used as a Bearer token. Protected values are never returned to the caller.
 
-- `TargetUrl`: The URL to send the request to.
+- `TargetUrl`: The URL to send the request to. Private or local addresses (localhost, 192.168.x.x) work only when the server's owner allows the host in Application Settings → Local network access (or Security:ProxyAllowedPrivateHosts in appsettings).
 - `HttpMethod`: HTTP method to use: GET, POST, PUT, PATCH, DELETE. Defaults to POST.
 - `ParentId`: Parent entity ID used to scope the protected-property lookup. Accepts a literal Guid or a variable name holding a Guid. Defaults to the current game ID when not provided.
 - `IncludeProtectedPropertyNames`: Comma-separated names of protected properties whose values will be injected into the request body.
@@ -532,6 +544,13 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 - `Output` (variable name): Variable name to store the boolean result. Leave empty to skip storing.
 - `StopIfDenied` (true/false): If true, stops the action execution when permission is denied.
 
+**SetPermission**: Shares a card, token or map with a player or everyone (Read), or lets a player move a token (Control); or takes it back. Only by a player who has that right; never Edit.
+
+- `EntityId`: The card, token or map, by id (e.g. %cardId%, %q:card[The Old Mill].id%). Templates, views, actions and the game can't be changed this way.
+- `Player`: Player to give it to (or take it from). Pick one, or type a name / ID / %variable%. Leave empty for everyone (Read only).
+- `Permission`: Read (see it: a card in the Cards panel, a map) or Control (move a token). Nothing else can be given by an action. Defaults to Read.
+- `Revoke` (true/false): Take it back instead. Never lowers a player who can edit it, the game's owner or the system.
+
 ## 6. Don't
 
 | Don't | Do instead |
@@ -542,5 +561,5 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 | Long chains of SetVariable / If for arithmetic or text | One RunScript step |
 | Roll with `Math.random()` in a script for game results | RollDice, or `game.roll(formula)` in a script |
 | Rely on GmOnly to protect a GM action | RequirePermission on `%gameId%`, Edit, `StopIfDenied: true` |
-| Put API keys or passwords in steps | Nothing in an action is secret: other GMs can open it |
+| Put API keys or passwords in steps | Nothing in an action is secret: other GMs can open it. Let a settings view save it with SetProperty `Protected: true` (after RequirePermission), and send it with SendRequest's `BearerTokenPropertyName` |
 | Use GetData, GetDetail, SetDetail, Calculate, FilterCollection, QueryData, QueryProperties, SendCommand, `%v:`, `%dto:` | They no longer exist; see Find, the property steps, RunScript and section 2 |

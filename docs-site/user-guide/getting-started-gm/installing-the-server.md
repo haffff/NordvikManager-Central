@@ -53,7 +53,7 @@ The login page asks for your Nordvik Manager account. It's the same account you'
 ### You're the server's admin
 
 The **first account to log in** to a new server becomes its **admin**. The console prints a box saying so. The admin's lobby has two extra buttons:
-- **Application Settings**: server-wide settings, such as [backups](#back-up-your-games).
+- **Application Settings**: server-wide settings, such as [backups](#back-up-your-games) and [server settings](#server-settings).
 - **User Management**: everyone who has joined a game on this server; see [Inviting players](./inviting-players.md#managing-players).
 
 The admin also sees every game on the server in the lobby (and can rename or delete any of them), and is the only one who can link files from the server's disk into a game's Materials. See [Permissions](../permissions.md#the-servers-admin).
@@ -65,6 +65,17 @@ If the wrong account became the admin, stop the server, delete the hidden `.loca
 ## Back up your games
 
 Everything lives in the server's folder. **Application Settings → Backups** makes a backup of the whole server (database and uploaded files) in one click. You can also schedule backups there, and download a backup to keep it somewhere else.
+
+## Server settings
+
+**Application Settings → Server** holds the settings for the whole server:
+- **Local network access:** hosts on this computer or your network that actions may call (*Send Request*, *Download Resource*), for example a Trilium at `localhost:8080`. Enter a host or `host:port`, without `http://` or a path; without a port, any port is allowed. Everything else on your network stays blocked.
+- **Card sandbox:** the `https` hosts addon cards may load styles, fonts and images from. See [Sandbox and security](/addon-guide/cards/sandbox#which-hosts-a-card-can-reach).
+- **Addon registry:** where addons are listed and downloaded from, and which ones are offered when a game is created.
+
+Changes apply at once. They're saved in `data/server-settings.json`, which stays when you update (you keep the `data` folder) but isn't part of backups.
+
+Entries with a lock come from `appsettings.json` and can only be changed there. To stop these settings being changed from the app, set `"AllowRuntimeSettings": false` under `"Security"` in `appsettings.json`.
 
 ## Updating
 

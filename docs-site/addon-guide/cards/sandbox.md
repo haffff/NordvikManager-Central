@@ -27,7 +27,8 @@ The frame is sandboxed with scripts allowed and almost nothing else:
 The page can load styles, fonts and images, and `fetch` data, only from:
 
 - the GM's server itself, and
-- the hosts the GM allows: `Security:SandboxAllowedOrigins` in the GM server's `appsettings.json`.
+- the hosts the GM's server allows: **Application Settings → Server → Card sandbox**, or
+  `Security:SandboxAllowedOrigins` in its `appsettings.json`.
 
 By default those are:
 
@@ -49,9 +50,11 @@ Scripts are stricter. A card can't load a script from any other host, even an al
 scripts as resources** (`additionalResources`), bundled, not from a CDN.
 
 :::note[For GMs]
-Change the list in `appsettings.json` and restart the server. Each entry must be an `https://` origin, such as
-`https://cdn.example.com` or `https://*.example.com`; anything else is ignored. Players pick up the change
-when they rejoin.
+The server's admin changes the list in **Application Settings → Server → Card sandbox**; it applies at once.
+Each entry must be an `https://` origin, such as `https://cdn.example.com` or `https://*.example.com`.
+Players pick up the change when they reload the game.
+
+The defaults come from `appsettings.json` (they show with a lock in the app and can only be changed there):
 
 ```json
 "Security": {

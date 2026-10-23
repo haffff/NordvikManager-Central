@@ -101,6 +101,11 @@ Who can open a card, change it or create cards from a template is decided on the
 everything else in the game. A new card is private: its creator, its `owner` and the GM can see and edit it.
 The Card API can't get around that: a player's card can only read what that player can read.
 
+**A card's code is the GM's.** A card's page runs with the rights of whoever opens it, the GM too. So only
+GMs (and co-GMs) can change a card's `mainResource`, `additionalResources`, `key` or hidden flag. A player
+who owns a card can still rename it and change its properties, and **Update from template** works for
+templates they can see. A player can't make someone else's browser run their code.
+
 ## Next
 
 - [Building a card](./building-a-card.md): the page itself, plain HTML or React.
