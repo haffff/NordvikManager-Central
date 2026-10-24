@@ -227,7 +227,7 @@ the map and the tokens found in it always match:
 
 | Step | What it does | Arguments |
 |---|---|---|
-| **CreateCard** | Creates a card from a template and stores its id | `Name`, `TemplateId`, `Owner`, `IsTemplate`, `Output` |
+| **CreateCard** | Creates a card from a template and stores its id. `Folder` (e.g. `Lore/Trilium`) puts it in that folder of the Cards panel (Templates, for a template), made if missing | `Name`, `TemplateId`, `Owner`, `IsTemplate`, `Folder`, `Output` |
 | **DeleteCard** | Permanently deletes a card and its properties | `CardId` |
 | **GetConnectedPlayers** | Stores the list of connected players | `Value` (variable name) |
 | **SetResource** | Creates or overwrites a text resource by key | `Key`, `Name`, `Content`, `MimeType`, `FolderId`, `OutputVariable` |
