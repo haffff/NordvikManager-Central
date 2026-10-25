@@ -50,6 +50,8 @@ Actions are edited in *Addons → Actions*, and addons ship them as JSON files i
 
 - `prefix` + `name` identify the action. Call it as `dnd5e/roll_attribute`.
 - `hook` is the number of the hook that triggers it, or `0` for none (see the [hook table](./hooks.md)).
+- `hookFilter` says which occurrences of the hook run it; a Chat Command action needs it for its commands, e.g.
+  `"poll, vote"` (see [Hook filter](./hooks.md#hook-filter)). Other hooks take none.
 - `isEnabled` only matters for hooks. Actions called by name run either way.
 - `content` holds the steps, run top to bottom. `Type` picks the step and `Data` holds its arguments.
   Every step is listed in the [step reference](./steps.md). *If* and *For Each* hold steps of their own

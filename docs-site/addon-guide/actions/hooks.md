@@ -6,7 +6,8 @@ title: Hooks
 # Hooks
 
 A hook runs every **enabled** action that uses it, whenever something happens in the game. Set the hook in
-the action editor, or as the `hook` number in an addon's action JSON.
+the action editor, or as the `hook` number in an addon's action JSON. Some hooks also take a
+[hook filter](#hook-filter) that says which occurrences run the action.
 
 Most hooks come from a change someone made (a player, or another action). They give the action:
 
@@ -37,11 +38,24 @@ Read fields inside `Data` with a path, e.g. `%Data.id%` or `%Data.name%`.
 | 16 | Map Changed | A battle map view switches to another map | `Data` (`id` = battle map view, `mapId`), `Player` |
 | 17 | Game Updated | The GM saves the game settings | `Data` (e.g. `name`), `Player` |
 | 18 | Chat Message | Any chat message is posted | `Data`, `Player` |
-| 19 | Chat Command | A chat command that isn't built in is typed | `ChatCommand`, `ChatArgs`, `ChatText`, `Player` |
+| 19 | Chat Command | A chat command the action lists in its hook filter is typed | `ChatCommand`, `ChatArgs`, `ChatText`, `Player` |
 | 20 | Card Added | A card is created | `Data`, `Player` |
 | 21 | Card Updated | A card changes | `Data`, `Player` |
 | 22 | Card Deleted | A card is deleted | `Data`, `Player` |
 | 23 | Turn Changed | The turn passes to another entry of a map's turn order, or the round changes | `Data` (`mapId`, `round`, `currentEntryId`, `elementId`), `Player` |
+
+## Hook filter
+
+The `hookFilter` of an action (the **Hook filter** field in the action editor) says which occurrences of
+its hook run it. What it holds depends on the hook:
+
+| Hook | Hook filter |
+|---|---|
+| 19 Chat Command | **Required.** The commands the action handles, without `/`, separated by commas or spaces, e.g. `poll, vote`. Each name is 1 to 32 characters: letters a-z, digits, `_` or `-` (a leading `/` is dropped, case doesn't matter). At most 20 names, and none of the built-in commands (`r`, `roll`, `gr`, `w`, `gm`, `help`). |
+| Every other hook | None yet: leave it out. |
+
+The server checks it when an action is saved or an addon is installed, and refuses a filter that doesn't
+fit its hook with a message saying why.
 
 ## Element Moved
 
@@ -84,23 +98,22 @@ Players can type their own commands in chat, e.g. `/cast fireball 3`:
 | `ChatArgs` | `fireball 3` (everything after the first space) |
 | `ChatText` | `/cast fireball 3` |
 
-- The built-in commands `/r`, `/roll` and `/help` keep working and never reach this hook.
-- Every Chat Command action gets every custom command, so start with an *If* on `ChatCommand`, e.g.
-  `'%ChatCommand%' = 'cast'`.
-- While at least one enabled action uses this hook, an unknown command no longer answers "Wrong command".
-  The typed text is shown only to its sender and isn't saved in the chat history.
+- The action's [hook filter](#hook-filter) lists the commands it handles, e.g. `cast`. Only a listed
+  command runs it, and a command no enabled action lists still gets "Wrong command".
+- A command an action takes is shown only to its sender and isn't saved in the chat history.
+- The built-in commands (`/r`, `/roll`, `/gr`, `/w`, `/gm`, `/help`) keep working and never reach this hook.
+- `ChatCommand` is the command as typed (`Cast` stays `Cast`); an *If* compares text ignoring case anyway.
 - Reply privately with *SendChat* and `Player` set to `%playerId%`.
-
-Put the work for each command in the *If*'s `Then`:
 
 ```json
 {
-  "name": "on_command", "prefix": "myaddon", "hook": 19, "isEnabled": true,
+  "name": "cast", "prefix": "myaddon", "hook": 19, "hookFilter": "cast", "isEnabled": true,
   "content": [
-    { "Type": "If", "Data": { "Condition": "'%ChatCommand%' = 'cast'", "Then": [
-        { "Type": "SendChat", "Data": { "Template": "Text", "Title": "Casting",
-            "Message": "%playerName% casts %ChatArgs%", "Player": "%playerId%" } }
-    ] } }
+    { "Type": "SendChat", "Data": { "Template": "Text", "Title": "Casting",
+        "Message": "%playerName% casts %ChatArgs%", "Player": "%playerId%" } }
   ]
 }
 ```
+
+One action can handle several commands (`"hookFilter": "poll, vote"`): then an *If* on `ChatCommand`
+picks the work for each, e.g. `'%ChatCommand%' = 'vote'`.
