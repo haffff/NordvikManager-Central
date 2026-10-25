@@ -27,6 +27,7 @@ Building a whole addon (cards, themes, several actions shipped together): https:
 
 - `name`: short, e.g. `roll_check`. `prefix` groups actions in the editor; other actions call this one as `prefix/name` (or just `name` without a prefix). Keep one prefix for everything you write for the same person, and not the key of an addon they have installed (e.g. not `dnd5e`): ask, or use something like `my`.
 - `hook`: when it runs by itself (section 4). `0`: only when called by name, from a menu item, a toolbar button, a map tool, a card or another action.
+- `hookFilter`: which occurrences of the hook run it; its meaning depends on the hook (section 4). Hook 19 (Chat Command) **needs** it: the commands the action handles, e.g. `"cast"` or `"poll, vote"`. Other hooks take none: leave it out.
 - `content`: the steps, run top to bottom. Each step is `{ "Type": "<step>", "Data": { ... } }` with the exact casing of section 5. A step may have `"Label"` in `Data`: a short name the editor shows.
 - Leave out `id`, `isEnabled` and `gmPermission`. The editor fills them in.
 - Several actions (e.g. a setup action that adds a menu item, and the action the item runs): one JSON block each. The user can paste the whole reply at once: every block becomes an action.
@@ -59,28 +60,28 @@ no"`, shown as buttons). RequestTargets, RequestPoint and RequestUserInput stop 
 - **The GM's say:** RequestUserInput with `UserID: "%gmId%"`, then `If` on `'%answer%' = 'yes'`.
 - **Menus and tools:** AddMenuItem / AddToolbarButton / AddMapTool in an action with hook 5 (Player Load) and `OnlyTriggeringPlayer: true`: each player gets them every time they load the game. They run another action by `prefix/name`.
 - **GM-only actions:** `GmOnly` only hides a menu entry. Start the action with **RequirePermission** (`EntityId: "%gameId%"`, `Permission: "Edit"`, `StopIfDenied: true`): only GMs have Edit on the game.
-- **Chat commands:** hook 19, then `If` on `'%ChatCommand%' = 'cast'`; `ChatArgs` holds the rest of the line. Every Chat Command action gets every custom command.
+- **Chat commands:** hook 19 with `"hookFilter": "cast"` (the commands, without `/`); `ChatArgs` holds the rest of the line. Only the listed commands run the action, and any other unknown command still gets "Wrong command". An action listing several (`"poll, vote"`) picks the work with `If` on `'%ChatCommand%' = 'vote'`.
 - **Debugging:** errors stop the action and appear in the game's event log with the step. Add **Log** steps to see values.
 
 ## 4. Hooks
 
 The `hook` number. A hooked action runs every time it happens, only while switched on.
 
-| # | Hook | Extra variables |
-|---|---|---|
-| 0 | None: only called by name | the caller's arguments |
-| 3 | Player Join | `Player` |
-| 4 | Player Leave | `Data`, `Player` |
-| 5 | Player Load (a player's board finished loading) | `Player` |
-| 6 / 7 / 8 / 9 | Element Added / Updated / Moved / Removed | `Data` (the element), `Player` |
-| 10 / 11 / 12 | Property Added / Updated / Removed | `Data` (the property), `Player` |
-| 13 / 14 / 15 | Map Added / Updated / Removed | `Data`, `Player` |
-| 16 | Map Changed (a battle map view switched map) | `Data` (`id`, `mapId`), `Player` |
-| 17 | Game Updated | `Data`, `Player` |
-| 18 | Chat Message | `Data`, `Player` |
-| 19 | Chat Command (`/something` that isn't built in) | `ChatCommand`, `ChatArgs`, `ChatText`, `Player` |
-| 20 / 21 / 22 | Card Added / Updated / Deleted | `Data`, `Player` |
-| 23 | Turn Changed | `Data` (`mapId`, `round`, `currentEntryId`, `elementId`: the token whose turn it is) |
+| # | Hook | Extra variables | Hook filter |
+|---|---|---|---|
+| 0 | None: only called by name | the caller's arguments | |
+| 3 | Player Join | `Player` | |
+| 4 | Player Leave | `Data`, `Player` | |
+| 5 | Player Load (a player's board finished loading) | `Player` | |
+| 6 / 7 / 8 / 9 | Element Added / Updated / Moved / Removed | `Data` (the element), `Player` | |
+| 10 / 11 / 12 | Property Added / Updated / Removed | `Data` (the property), `Player` | |
+| 13 / 14 / 15 | Map Added / Updated / Removed | `Data`, `Player` | |
+| 16 | Map Changed (a battle map view switched map) | `Data` (`id`, `mapId`), `Player` | |
+| 17 | Game Updated | `Data`, `Player` | |
+| 18 | Chat Message | `Data`, `Player` | |
+| 19 | Chat Command (a `/command` the action lists) | `ChatCommand`, `ChatArgs`, `ChatText`, `Player` | **required**: the commands, e.g. `poll, vote` |
+| 20 / 21 / 22 | Card Added / Updated / Deleted | `Data`, `Player` | |
+| 23 | Turn Changed | `Data` (`mapId`, `round`, `currentEntryId`, `elementId`: the token whose turn it is) | |
 
 Hooks 1 (Install) and 2 (Uninstall) are for addons only. Read inside `Data` with a path: `%Data.id%`. Docs: https://nordvikmanager.pl/addon-guide/actions/hooks
 
@@ -561,6 +562,7 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 | Guess property names (`hp`, `HP`, `hit_points`) | Ask the user what their sheet calls them |
 | Long chains of SetVariable / If for arithmetic or text | One RunScript step |
 | Roll with `Math.random()` in a script for game results | RollDice, or `game.roll(formula)` in a script |
+| A Chat Command action (hook 19) without `hookFilter`, or one `If` chain for every command | `"hookFilter": "cast"`: only the listed commands reach it |
 | Rely on GmOnly to protect a GM action | RequirePermission on `%gameId%`, Edit, `StopIfDenied: true` |
 | Put API keys or passwords in steps | Nothing in an action is secret: other GMs can open it. Let a settings view save it with SetProperty `Protected: true` (after RequirePermission), and send it with SendRequest's `BearerTokenPropertyName` |
 | Use GetData, GetDetail, SetDetail, Calculate, FilterCollection, QueryData, QueryProperties, SendCommand, `%v:`, `%dto:` | They no longer exist; see Find, the property steps, RunScript and section 2 |
