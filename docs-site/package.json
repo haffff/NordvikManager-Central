@@ -19,6 +19,8 @@
     "@docusaurus/preset-classic": "3.10.2",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
+    "dompurify": "^3.4.17",
+    "markdown-it": "^14.3.3",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

@@ -139,6 +139,7 @@ const config = {
             position: 'left',
             label: 'Addon Guide',
           },
+          {to: '/addons', label: 'Addons', position: 'left'},
           {href: 'https://nordvikmanager.pl', label: 'Main site', position: 'right'},
           {
             href: 'https://github.com/haffff/NordvikManager',
@@ -157,6 +158,7 @@ const config = {
               {label: 'User Guide', to: '/user-guide'},
               {label: 'Documentation', to: '/documentation'},
               {label: 'Addon Guide', to: '/addon-guide'},
+              {label: 'Addons', to: '/addons'},
             ],
           },
           {
