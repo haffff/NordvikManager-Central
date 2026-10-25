@@ -228,6 +228,7 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 - `Owner`: Player to grant Edit permission on the new card. Pick one, or type an ID / %variable%. Leave empty to skip.
 - `Output` (variable name): Name of the variable where the new card's id will be stored.
 - `IsTemplate` (true/false): If true, the new card is created as a reusable Template (IsTemplate=true) instead of a regular Instance — e.g. for an addon that imports/generates a new card blueprint at runtime. Defaults to false (a normal instance).
+- `Folder`: Folder of the Cards panel (or Templates, for a template) to put the new card in, e.g. "Lore/Trilium". Folders are found by name, ignoring case, and made where missing. Leave empty for the top level.
 
 **DeleteCard**: Permanently deletes a card and its properties.
 
