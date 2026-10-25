@@ -8,7 +8,7 @@ const express = require('express');
 // AGENTS.md, the guide for AI assistants building addons). Only they
 // are served, so nothing else in the folder (e.g. the FTP deploy's state file, or
 // whatever else the hosting keeps there) is reachable.
-const DOCS_SECTIONS = ['/quickstart', '/user-guide', '/documentation', '/addon-guide', '/ai', '/assets', '/img'];
+const DOCS_SECTIONS = ['/quickstart', '/user-guide', '/documentation', '/addon-guide', '/addons', '/ai', '/assets', '/img'];
 
 /**
  * Serves the built docs site from `docsDir` (DOCS_DIR). Unknown pages under a docs

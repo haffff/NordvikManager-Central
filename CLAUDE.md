@@ -59,6 +59,8 @@ After connecting, a client must emit `authenticate { token, sessionId, role }` (
 
 **Protocol version.** The GM backend sends `protocol` (integer) in its `authenticate`. `services/protocol.js` validates it; below `MIN_GM_PROTOCOL` the GM gets an `auth-error` telling it to update. Players receive it as `gmProtocol` in `session-info` and switch to the matching frozen player build at `/client/p<N>/` before connecting. The protocol number only goes up on breaking player↔backend changes; bump it in Backend (`ProtocolVersion.Current`) and Frontend (`src/protocol.json`) together.
 
+**Addons page.** `GET /api/addons` (public) returns the addon registry (`ADDON_REGISTRY_URL`, default the main addons.json on GitHub) as `{ categories, addons }`, and `GET /api/addons/:key/readme` an addon's markdown readme, read from the URL in its registry entry (raw.githubusercontent.com `.md` only, ≤ 512 KB). Both are cached for 10 minutes (`routes/addons.js`). The docs site's `/addons` page (`docs-site/src/pages/addons.js`) shows them.
+
 **ICE servers.** `GET /api/ice-servers` (authenticated) returns the `RTCIceServer[]` both peers use: STUN from `STUN_SERVERS`, plus TURN with short-lived coturn `use-auth-secret` credentials when `TURN_URLS` + `TURN_SECRET` are set (`services/iceServers.js`). The unauthenticated `/api/meta` never carries TURN details. Sample coturn config is in `coturn/`.
 
 In-memory state lives in `services/signalingService.js` (a plain `Map`). It is lost on restart — clients are expected to reconnect and re-authenticate.

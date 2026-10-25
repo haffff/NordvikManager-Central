@@ -23,6 +23,7 @@ function write(rel, content) {
 before(() => {
   docsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docs-'));
   write('quickstart/index.html', 'quickstart page');
+  write('addons/index.html', 'addons page');
   write('user-guide/layers/index.html', 'layers page');
   write('assets/js/main.js', 'js');
   write('img/favicon.ico', 'ico');
@@ -89,4 +90,8 @@ test('does nothing when the docs folder does not exist', async () => {
   } finally {
     s.close();
   }
+});
+
+test('serves the public addons page at /addons', async () => {
+  assert.equal(await (await fetch(`${base}/addons`)).text(), 'addons page');
 });

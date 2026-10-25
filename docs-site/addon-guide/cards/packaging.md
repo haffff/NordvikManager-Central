@@ -98,9 +98,23 @@ The registry is [NordvikManager-Addons](https://github.com/haffff/NordvikManager
 lists every addon GMs can install from the app.
 
 - **First release:** open a pull request that adds your addon's entry (key, name, categories, version,
-  author, `repositoryUrl` and `releaseUrl`).
+  author, `repositoryUrl`, `releaseUrl` and, if you like, `readme`).
 - **Later releases:** nothing to do. A daily job finds new releases and updates the entries.
+
+Listed addons show on the public [addons page](/addons) and in every game's **Addons → Browse**.
 
 `releaseUrl` must be the release asset, `https://github.com/<you>/<repo>/releases/download/<tag>/<file>.zip`.
 GitHub's "Source code" zip doesn't work: it contains the whole repository, not the packed addon. The
 registry's checks refuse it.
+
+### A readme
+
+`readme` is optional: a markdown file shown with your addon on the [addons page](/addons) and in the
+game's Browse and Installed tabs. The short `description` stays the one line in lists; the readme is the
+long version: what it adds, how to use it, screenshots.
+
+- Give its raw URL on `raw.githubusercontent.com`, pinned to the release's tag, so it describes the version
+  people install: `https://raw.githubusercontent.com/<you>/<repo>/<tag>/README.md`.
+- When the daily job moves your entry to a new release, it moves a readme on the old tag to the new tag.
+- Relative links and images in it work as on GitHub: they're read from the readme's folder at that tag.
+- Raw HTML in it is shown as text, and it can be at most 512 KB.

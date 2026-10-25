@@ -56,6 +56,10 @@ const config = Object.freeze({
   // Built docs site (docs-site/build) served at /quickstart, /user-guide, /documentation and
   // /addon-guide. On the hosting, point it at the folder the docs deploy uploads to (DOCS_FTP_DIR).
   docsDir: process.env.DOCS_DIR || path.join(__dirname, '..', 'docs-site', 'build'),
+
+  // The addon registry (addons.json) the public addons page (/addons, via /api/addons) shows.
+  addonRegistryUrl: process.env.ADDON_REGISTRY_URL
+    || 'https://raw.githubusercontent.com/haffff/NordvikManager-Addons/main/addons.json',
 });
 
 module.exports = config;

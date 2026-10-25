@@ -139,9 +139,38 @@ const spec = {
     { name: 'Invites', description: 'Invite code management (admin only)' },
     { name: 'Game Sessions', description: 'Game session management' },
     { name: 'WebRTC', description: 'Active signaling session info (Socket.io handles actual signaling)' },
+    { name: 'Addons', description: 'The public addon registry and readmes (for the /addons page)' },
   ],
 
   paths: {
+    // ── ADDONS ─────────────────────────────────────────────────────────
+    '/api/addons': {
+      get: {
+        tags: ['Addons'],
+        summary: 'The addon registry: categories and addons',
+        description: "Fetched from ADDON_REGISTRY_URL and cached for 10 minutes. 502 when it can't be read and nothing is cached.",
+        security: [],
+        responses: {
+          200: { description: '{ categories: [{ key, name, description }], addons: [{ key, name, description, version, author, license, repositoryUrl, releaseUrl, readme, categories, dependencies }] }' },
+          502: { description: "The registry couldn't be read" },
+        },
+      },
+    },
+    '/api/addons/{key}/readme': {
+      get: {
+        tags: ['Addons'],
+        summary: "An addon's markdown readme",
+        description: 'Read from the URL in its registry entry (a markdown file on raw.githubusercontent.com), at most 512 KB, cached for 10 minutes.',
+        security: [],
+        parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: '{ key, url, markdown }' },
+          404: { description: 'No such addon, or it has no readme' },
+          502: { description: "The readme couldn't be read" },
+        },
+      },
+    },
+
     // ── AUTH ───────────────────────────────────────────────────────────
     '/api/user/login': {
       post: {

@@ -19,12 +19,14 @@ The menu has three groups: **Addons** (installing), **Views** (templates and vie
 
 ![Addons Manage, Browse tab](/img/user-guide/addons-manage.png)
 
-- **Browse:** addons from the addon registry. Search, read about one, and install it with a click. Installed ones are marked, and **Update available** shows when there's a newer version.
-- **Installed:** the game's addons, with their author, licence, website and dependencies. Per addon:
+- **Browse:** addons from the addon registry. Search (names, authors, descriptions), filter by category, sort, and click one to see its details and readme beside the list. Install it with a click; installed ones are marked, and **Update available** shows when there's a newer version.
+- **Installed:** the game's addons, with their author, licence, website, dependencies and readme. Per addon:
   - **Enabled** switches it off without removing it.
   - **Update** installs the newest version.
   - **Uninstall** removes it.
 - **Install:** **Install from file** (drop the addon's `.zip`) or **Install from URL**.
+
+Everyone can look through the same addons, with their readmes, on the public [addons page](/addons).
 
 Installing can take a while for big addons; a progress message shows until it's done. Addons a new addon depends on are installed with it.
 
