@@ -6,6 +6,12 @@
 
 import {themes as prismThemes} from 'prism-react-renderer';
 
+// Code blocks on the night-sky background (see src/css/custom.css)
+const nightSkyCode = {
+  ...prismThemes.nightOwl,
+  plain: {...prismThemes.nightOwl.plain, backgroundColor: '#151E33'},
+};
+
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 /** @type {import('@docusaurus/types').Config} */
@@ -13,6 +19,14 @@ const config = {
   title: 'Nordvik Manager Docs',
   tagline: 'Documentation for Nordvik Manager',
   favicon: 'img/favicon.ico',
+
+  // The landing page's fonts (Cinzel headings, Inter body)
+  stylesheets: [
+    'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap',
+  ],
+
+  // Sets dark/light before paint: Docusaurus' own inline script is blocked by the site's CSP
+  scripts: [{src: '/assets/theme-init.js'}],
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -105,11 +119,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      // Dark like the landing page; the light (parchment) mode stays a click away
       colorMode: {
-        respectPrefersColorScheme: true,
+        defaultMode: 'dark',
+        respectPrefersColorScheme: false,
       },
       navbar: {
-        title: 'Nordvik Manager Docs',
+        title: 'NordvikManager',
+        logo: {alt: 'NordvikManager', src: 'img/moon.svg', href: 'https://nordvikmanager.pl', target: '_self'},
         items: [
           {
             type: 'docSidebar',
@@ -140,16 +157,16 @@ const config = {
             label: 'Addon Guide',
           },
           {to: '/addons', label: 'Addons', position: 'left'},
-          {href: 'https://nordvikmanager.pl', label: 'Main site', position: 'right'},
+          {href: 'https://nordvikmanager.pl', label: 'Main site', position: 'right', className: 'nv-home', target: '_self'},
           {
             href: 'https://github.com/haffff/NordvikManager',
             label: 'GitHub',
             position: 'right',
           },
+          {href: 'https://nordvikmanager.pl/client', label: 'Join a game', position: 'right', className: 'nv-join', target: '_self'},
         ],
       },
       footer: {
-        style: 'dark',
         links: [
           {
             title: 'Docs',
@@ -169,11 +186,11 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Nordvik Manager.`,
+        copyright: `Copyright © ${new Date().getFullYear()} NordvikManager. Free software under the GNU AGPL v3.`,
       },
       prism: {
         theme: prismThemes.github,
-        darkTheme: prismThemes.dracula,
+        darkTheme: nightSkyCode,
       },
     }),
 };
