@@ -23,11 +23,11 @@ The zip contains everything the server needs. You don't need to install .NET or 
 
 ## Start it
 
-1. Unzip it into a folder of its own, somewhere you'll keep it, for example `Documents\NordvikManager`. Your games are saved in this folder (`data.db` and the `data` folder), so don't unzip it into a temporary place.
-2. Run **`DNDOnePlaceManager.exe`** (on Linux: `./DNDOnePlaceManager`).
-   - A console window opens and shows the server's log.
-   - Keep it open while you play. Closing it stops the server.
-3. Open **[http://localhost:8213](http://localhost:8213)** in your browser.
+1. Unzip it into a folder of its own, somewhere you'll keep it, for example `Documents\NordvikManager`. Your games are saved in this folder (in `data`, created on the first start), so don't unzip it into a temporary place or into Program Files.
+2. Run **`NordvikManager.exe`** (on Linux: `./NordvikManager`).
+   - A console window opens. Once the server is ready, it shows the address to open, whether it can reach the central server, and where your data is.
+   - Keep it open while you play. To stop the server, close the window or press **Ctrl+C**.
+3. Your browser opens **[http://localhost:8213](http://localhost:8213)** by itself. If it doesn't, open that address yourself.
 
 {/* SCREENSHOT: img/server-console.png — The server console window after starting. */}
 
@@ -35,6 +35,10 @@ The zip contains everything the server needs. You don't need to install .NET or 
 Windows may warn that the program is from an unknown publisher. Choose **More info → Run anyway**.
 
 The first time players connect, Windows may also ask whether to allow the server through the firewall. Allow it on private networks.
+:::
+
+:::note[If the server doesn't start]
+The console window says why in plain words (for example, that the server is already running in another window) and waits for **Enter** before closing. Logs are in `data/logs`: attach the newest file when you ask for help.
 :::
 
 :::note[Open it on the same computer]
@@ -60,7 +64,7 @@ The admin also sees every game on the server in the lobby (and can rename or del
 
 {/* SCREENSHOT: img/lobby-empty.png — The lobby of a fresh server: "Hello, <name>", Application Settings, User Management, Logout, and "Create new game". */}
 
-If the wrong account became the admin, stop the server, delete the hidden `.localadmin` file next to `DNDOnePlaceManager.exe`, start the server again and log in with the right account first.
+If the wrong account became the admin, stop the server, delete the hidden `.localadmin` file next to `NordvikManager.exe`, start the server again and log in with the right account first.
 
 ## Back up your games
 
@@ -82,7 +86,7 @@ Entries with a lock come from `appsettings.json` and can only be changed there. 
 When a new version is out, the admin sees a notice in the lobby. To update:
 1. Make a backup.
 2. Stop the server.
-3. Unzip the new release over the old folder, keeping `data.db`, the `data` folder and `.localadmin`. If you edited `appsettings.json`, keep a copy of it too: the release ships its own.
-4. Start the server again. It upgrades the database by itself.
+3. Unzip the new release into a new folder, then copy the `data` folder and the `.localadmin` file from the old folder into it. If you edited `appsettings.json`, copy it too: the release ships its own.
+4. Start the new `NordvikManager.exe`. It upgrades the database by itself. Once everything works, you can delete the old folder.
 
 Next: [Create a game](./creating-a-game.md).
