@@ -28,10 +28,12 @@ Sounds are audio files from the game's [materials](./materials.md). Upload them 
 
 ## Soundboard
 
-**View → Soundboard** is for one-off sound effects: a door creaking, a dragon roaring.
+**View → Soundboard** is for sound effects: a door creaking, a dragon roaring, rain.
 
 - **New Soundboard** groups sounds, with a **Name**, **Description** and its **Sounds**.
-- Click a sound's button to play it once for everyone; **Stop** cuts it off.
+- Click a sound to play it for everyone. While it plays its tile lights up with a progress bar; click it again to stop it.
+- The loop button in a tile's corner makes that sound repeat until you stop it (rain, a crackling fire). It is saved on the soundboard and applies from the sound's next play.
+- **Stop all** silences every sound playing.
 - Each soundboard has its own volume.
 
 ## How loud things are
