@@ -10,8 +10,8 @@ From nothing to a running game in a few minutes. For the details, see the [User 
 ## Game Master
 
 1. **Download** the latest `NordvikManager_<version>_win-x64.zip` from [GitHub Releases](https://github.com/haffff/NordvikManager/releases) and unzip it into a folder you'll keep.
-2. **Start** `DNDOnePlaceManager.exe`. Keep the console window open while you play.
-3. **Open** [http://localhost:8213](http://localhost:8213) and **Register** (or log in with your Nordvik Manager account).
+2. **Start** `NordvikManager.exe`. Keep the console window open while you play.
+3. Your browser opens [http://localhost:8213](http://localhost:8213) (open it yourself if it doesn't). **Register**, or log in with your Nordvik Manager account.
 4. **Create new game**: enter a **Title**, leave the rest as it is, and choose **Create game**.
 5. **Invite:** on the game's card, choose the **gear** button, copy the **Player Invite Link** and send it to your players.
 6. **Join** the game. Players can connect while you're in it.
