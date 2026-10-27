@@ -22,7 +22,7 @@ A **card** is a window with content of its own: a character sheet, a monster's s
 ### Folders (GM)
 
 :::note[GM only]
-The GM (anyone with Edit on the game) can organise the list into folders: **Add Folder**, then **Edit Folder** (name, colour, icon), **Delete Folder** and **Delete All**. Drag cards and folders to reorder them or move them into a folder.
+The GM (anyone with Edit on the game) can organise the list into folders: **Add Folder**, then **Edit Folder** (name, colour, icon), **Delete Folder** and **Delete All**. Drag cards and folders by their grip to reorder them or move them into a folder. To move several at once, select them with **Ctrl**-click (**⌘** on a Mac) or **Shift**-click for a run of rows, then drag any one of them.
 :::
 
 ## Card settings
