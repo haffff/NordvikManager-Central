@@ -12,6 +12,7 @@ const LIST = 'https://api.github.com/repos/o/r/releases?per_page=20';
 const asset = (name, size = 100) => ({
   name,
   size,
+  digest: 'sha256:ab12',
   browser_download_url: `https://github.com/o/r/releases/download/v1/${name}`,
   somethingElse: 'not passed on',
 });
@@ -79,6 +80,12 @@ test('pickRelease falls back to the newest pre-release when there is no stable o
   assert.equal(pickRelease([]), null);
 });
 
+test('pickRelease on the dev channel takes the newest release, pre-release or not', () => {
+  const list = [release('v3', { draft: true }), release('v2-dev', { prerelease: true }), release('v1')];
+  assert.equal(pickRelease(list, 'dev').tag_name, 'v2-dev');
+  assert.equal(pickRelease([release('v1')], 'dev').tag_name, 'v1');
+});
+
 test('GET /latest maps the release to the page format, server zips only', async () => {
   const res = await fetch(await start());
 
@@ -95,9 +102,32 @@ test('GET /latest maps the release to the page format, server zips only', async 
       platform: 'windows',
       arch: 'x64',
       size: 151,
+      sha256: 'ab12',
       url: 'https://github.com/o/r/releases/download/v1/NordvikManager_0.0.1-dev.abc_win-x64.zip',
     }],
   });
+});
+
+// The GM server's updater checks the downloaded zip against sha256.
+test('GET /latest leaves sha256 null when GitHub has no digest for the file', async () => {
+  answer.body[0].assets = [{ ...asset('NordvikManager_1_win-x64.zip'), digest: undefined }];
+  const res = await fetch(await start());
+  assert.equal((await res.json()).assets[0].sha256, null);
+});
+
+test('GET /latest?channel=dev offers the newest pre-release over an older stable one', async () => {
+  answer = { body: [release('v2-dev', { prerelease: true }), release('v1')] };
+  const url = await start();
+
+  assert.equal((await (await fetch(url)).json()).version, '1');
+  assert.equal((await (await fetch(`${url}?channel=dev`)).json()).version, '2-dev');
+  assert.equal(requests.length, 1, 'both channels come from one cached GitHub answer');
+});
+
+test('GET /latest treats an unknown channel as stable', async () => {
+  answer = { body: [release('v2-dev', { prerelease: true }), release('v1')] };
+  const res = await fetch(`${await start()}?channel=nightly`);
+  assert.equal((await res.json()).version, '1');
 });
 
 test('GET /latest asks GitHub for the configured repo, with the token when set', async () => {
