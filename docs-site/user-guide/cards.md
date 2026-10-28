@@ -25,6 +25,17 @@ A **card** is a window with content of its own: a character sheet, a monster's s
 The GM (anyone with Edit on the game) can organise the list into folders: **Add Folder**, then **Edit Folder** (name, colour, icon), **Delete Folder** and **Delete All**. Drag cards and folders by their grip to reorder them or move them into a folder. To move several at once, select them with **Ctrl**-click (**⌘** on a Mac) or **Shift**-click for a run of rows, then drag any one of them.
 :::
 
+### Copying, export and import (GM)
+
+:::note[GM only]
+Each card has **Duplicate** and **Export JSON** (in the toolbar and its right-click menu); the toolbar has **Import JSON**. The Maps, Templates, Custom Views, Playlists and Soundboard lists have them too.
+:::
+
+- **Duplicate** puts a copy, named *… (copy)*, right after the original. With several selected (Ctrl/Shift-click), the toolbar's **Duplicate** copies each of them.
+- **Export JSON** downloads it as a file. Tick **Include files** to put the pictures, sounds and card pages it uses in too: the file gets bigger, but works in a game that doesn't have them.
+- **Import JSON** takes such a file (pick it or paste its text) into the selected folder, in this game or another one. The files it uses are found in the game (an addon's files by their key, when the same addon is installed) or taken from the export. Whatever is still missing is left out and named in a message: a token shows the empty token picture, another image the empty image, and a card without its page opens blank.
+- Who may see or use it comes along for players who are in that game. A card keeps its owner if they play there too.
+
 ## Card settings
 
 **Edit** on a selected card opens its settings.

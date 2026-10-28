@@ -36,6 +36,8 @@ Sounds are audio files from the game's [materials](./materials.md). Upload them 
 - **Stop all** silences every sound playing.
 - Each soundboard has its own volume.
 
+Playlists and soundboards can be copied with **Duplicate**, or moved to another game with **Export JSON** / **Import JSON** (see [Cards](./cards.md#copying-export-and-import-gm)). A copy plays the same files; they aren't copied.
+
 ## How loud things are
 
 A sound's loudness is set in three places, multiplied together:

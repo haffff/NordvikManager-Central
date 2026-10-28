@@ -234,6 +234,8 @@ the map and the tokens found in it always match:
 | **ReadResource** | Reads a text resource | `Key` or `ResourceId`, `OutputVariable` |
 | **UpdateResource** | Overwrites a text resource (creates it if missing) | `Key` or `ResourceId`, `Content`, `MimeType` |
 | **DeleteResource** | Deletes a resource | `Key` or `ResourceId` |
+| **Duplicate** | Copies a map (with everything on it), card, template, custom view, playlist or soundboard and stores the copy's id. The copy goes right after the original, or into `Folder` | `Kind`, `Id`, `Name`, `Folder`, `Output` |
+| **ImportJson** | Imports a map, card, playlist or soundboard from a file made with **Export JSON** that's in the game, e.g. one your addon ships (by its key). Only files uploaded by the GM or an addon are imported. `MissingOutput` gets the names of files the game doesn't have | `Resource`, `Kind`, `Name`, `Folder`, `Output`, `MissingOutput` |
 
 ## Map
 
