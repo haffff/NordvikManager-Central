@@ -60,6 +60,11 @@ const config = Object.freeze({
   // The addon registry (addons.json) the public addons page (/addons, via /api/addons) shows.
   addonRegistryUrl: process.env.ADDON_REGISTRY_URL
     || 'https://raw.githubusercontent.com/haffff/NordvikManager-Addons/main/addons.json',
+
+  // GitHub repo whose releases the landing page's Download section offers (via /api/releases),
+  // and an optional token for GitHub's API (raises its rate limit; replies are cached anyway).
+  releasesRepo: process.env.RELEASES_REPO || 'haffff/NordvikManager',
+  githubToken: process.env.GITHUB_TOKEN || null,
 });
 
 module.exports = config;

@@ -4,6 +4,7 @@ const userRouter = require('./user');
 const gamelistRouter = require('./gamelist');
 const webrtcRouter = require('./webrtc');
 const { createAddonsRouter } = require('./addons');
+const { createReleasesRouter } = require('./releases');
 const config = require('../config/config');
 const auth = require('../middleware/auth');
 const { buildIceServers } = require('../services/iceServers');
@@ -14,6 +15,8 @@ function mountRoutes(app) {
   app.use('/webrtc', webrtcRouter);
   // Public: the addon registry and readmes for the /addons page (fetched here and cached).
   app.use('/api/addons', createAddonsRouter({ registryUrl: config.addonRegistryUrl }));
+  // Public: the newest GM server release for the landing page's Download section (cached).
+  app.use('/api/releases', createReleasesRouter({ repo: config.releasesRepo, token: config.githubToken }));
 
   app.get('/api/meta', (req, res) => {
     //get isInvitationRequired from configuration

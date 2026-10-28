@@ -46,6 +46,8 @@ app.use(
 // Static files
 app.use('/client', express.static('static/client'));
 app.use('/client-admin', express.static('static/client-admin'));
+// The landing page at /; its CSS, JS and images live under /landing (/img belongs to the docs).
+app.use('/landing', express.static('static/landing'));
 app.get('/', (_req, res) => {
   res.sendFile('static/landing/index.html', { root: __dirname });
 });

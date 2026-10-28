@@ -1,30 +1,191 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+/*
+ * NordvikManager docs theme, matching the landing page (static/landing/landing.css):
+ * night sky + moon, Cinzel headings, Inter body, square corners, flat 1px rules, no shadows.
+ * Dark is the default; light is the same palette as moonlit parchment.
  */
 
-/* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  /* Shared */
+  --nv-sky: #0D1424;
+  --nv-sky-2: #151E33;
+  --nv-sky-3: #22304D;
+  --nv-moon: #E4D3AA;
+  --nv-moon-dim: #B9AC8C;
+  --nv-ember: #C8743A;
+
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ifm-heading-font-family: 'Cinzel', 'Times New Roman', serif;
+  --ifm-heading-font-weight: 700;
+  --ifm-code-font-size: 92%;
+  --ifm-navbar-height: 56px;
+
+  /* Square, flat */
+  --ifm-global-radius: 0;
+  --ifm-button-border-radius: 0;
+  --ifm-code-border-radius: 0;
+  --ifm-card-border-radius: 0;
+  --ifm-alert-border-radius: 0;
+  --ifm-badge-border-radius: 0;
+  --ifm-pagination-nav-border-radius: 0;
+  --ifm-breadcrumb-border-radius: 0;
+  --ifm-menu-link-padding-vertical: .4rem;
+  --ifm-global-shadow-lw: none;
+  --ifm-global-shadow-md: none;
+  --ifm-global-shadow-tl: none;
+  --ifm-navbar-shadow: none;
+  --ifm-transition-fast: 150ms;
+
+  /* Light: parchment, ink text, sky as the accent */
+  --ifm-color-primary: #1F3159;
+  --ifm-color-primary-dark: #1C2C50;
+  --ifm-color-primary-darker: #1A2A4C;
+  --ifm-color-primary-darkest: #15223E;
+  --ifm-color-primary-light: #223662;
+  --ifm-color-primary-lighter: #243866;
+  --ifm-color-primary-lightest: #283F72;
+  --ifm-background-color: #F6F0E1;
+  --ifm-background-surface-color: #EFE6CF;
+  --ifm-font-color-base: #1B2234;
+  --ifm-heading-color: var(--nv-sky);
+  --ifm-toc-border-color: #DCCFAF;
+  --ifm-hr-background-color: #DCCFAF;
+  --ifm-table-border-color: #DCCFAF;
+  --ifm-color-emphasis-100: #EFE6CF;
+  --ifm-color-emphasis-200: #E4D7B8;
+  --ifm-color-emphasis-300: #D3C49F;
+  --ifm-navbar-background-color: var(--nv-sky);
+  --ifm-navbar-link-color: var(--nv-moon-dim);
+  --ifm-navbar-link-hover-color: var(--nv-moon);
+  --ifm-footer-background-color: var(--nv-sky);
+  --ifm-code-background: #EBE1C7;
+  --docusaurus-highlighted-code-line-bg: rgba(13, 20, 36, .08);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #E4D3AA;
+  --ifm-color-primary-dark: #DCC796;
+  --ifm-color-primary-darker: #D8C18C;
+  --ifm-color-primary-darkest: #CBAC6C;
+  --ifm-color-primary-light: #ECDFBE;
+  --ifm-color-primary-lighter: #F0E5C8;
+  --ifm-color-primary-lightest: #F8F2E6;
+  --ifm-background-color: var(--nv-sky);
+  --ifm-background-surface-color: var(--nv-sky-2);
+  --ifm-font-color-base: var(--nv-moon-dim);
+  --ifm-heading-color: var(--nv-moon);
+  --ifm-link-color: var(--nv-moon);
+  --ifm-toc-border-color: var(--nv-sky-3);
+  --ifm-hr-background-color: var(--nv-sky-3);
+  --ifm-table-border-color: var(--nv-sky-3);
+  --ifm-table-stripe-background: rgba(21, 30, 51, .6);
+  --ifm-color-emphasis-100: #121A2D;
+  --ifm-color-emphasis-200: var(--nv-sky-2);
+  --ifm-color-emphasis-300: var(--nv-sky-3);
+  --ifm-color-emphasis-400: #33446A;
+  --ifm-menu-color: var(--nv-moon-dim);
+  --ifm-menu-color-background-active: var(--nv-sky-2);
+  --ifm-menu-color-background-hover: var(--nv-sky-2);
+  --ifm-code-background: var(--nv-sky-2);
+  --docusaurus-highlighted-code-line-bg: rgba(228, 211, 170, .08);
+}
+
+/* ---------- Type ---------- */
+
+h1, h2, h3 { letter-spacing: .01em; }
+h4, h5, h6 { font-family: var(--ifm-font-family-base); font-weight: 600; }
+.markdown h1:first-child { --ifm-h1-font-size: 2.4rem; }
+
+a { text-underline-offset: 3px; }
+.markdown a { text-decoration: underline; text-decoration-color: var(--ifm-color-emphasis-300); }
+.markdown a:hover { text-decoration-color: var(--nv-ember); }
+
+/* ---------- Navbar: same sky bar as the landing page, in both modes ---------- */
+
+.navbar {
+  border-bottom: 1px solid var(--nv-sky-3);
+  --ifm-navbar-search-input-background-color: var(--nv-sky-2);
+  --ifm-navbar-search-input-color: var(--nv-moon);
+}
+.navbar__brand { color: var(--nv-moon); }
+.navbar__logo { height: 20px; }
+.navbar__title {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.navbar__link {
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.navbar__link--active { color: var(--nv-moon); box-shadow: inset 0 -2px 0 var(--nv-moon); }
+.navbar .navbar__toggle, .navbar .clean-btn,
+.navbar [class*='colorModeToggle'] button { color: var(--nv-moon); }
+.navbar [class*='colorModeToggle'] button:hover { background: var(--nv-sky-2); }
+/* Join and Main site are this same domain, not external */
+.navbar .nv-join svg, .navbar .nv-home svg { display: none; }
+
+/* "Join a game" — the landing page's primary button */
+.navbar .nv-join {
+  margin-left: 8px;
+  padding: 8px 16px;
+  background: var(--nv-moon);
+  color: var(--nv-sky);
+  border: 1px solid var(--nv-moon);
+  font-weight: 600;
+  transition: background-color 150ms, color 150ms;
+}
+.navbar .nv-join:hover { background: transparent; color: var(--nv-moon); }
+
+.navbar-sidebar { background: var(--ifm-background-color); }
+
+/* ---------- Sidebar & TOC ---------- */
+
+.menu__link { border-left: 2px solid transparent; }
+.menu__link--active:not(.menu__link--sublist) {
+  border-left-color: var(--nv-ember);
+  font-weight: 600;
+}
+.table-of-contents__link--active { color: var(--ifm-color-primary); font-weight: 600; }
+.theme-doc-sidebar-container { border-right-color: var(--ifm-toc-border-color) !important; }
+
+/* ---------- Content blocks ---------- */
+
+.theme-admonition { border-width: 1px 1px 1px 3px; border-style: solid; }
+.pagination-nav__link { border-color: var(--ifm-toc-border-color); transition: border-color 150ms; }
+.pagination-nav__link:hover { border-color: var(--ifm-color-primary); }
+.breadcrumbs__item--active .breadcrumbs__link { background: var(--ifm-color-emphasis-200); }
+
+.markdown img { border: 1px solid var(--ifm-toc-border-color); }
+
+.button {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .8rem;
+}
+
+code { border: 1px solid var(--ifm-toc-border-color); padding: .1rem .3rem; }
+pre code, .prism-code code { border: 0; }
+div[class*='codeBlockContainer'] { border: 1px solid var(--ifm-toc-border-color); box-shadow: none; }
+
+/* ---------- Footer ---------- */
+
+.footer {
+  --ifm-footer-link-color: var(--nv-moon-dim);
+  --ifm-footer-link-hover-color: var(--nv-moon);
+  --ifm-footer-title-color: var(--nv-moon);
+  --ifm-footer-color: var(--nv-moon-dim);
+  border-top: 1px solid var(--nv-sky-3);
+}
+.footer__title {
+  font-family: 'Cinzel', serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
 }

@@ -4,40 +4,243 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NordvikManager</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, sans-serif;
-      background: #1a1a2e;
-      color: #e0e0e0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 1.5rem;
-    }
-    h1 { font-size: 2.5rem; letter-spacing: .05em; color: #c9a84c; }
-    p  { font-size: 1.1rem; color: #aaa; }
-    a  {
-      display: inline-block;
-      padding: .75rem 2rem;
-      background: #c9a84c;
-      color: #1a1a2e;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: bold;
-      transition: opacity .2s;
-    }
-    a:hover { opacity: .85; }
-  </style>
+  <meta name="description" content="NordvikManager is a free, open source virtual tabletop. Players join from the browser; the GM runs it on their own machine." />
+  <meta name="theme-color" content="#0D1424" />
+  <link rel="icon" href="/img/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/landing/landing.css" />
+  <script src="/landing/landing.js" defer></script>
 </head>
 <body>
-  <h1>NordvikManager</h1>
-  <p>Tabletop RPG session management</p>
-  <p>This website is in process of development, if you are tester, please proceed here</p>
-  <i> This is generated example page, it will be reworked later with proper frontend </i>
-  <a href="/client">Open Game Client</a>
-  <a href="/addons">Browse addons</a>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="bar">
+    <div class="wrap bar__inner">
+      <a class="wordmark" href="/" aria-label="NordvikManager home">
+        <svg class="wordmark__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2a10 10 0 1 0 7 17A8 8 0 0 1 15 2z" /></svg>
+        <span>Nordvik<span class="wordmark__thin">Manager</span></span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Main">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="/addons">Addons</a>
+        <a href="/user-guide">Guide</a>
+        <a href="/documentation">Docs</a>
+        <a href="https://github.com/haffff/NordvikManager" rel="noopener">GitHub</a>
+      </nav>
+      <a class="btn btn--primary bar__join" href="/client">Join<span class="bar__join-long">&nbsp;a game</span></a>
+      <button class="bar__toggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu">
+        <svg class="icon-open" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v1.5H3zm0 4.25h14v1.5H3zm0 4.25h14V15H3z" /></svg>
+        <svg class="icon-close" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.4 3.3 10 8.9l5.6-5.6 1.1 1.1-5.6 5.6 5.6 5.6-1.1 1.1-5.6-5.6-5.6 5.6-1.1-1.1 5.6-5.6-5.6-5.6z" /></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero">
+      <svg class="stars" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 600">
+        <g>
+          <rect x="62" y="48" width="2" height="2" /><rect x="190" y="132" width="1" height="1" /><rect x="301" y="38" width="2" height="2" />
+          <rect x="412" y="210" width="1" height="1" /><rect x="520" y="86" width="2" height="2" /><rect x="640" y="30" width="1" height="1" />
+          <rect x="702" y="164" width="1" height="1" /><rect x="812" y="62" width="2" height="2" /><rect x="903" y="240" width="1" height="1" />
+          <rect x="1010" y="120" width="2" height="2" /><rect x="1130" y="44" width="1" height="1" /><rect x="1160" y="300" width="2" height="2" />
+          <rect x="34" y="340" width="1" height="1" /><rect x="128" y="470" width="2" height="2" /><rect x="250" y="390" width="1" height="1" />
+          <rect x="350" y="530" width="1" height="1" /><rect x="470" y="440" width="2" height="2" /><rect x="580" y="560" width="1" height="1" />
+          <rect x="760" y="480" width="1" height="1" /><rect x="880" y="540" width="2" height="2" /><rect x="980" y="420" width="1" height="1" />
+          <rect x="1090" y="510" width="1" height="1" /><rect x="1180" y="580" width="2" height="2" /><rect x="150" y="250" width="1" height="1" />
+        </g>
+        <g class="stars__bright">
+          <path d="M240 90h2v-4h2v4h2v2h-2v4h-2v-4h-2z" /><path d="M960 330h2v-4h2v4h2v2h-2v4h-2v-4h-2z" /><path d="M560 300h2v-4h2v4h2v2h-2v4h-2v-4h-2z" />
+        </g>
+      </svg>
+
+      <div class="wrap hero__inner">
+        <div class="hero__text">
+          <p class="eyebrow">Free &amp; open source virtual tabletop <span class="tag">Alpha</span></p>
+          <h1>Your table, under a&nbsp;wizard's&nbsp;moon.</h1>
+          <p class="lead">Maps, tokens, character sheets, music and dice in one browser tab. Players install nothing; the GM runs the game on their own machine.</p>
+          <div class="actions">
+            <a class="btn btn--primary" href="/client">Join a game</a>
+            <a class="btn" href="/client/demo/">Try the demo</a>
+            <a class="btn" href="/user-guide">User guide</a>
+            <a class="btn btn--ghost" href="#download">Download <span aria-hidden="true">&darr;</span></a>
+          </div>
+        </div>
+        <div class="hero__art" aria-hidden="true">
+          <svg class="moon" viewBox="0 0 200 200"><path d="M128 14a90 90 0 1 0 58 150A74 74 0 0 1 128 14z" /></svg>
+          <img class="mascot" src="/landing/img/mascot.png" width="226" height="261" alt="" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Features: horizontal slides -->
+    <section class="features reveal" id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">What's in the spellbook</p>
+          <h2 id="features-title">Everything a session needs</h2>
+        </div>
+
+        <div class="slider" data-slider>
+          <div class="slider__tabs" role="tablist" aria-label="Features">
+            <!-- Filled by landing.js from the slides below -->
+          </div>
+
+          <div class="slider__track" tabindex="0" aria-label="Feature slides, use the arrow keys to move">
+            <article class="slide" id="slide-1" data-title="Workspace">
+              <div class="slide__text">
+                <span class="slide__num">01</span>
+                <h3>A workspace you arrange</h3>
+                <p>Every tool is a panel you can dock, float and tab. Save layouts and share them with your players, so everyone starts with the right screen.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/the-game-screen.png" alt="The game screen with docked panels around the battle map" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-2" data-title="Battle maps">
+              <div class="slide__text">
+                <span class="slide__num">02</span>
+                <h3>Battle maps and layers</h3>
+                <p>Several maps per game, a grid you resize on the map itself, measuring tools and custom layers above or below the tokens, including GM-only and hidden ones.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/battle-map.png" alt="A battle map with a grid and tokens" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-3" data-title="Tokens">
+              <div class="slide__text">
+                <span class="slide__num">03</span>
+                <h3>Tokens and turn order</h3>
+                <p>Tokens with bars and status icons, visible to everyone or just the GM. Each map keeps its own initiative tracker with rounds, and players can end their own turn.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/token-selected.png" alt="A selected token with its bars and controls" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-4" data-title="Cards">
+              <div class="slide__text">
+                <span class="slide__num">04</span>
+                <h3>Cards from addons</h3>
+                <p>Character sheets, items, notes and handouts are cards made from addon templates, with permissions per player. Install a game system and start playing.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/cards-panel.png" alt="The cards panel listing character sheets and notes" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-5" data-title="Chat &amp; dice">
+              <div class="slide__text">
+                <span class="slide__num">05</span>
+                <h3>Chat and dice</h3>
+                <p>Roll from the chat or with a click, whisper to one player or only to the GM, and add your own chat commands.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/chat.png" alt="The chat with dice rolls" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-6" data-title="Music">
+              <div class="slide__text">
+                <span class="slide__num">06</span>
+                <h3>Music and sound</h3>
+                <p>Playlists and soundboards play to everyone in sync, with fades. You set the volume per track; each player sets their own for music, effects and notifications.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/playlists.png" alt="The playlists panel" loading="lazy" /></figure>
+            </article>
+
+            <article class="slide" id="slide-7" data-title="Actions">
+              <div class="slide__text">
+                <span class="slide__num">07</span>
+                <h3>Actions, no code needed</h3>
+                <p>Automate the game with hooks and steps: change the music when the turn changes, move tokens, update cards. Sandboxed scripts are there when blocks aren't enough.</p>
+              </div>
+              <figure class="slide__shot"><img src="/img/user-guide/actions-editor.png" alt="The actions editor with a hook and its steps" loading="lazy" /></figure>
+            </article>
+          </div>
+
+          <div class="slider__nav">
+            <button class="sq" type="button" data-prev aria-label="Previous feature">&larr;</button>
+            <span class="slider__count" aria-live="polite"><span data-current>01</span> / <span data-total>07</span></span>
+            <button class="sq" type="button" data-next aria-label="Next feature">&rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how reveal" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-title">Three steps to the table</h2>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="steps__num">1</span>
+            <h3>The GM runs the server</h3>
+            <p>Download NordvikManager and start it on your computer. Your game and its files stay with you.</p>
+          </li>
+          <li>
+            <span class="steps__num">2</span>
+            <h3>Create a game, invite players</h3>
+            <p>Set up maps and cards, install addons for your system, and send your players an invite.</p>
+          </li>
+          <li>
+            <span class="steps__num">3</span>
+            <h3>Players open a link</h3>
+            <p>They join from the browser at <a href="/client">nordvikmanager.pl/client</a>. Nothing to install.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section class="download reveal" id="download" aria-labelledby="download-title">
+      <div class="wrap download__inner">
+        <div class="section-head">
+          <p class="eyebrow">For the GM</p>
+          <h2 id="download-title">Download</h2>
+          <p class="muted">Players don't need this, only the GM running the game. New here? The <a href="/quickstart">quick start</a> walks you through your first session.</p>
+        </div>
+
+        <div class="dl" data-download>
+          <p class="dl__release" data-release>Latest builds are on GitHub.</p>
+          <div class="dl__primary" data-primary hidden></div>
+          <ul class="dl__list" data-assets hidden></ul>
+          <p class="dl__links">
+            <a href="https://github.com/haffff/NordvikManager/releases" data-all-releases rel="noopener">All releases on GitHub</a>
+            <span aria-hidden="true">&middot;</span>
+            <a href="/quickstart">Install guide</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Extend -->
+    <section class="extend reveal" aria-labelledby="extend-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Make it yours</p>
+          <h2 id="extend-title">Extend it</h2>
+        </div>
+        <ul class="tiles">
+          <li><a class="tile" href="/addons"><h3>Addons</h3><p>Game systems, themes and tools ready to install.</p></a></li>
+          <li><a class="tile" href="/addon-guide"><h3>Addon guide</h3><p>Build your own cards, actions and themes.</p></a></li>
+          <li><a class="tile" href="/ai/AGENTS.md"><h3>AI guide</h3><p>Hand this to an AI assistant to help it write an addon.</p></a></li>
+          <li><a class="tile" href="/documentation"><h3>Documentation</h3><p>How it all fits together, for hosting and contributing.</p></a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__inner">
+      <p class="wordmark wordmark--small">Nordvik<span class="wordmark__thin">Manager</span></p>
+      <p class="muted">Free software under the <a href="https://github.com/haffff/NordvikManager/blob/main/LICENSE" rel="noopener">GNU AGPL v3</a>. Alpha: expect bugs, and keep backups.</p>
+      <nav class="foot__links" aria-label="Footer">
+        <a href="/quickstart">Quick start</a>
+        <a href="/user-guide">User guide</a>
+        <a href="/documentation">Docs</a>
+        <a href="/addons">Addons</a>
+        <a href="https://github.com/haffff/NordvikManager" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </footer>
 </body>
 </html>
