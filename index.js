@@ -1,5 +1,6 @@
 'use strict';
 
+const { setClientCacheHeaders } = require('./config/clientCache');
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
@@ -44,7 +45,8 @@ app.use(
 );
 
 // Static files
-app.use('/client', express.static('static/client'));
+// Hashed build assets cached for a year, pages revalidated (config/clientCache.js).
+app.use('/client', express.static('static/client', { setHeaders: setClientCacheHeaders }));
 app.use('/client-admin', express.static('static/client-admin'));
 // The landing page at /; its CSS, JS and images live under /landing (/img belongs to the docs).
 app.use('/landing', express.static('static/landing'));
