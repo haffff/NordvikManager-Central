@@ -13,7 +13,7 @@ title: Materials
 
 ## Uploading
 
-- **Drop files** on *Drop files or click to upload*, or click it to pick files. Dropping files anywhere on the Materials window works too.
+- **Upload files** (a small button at the end of the list, and of each open folder) picks files to upload, into that folder. Dropping files anywhere on the Materials window works too.
 - **Drop images on the battle map** to upload them and place them on the map in one go.
 
 Everyone can upload. Your Materials list shows your own uploads; the GM sees everyone's. Anything you put on the map or a card is of course shown to whoever sees that.
@@ -48,6 +48,6 @@ A material is stored in one of three ways, shown by its icon:
 | **Stored as a file on disk** | A file the server keeps in its own folder. |
 | **Linked to a file on disk (not copied)** | A file elsewhere on the server's computer, e.g. your music folder. It's read from there, never copied or changed. |
 
-- **Link local file or folder…** browses the server's computer and links files or whole folders, without uploading copies. Useful for large music libraries. Only the [server's admin](./permissions.md#the-servers-admin) has this button, and only they see where linked files live on disk.
+- **Link local file or folder…** (next to **Upload files**, also per folder) browses the server's computer and links files or whole folders, without uploading copies. Useful for large music libraries. Only the [server's admin](./permissions.md#the-servers-admin) has this button, and only they see where linked files live on disk.
 - **Store as file on disk** / **Store in database** move a material between the two. For a linked file, **Adopt as …** makes a copy the server owns.
 - Deleting a linked material only **Unlinks** it: the file on disk is kept.

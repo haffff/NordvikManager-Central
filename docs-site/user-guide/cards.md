@@ -15,15 +15,28 @@ A **card** is a window with content of its own: a character sheet, a monster's s
 
 - **Open a card:** click it. It opens as a floating window you can dock like any other.
 - **Search:** type in the search box to filter the list.
-- **Create a card:** **Add Item** (the **+**), give it a **Name** and pick a **Template**. The GM also picks its **Owner**. Players can create cards only from templates the GM shared with them, and their cards belong to them.
+- **Create a card:** **Add Item** (the **+**), or the greyed **New card** row at the end of the list or of an open folder (the card goes into that folder). Give it a **Name** and pick a **Template**. The GM also picks its **Owner**. Players can create cards only from templates the GM shared with them, and their cards belong to them.
 - **Edit / Delete:** select a card for its **Edit** (card settings) and **Delete** buttons. Addons can add entries to a card's right-click menu.
 - **Place its token:** drag a card onto the battle map (see [Tokens](./battle-map/tokens.md)).
 
 ### Folders (GM)
 
 :::note[GM only]
-The GM (anyone with Edit on the game) can organise the list into folders: **Add Folder**, then **Edit Folder** (name, colour, icon), **Delete Folder** and **Delete All**. Drag cards and folders to reorder them or move them into a folder.
+The GM (anyone with Edit on the game) can organise the list into folders: **Add Folder**, then **Edit Folder** (name, colour, icon), **Delete Folder** and **Delete All**. Drag cards and folders by their grip to reorder them or move them into a folder. To move several at once, select them with **Ctrl**-click (**⌘** on a Mac) or **Shift**-click for a run of rows, then drag any one of them.
 :::
+
+### Copying, export and import (GM)
+
+:::note[GM only]
+Each card has **Duplicate** and **Export JSON** (in the toolbar and its right-click menu); the toolbar has **Import JSON**. The Maps, Templates, Custom Views, Playlists and Soundboard lists have them too.
+:::
+
+- **Duplicate** puts a copy, named *… (copy)*, right after the original. With several selected (Ctrl/Shift-click), the toolbar's **Duplicate** copies each of them.
+- **Export JSON** downloads it as a file. Tick **Include files** to put the pictures, sounds and card pages it uses in too: the file gets bigger, but works in a game that doesn't have them.
+- **Import JSON** takes such a file (pick it or paste its text) into the selected folder, in this game or another one. The files it uses are found in the game (an addon's files by their key, when the same addon is installed) or taken from the export. Whatever is still missing is left out and named in a message: a token shows the empty token picture, another image the empty image, and a card without its page opens blank.
+- Who may see or use it comes along for players who are in that game. A card keeps its owner if they play there too.
+- A **map's** export can **Include the tokens' cards**: in another game they're made too, in a Cards folder named after the map, and the tokens belong to them again. Without them, the tokens there have no card (and only the GM sees them).
+- Dropping an exported file onto the battle map or into Materials asks whether to **Import** it or just add the file to Materials. An imported map then shows on that battle map; an imported card's token is placed where you dropped it.
 
 ## Card settings
 

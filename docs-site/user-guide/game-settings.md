@@ -36,7 +36,7 @@ Extra values stored on the game, mostly for addons.
 ## Appearance
 
 - **Stylesheets:** CSS files that restyle the game for every player, and themes from addons. See [Custom styling](./custom-styling.md).
-- **Sounds & images:** replace the built-in **Empty image placeholder**, **Empty token image**, **Empty player avatar**, **Incoming chat message sound** and **Your turn sound** with your own files.
+- **Sounds & images:** replace the built-in **Empty image placeholder**, **Empty token image**, **Empty player avatar**, **Incoming chat message sound** and **Your turn sound** with your own: **Choose…** opens the game's materials (images or sounds, whichever fits); drop a file on the list to upload it.
 
 ## Advanced
 

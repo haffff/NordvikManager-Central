@@ -61,7 +61,7 @@ Right-click the map for a menu that depends on what's selected.
 **With something selected:**
 - **Delete**, **Copy**, **Paste**.
 - **Add to turn order** (tokens; see [Turn order](../turn-order.md)).
-- **More Actions:** **Move Up** / **Move Down** within its layer, and **Ungroup** a group. *Needs Edit.*
+- **More Actions:** **Move Up** / **Move Down** within its layer, and **Ungroup** a group. *Needs Edit.* A group keeps its parts' properties and gives each player only what they could do with every part; tokens can't be grouped, so a selection with tokens groups the rest.
 - **Move to layer:** puts it on another layer. *Needs Edit.*
 - **Properties:** the raw values stored on it, mostly useful with addons.
 - Token entries: **Manage Icons** and **Lock Scale/Rotate**, see [Tokens](./tokens.md).
@@ -75,7 +75,7 @@ Addons can add their own entries to this menu.
 |---|---|
 | **Ctrl+C** / **Ctrl+V** | Copy / paste the selection |
 | **Delete** | Delete the selection |
-| **Shift+G** / **Shift+U** | Group / ungroup the selection |
+| **Shift+G** / **Shift+U** | Group / ungroup the selection (tokens are left out of groups) |
 
 Change them in **Settings → Keyboard Shortcuts**.
 
@@ -87,7 +87,7 @@ Change them in **Settings → Keyboard Shortcuts**.
 
 For each battle map:
 - **Open** shows it in a new window; one that's already open is ticked.
-- **Map Selector** (open ones) lists the game's maps. Click a map to show it in this battle map, **+** adds a map, and each map has **Settings** and **Remove**. You can also drag a map from here onto a battle map.
+- **Map Selector** (open ones) lists the game's maps. Click a map to show it in this battle map; the one on show is marked *Active*. **Add Item** (the **+**) adds a map, as does the greyed **New map** row at the end of the list or of an open folder (into that folder). The selected map's **Settings** and **Remove** are in the toolbar and its right-click menu, as in the Cards list (the map on show can't be removed). You can also drag a map from here onto a battle map. **Duplicate** copies a map with everything on it, and **Export JSON** / **Import JSON** move one to another game (see [Cards](../cards.md#copying-export-and-import-gm)).
 - **Switch Map** changes the map it shows.
 - **Delete** (closed ones only) and **Permissions**.
 

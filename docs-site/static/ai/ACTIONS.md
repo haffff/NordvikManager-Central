@@ -235,6 +235,23 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 
 - `CardId`: GUID of the card to delete (with its properties).
 
+**Duplicate**: Copies a map (with everything on it), card, template, custom view, playlist or soundboard, storing the copy's id in a variable.
+
+- `Kind`: What to copy: map, card, template, view (custom view), playlist or soundboard.
+- `Id`: Id of the map, card or playlist to copy, e.g. %q:card[Goblin].id% or a variable.
+- `Name`: Name of the copy. Leave empty for the original's name with " (copy)".
+- `Folder`: Folder of its panel to put the copy in, e.g. "Encounters/Forest" (made where missing). Leave empty to put it right after the original.
+- `Output` (variable name): Name of the variable where the copy's id will be stored.
+
+**ImportJson**: Imports a map, card, playlist or soundboard from an exported file (Export JSON) in the game, e.g. one an addon ships, storing the new id in a variable.
+
+- `Resource`: The exported file (Export JSON) to import: its key (e.g. an addon's "myaddon_dungeon.json") or id. Only files uploaded by the GM or an addon are imported.
+- `Kind`: Import only this kind (map, card, template, view, playlist, soundboard). Leave empty to take whatever the file holds.
+- `Name`: Name for what's imported. Leave empty for the name in the file.
+- `Folder`: Folder of its panel to put it in, e.g. "Imported" (made where missing). Leave empty for the top level.
+- `Output` (variable name): Name of the variable where the new map's, card's or playlist's id will be stored.
+- `MissingOutput` (variable name): Name of a variable for the files the import didn't find (names, comma-separated; empty when none). Leave empty to skip.
+
 **DeleteResource**: Permanently deletes a resource identified by key or ID. Also removes any associated tree entries.
 
 - `Key`: Key of the resource to delete. Takes priority over ResourceId when both are set.
