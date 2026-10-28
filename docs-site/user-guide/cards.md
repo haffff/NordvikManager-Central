@@ -35,6 +35,8 @@ Each card has **Duplicate** and **Export JSON** (in the toolbar and its right-cl
 - **Export JSON** downloads it as a file. Tick **Include files** to put the pictures, sounds and card pages it uses in too: the file gets bigger, but works in a game that doesn't have them.
 - **Import JSON** takes such a file (pick it or paste its text) into the selected folder, in this game or another one. The files it uses are found in the game (an addon's files by their key, when the same addon is installed) or taken from the export. Whatever is still missing is left out and named in a message: a token shows the empty token picture, another image the empty image, and a card without its page opens blank.
 - Who may see or use it comes along for players who are in that game. A card keeps its owner if they play there too.
+- A **map's** export can **Include the tokens' cards**: in another game they're made too, in a Cards folder named after the map, and the tokens belong to them again. Without them, the tokens there have no card (and only the GM sees them).
+- Dropping an exported file onto the battle map or into Materials asks whether to **Import** it or just add the file to Materials. An imported map then shows on that battle map; an imported card's token is placed where you dropped it.
 
 ## Card settings
 
