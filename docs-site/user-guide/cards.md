@@ -15,7 +15,7 @@ A **card** is a window with content of its own: a character sheet, a monster's s
 
 - **Open a card:** click it. It opens as a floating window you can dock like any other.
 - **Search:** type in the search box to filter the list.
-- **Create a card:** **Add Item** (the **+**), give it a **Name** and pick a **Template**. The GM also picks its **Owner**. Players can create cards only from templates the GM shared with them, and their cards belong to them.
+- **Create a card:** **Add Item** (the **+**), or the greyed **New card** row at the end of the list or of an open folder (the card goes into that folder). Give it a **Name** and pick a **Template**. The GM also picks its **Owner**. Players can create cards only from templates the GM shared with them, and their cards belong to them.
 - **Edit / Delete:** select a card for its **Edit** (card settings) and **Delete** buttons. Addons can add entries to a card's right-click menu.
 - **Place its token:** drag a card onto the battle map (see [Tokens](./battle-map/tokens.md)).
 

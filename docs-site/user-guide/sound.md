@@ -17,7 +17,7 @@ Sounds are audio files from the game's [materials](./materials.md). Upload them 
 
 ![The Playlists window](/img/user-guide/playlists.png)
 
-- **New Playlist**, then set:
+- **New playlist** (the greyed row at the end of the list, or of a folder to make it there; or the toolbar's **+**), then set:
   - **Name** and **Description**.
   - **Playback Mode:** **Sequential** plays the tracks one after another; **Concurrent** plays them all at once, e.g. rain + fire + tavern chatter layered into one ambience.
   - **Shuffle** (Sequential only) and **Repeat**.
@@ -30,7 +30,7 @@ Sounds are audio files from the game's [materials](./materials.md). Upload them 
 
 **View → Soundboard** is for sound effects: a door creaking, a dragon roaring, rain.
 
-- **New Soundboard** groups sounds, with a **Name**, **Description** and its **Sounds**.
+- **New soundboard** (the greyed row at the end of the list or of a folder, or the toolbar's **+**) groups sounds, with a **Name**, **Description** and its **Sounds**.
 - Click a sound to play it for everyone. While it plays its tile lights up with a progress bar; click it again to stop it.
 - The loop button in a tile's corner makes that sound repeat until you stop it (rain, a crackling fire). It is saved on the soundboard and applies from the sound's next play.
 - **Stop all** silences every sound playing.

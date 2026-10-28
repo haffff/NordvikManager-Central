@@ -87,7 +87,7 @@ Change them in **Settings → Keyboard Shortcuts**.
 
 For each battle map:
 - **Open** shows it in a new window; one that's already open is ticked.
-- **Map Selector** (open ones) lists the game's maps. Click a map to show it in this battle map; the one on show is marked *Active*. **Add Item** (the **+**) adds a map. The selected map's **Settings** and **Remove** are in the toolbar and its right-click menu, as in the Cards list (the map on show can't be removed). You can also drag a map from here onto a battle map. **Duplicate** copies a map with everything on it, and **Export JSON** / **Import JSON** move one to another game (see [Cards](../cards.md#copying-export-and-import-gm)).
+- **Map Selector** (open ones) lists the game's maps. Click a map to show it in this battle map; the one on show is marked *Active*. **Add Item** (the **+**) adds a map, as does the greyed **New map** row at the end of the list or of an open folder (into that folder). The selected map's **Settings** and **Remove** are in the toolbar and its right-click menu, as in the Cards list (the map on show can't be removed). You can also drag a map from here onto a battle map. **Duplicate** copies a map with everything on it, and **Export JSON** / **Import JSON** move one to another game (see [Cards](../cards.md#copying-export-and-import-gm)).
 - **Switch Map** changes the map it shows.
 - **Delete** (closed ones only) and **Permissions**.
 
