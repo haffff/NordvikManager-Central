@@ -61,7 +61,7 @@ Right-click the map for a menu that depends on what's selected.
 **With something selected:**
 - **Delete**, **Copy**, **Paste**.
 - **Add to turn order** (tokens; see [Turn order](../turn-order.md)).
-- **More Actions:** **Move Up** / **Move Down** within its layer, and **Ungroup** a group. *Needs Edit.*
+- **More Actions:** **Move Up** / **Move Down** within its layer, and **Ungroup** a group. *Needs Edit.* A group keeps its parts' properties and gives each player only what they could do with every part; tokens can't be grouped, so a selection with tokens groups the rest.
 - **Move to layer:** puts it on another layer. *Needs Edit.*
 - **Properties:** the raw values stored on it, mostly useful with addons.
 - Token entries: **Manage Icons** and **Lock Scale/Rotate**, see [Tokens](./tokens.md).
@@ -75,7 +75,7 @@ Addons can add their own entries to this menu.
 |---|---|
 | **Ctrl+C** / **Ctrl+V** | Copy / paste the selection |
 | **Delete** | Delete the selection |
-| **Shift+G** / **Shift+U** | Group / ungroup the selection |
+| **Shift+G** / **Shift+U** | Group / ungroup the selection (tokens are left out of groups) |
 
 Change them in **Settings → Keyboard Shortcuts**.
 
