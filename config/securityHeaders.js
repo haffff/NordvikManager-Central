@@ -39,9 +39,9 @@ const sandboxDirectives = {
   'form-action': ["'none'"],
 };
 
-// /client/sandbox.html, and the same page in the frozen builds at /client/p<N>/ and in
-// the public demo at /client/demo/.
-const SANDBOX_PAGE = /^\/client\/(?:p\d+\/|demo\/)?sandbox\.html$/;
+// /client/sandbox.html, and the same page in the frozen builds at /client/p<N>/, in
+// the public demo at /client/demo/, and the dev build at /client/dev/.
+const SANDBOX_PAGE = /^\/client\/(?:p\d+\/|demo\/|dev\/)?sandbox\.html$/;
 
 const options = (directives) => ({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
