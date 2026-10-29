@@ -189,11 +189,16 @@ router.get(
   '/GenerateInvite',
   auth,
   requireAdmin,
-  [query('hours').optional().isInt({ min: 1, max: 720 }).toInt()],
+  [
+    query('hours').optional().isInt({ min: 1, max: 720 }).toInt(),
+    // How many accounts the key can register; 0 = unlimited (one key for a whole group).
+    query('uses').optional().isInt({ min: 0, max: 10000 }).toInt(),
+  ],
   validate,
   (req, res) => {
     const hours = req.query.hours || 24;
-    const key = inviteService.generateInvite(req.user.id, hours);
+    const uses = req.query.uses ?? 1;
+    const key = inviteService.generateInvite(req.user.id, hours, uses === 0 ? null : uses);
     res.json({ key });
   }
 );

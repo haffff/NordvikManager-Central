@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS invites (
     key         TEXT PRIMARY KEY,
     created_by  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     expires_at  TEXT NOT NULL,
-    used        INTEGER NOT NULL DEFAULT 0
+    used        INTEGER NOT NULL DEFAULT 0,
+    max_uses    INTEGER DEFAULT 1,
+    use_count   INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS game_sessions (

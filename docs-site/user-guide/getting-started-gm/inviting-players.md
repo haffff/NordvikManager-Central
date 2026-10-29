@@ -25,6 +25,12 @@ Anyone with the link (and the password, if you set one) can join. If the link le
 A **Public** game needs no link at all: it's listed for every registered player under *Public Games*.
 :::
 
+## Opening your own game from another browser
+
+The invite link works for you too. Open it on any computer, log in with the account that owns the game, and you join as the **Game Master**, with the same game and rights you have on `http://localhost:8213`. It's handy on a laptop at the table, or from a second room. Your server still has to be running with the game open.
+
+To see the game as a player sees it, use a second account.
+
 ## What your players need
 
 - **A browser:** a recent Chrome, Edge, Firefox or Safari. They don't install anything.

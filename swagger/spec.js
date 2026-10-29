@@ -77,7 +77,9 @@ const spec = {
           key: { type: 'string', format: 'uuid' },
           created_by: { type: 'string', format: 'uuid' },
           expires_at: { type: 'string', format: 'date-time' },
-          used: { type: 'integer', enum: [0, 1] },
+          used: { type: 'integer', enum: [0, 1], description: '1 once every use is taken' },
+          max_uses: { type: 'integer', nullable: true, description: 'Accounts the key can register; null = unlimited' },
+          use_count: { type: 'integer', description: 'Accounts registered with it so far' },
         },
       },
       PaginatedInvites: {
@@ -493,6 +495,7 @@ const spec = {
         summary: 'Generate an invite code (admin)',
         parameters: [
           { name: 'hours', in: 'query', description: 'Validity in hours (1–720, default 24)', schema: { type: 'integer', default: 24 } },
+          { name: 'uses', in: 'query', description: 'How many accounts the key can register (0 = unlimited, default 1)', schema: { type: 'integer', default: 1, minimum: 0, maximum: 10000 } },
         ],
         responses: {
           200: { description: 'Invite key', content: { 'application/json': { schema: { type: 'object', properties: { key: { type: 'string', format: 'uuid' } } } } } },

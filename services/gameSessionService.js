@@ -40,9 +40,10 @@ function joinSession(userId, sessionId, password) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
 
-  if (session.owner_id === userId) {
-    return { error: 'You are the owner of this session', status: 400 };
-  }
+  // The owner may open their own game from the player client (e.g. away from the GM
+  // server). No password and no member row: the GM backend maps them to its Game Master
+  // player by Central user id, and getgames already lists the session through owner_id.
+  if (session.owner_id === userId) return { ok: true, sessionId };
 
   // Members already passed the password check when they first joined. Checking membership
   // first lets them back in without it — e.g. after the player client switches to the
