@@ -21,6 +21,9 @@ runMigration();
 
 const app = express();
 
+// Client addresses from the reverse proxy's X-Forwarded-For (rate limits, logs)
+app.set('trust proxy', config.trustProxy);
+
 // Security headers
 app.use(securityHeaders());
 
