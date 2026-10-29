@@ -271,9 +271,9 @@ let invitePage = 1;
 
 async function loadInvites(page) {
   invitePage = page;
-  $('invites-tbody').innerHTML = '<tr><td colspan="5" class="loading">Loading…</td></tr>';
+  $('invites-tbody').innerHTML = '<tr><td colspan="6" class="loading">Loading…</td></tr>';
   const res = await api('GET', `/api/user/invites?page=${page}`);
-  if (!res.ok) { $('invites-tbody').innerHTML = '<tr><td colspan="5" class="loading">Failed to load.</td></tr>'; return; }
+  if (!res.ok) { $('invites-tbody').innerHTML = '<tr><td colspan="6" class="loading">Failed to load.</td></tr>'; return; }
   const { data, total } = await res.json();
   renderInvites(data, total, page);
 }
@@ -281,7 +281,7 @@ async function loadInvites(page) {
 function renderInvites(invites, total, page) {
   const tbody = $('invites-tbody');
   if (!invites.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="loading">No invitations found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="loading">No invitations found.</td></tr>';
     renderInvitesPagination(total, page);
     return;
   }
@@ -302,6 +302,7 @@ function renderInvites(invites, total, page) {
       </td>
       <td style="color:var(--text-dim)">${escHtml(inv.created_by || '—')}</td>
       <td style="color:var(--text-dim); font-size:.8rem">${fmtDate(inv.expires_at)}</td>
+      <td style="color:var(--text-dim)">${inv.use_count ?? (inv.used ? 1 : 0)} / ${inv.max_uses == null ? '∞' : inv.max_uses}</td>
       <td>${statusBadge}</td>
       <td>
         <div style="display:flex;gap:.4rem">
@@ -335,8 +336,10 @@ function renderInvitesPagination(total, page) {
 
 $('gen-invite-btn').addEventListener('click', async () => {
   const hours = parseInt($('inv-hours').value, 10) || 24;
+  const parsedUses = parseInt($('inv-uses').value, 10);
+  const uses = Number.isNaN(parsedUses) ? 1 : Math.max(0, parsedUses);
   $('gen-invite-btn').disabled = true;
-  const res = await api('GET', `/api/user/GenerateInvite?hours=${hours}`);
+  const res = await api('GET', `/api/user/GenerateInvite?hours=${hours}&uses=${uses}`);
   $('gen-invite-btn').disabled = false;
   if (!res.ok) { toast('Failed to generate invite.', 'err'); return; }
   const { key } = await res.json();

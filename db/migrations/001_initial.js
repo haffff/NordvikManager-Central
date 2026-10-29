@@ -28,6 +28,16 @@ function runMigration() {
     console.log('[migration] added is_public column to game_sessions');
   }
 
+  // Reusable invites: max_uses (NULL = unlimited) and use_count. An invite already used
+  // under the old one-shot rule counts as one use of one.
+  const inviteColumns = db.prepare('PRAGMA table_info(invites)').all();
+  if (!inviteColumns.some((c) => c.name === 'max_uses')) {
+    db.prepare('ALTER TABLE invites ADD COLUMN max_uses INTEGER DEFAULT 1').run();
+    db.prepare('ALTER TABLE invites ADD COLUMN use_count INTEGER NOT NULL DEFAULT 0').run();
+    db.prepare('UPDATE invites SET use_count = used').run();
+    console.log('[migration] added max_uses/use_count columns to invites');
+  }
+
   console.log('[migration] 001_initial applied');
 }
 
