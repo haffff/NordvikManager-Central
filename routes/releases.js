@@ -56,13 +56,35 @@ function toPageFormat(release) {
  * Router for /api/releases. repo: "owner/name"; token: optional GitHub token (raises the
  * API rate limit); fetchImpl and now are for tests.
  */
+// How long to leave GitHub alone after a failure without its own say.
+const RETRY_MS = 60 * 1000;
+
+/**
+ * When GitHub says it may be asked again (ms), from a refusal: Retry-After (seconds) on a
+ * 429/403, or the rate limit's reset (epoch seconds) once it's spent. Else a minute.
+ */
+function retryAt(response, nowMs) {
+  const retryAfter = Number(response.headers.get('retry-after'));
+  if (retryAfter > 0) return nowMs + retryAfter * 1000;
+  const reset = Number(response.headers.get('x-ratelimit-reset'));
+  if (response.headers.get('x-ratelimit-remaining') === '0' && reset > 0) return Math.max(reset * 1000, nowMs + RETRY_MS);
+  return nowMs + RETRY_MS;
+}
+
 function createReleasesRouter({ repo, token = null, fetchImpl = fetch, now = Date.now }) {
   const router = express.Router();
   const fallbackUrl = `https://github.com/${repo}/releases`;
   let cached = null; // { at, releases }: GitHub's list, shared by both channels
+  // After GitHub refused or failed: not asked again before this time (ms), so page views and
+  // GM servers' checks don't keep its hourly limit spent. { until, error }
+  let backoff = null;
 
   async function loadReleases() {
     if (cached && now() - cached.at < CACHE_MS) return cached.releases;
+    if (backoff && now() < backoff.until) {
+      if (cached) return cached.releases;
+      throw backoff.error;
+    }
     try {
       const headers = { 'User-Agent': 'NordvikManager-Central', Accept: 'application/vnd.github+json' };
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -70,12 +92,18 @@ function createReleasesRouter({ repo, token = null, fetchImpl = fetch, now = Dat
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         headers,
       });
-      if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
+      if (!response.ok) {
+        const error = new Error(`GitHub answered ${response.status}`);
+        error.retryAt = retryAt(response, now());
+        throw error;
+      }
       const releases = await response.json();
       if (!pickRelease(Array.isArray(releases) ? releases : [], 'dev')) throw new Error('There are no releases yet');
       cached = { at: now(), releases };
+      backoff = null;
       return releases;
     } catch (error) {
+      backoff = { until: error.retryAt ?? now() + RETRY_MS, error };
       if (cached) return cached.releases; // the last good copy beats nothing
       throw error;
     }

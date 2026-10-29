@@ -36,7 +36,7 @@ const servers = [];
 const fakeFetch = async (url, init) => {
   requests.push({ url, init });
   if (answer instanceof Error) throw answer;
-  return new Response(JSON.stringify(answer.body), { status: answer.status ?? 200 });
+  return new Response(JSON.stringify(answer.body), { status: answer.status ?? 200, headers: answer.headers });
 };
 
 async function start(options = {}) {
@@ -181,4 +181,47 @@ test('GET /latest answers 502 when the repo has no releases', async () => {
 
   assert.equal(res.status, 502);
   assert.equal((await res.json()).fallbackUrl, 'https://github.com/o/r/releases');
+});
+
+// GitHub refusing (its hourly limit for a server without a token is 60 requests) must not
+// be asked again on every page view and every GM server's check: that keeps the limit spent.
+test('GET /latest asks GitHub nothing more until its rate limit resets', async () => {
+  const url = await start();
+  answer = { status: 403, body: { message: 'API rate limit exceeded' }, headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': String(clock / 1000 + 300) } };
+
+  assert.equal((await fetch(url)).status, 502);
+  assert.equal((await fetch(url)).status, 502);
+  assert.equal(requests.length, 1);
+
+  clock += 301_000;
+  answer = { body: [release('v0.0.2', { assets: [asset('NordvikManager_0.0.2_win-x64.zip')] })] };
+  assert.equal((await fetch(url)).status, 200);
+  assert.equal(requests.length, 2);
+});
+
+test('GET /latest waits as long as a 429 says', async () => {
+  const url = await start();
+  answer = { status: 429, body: {}, headers: { 'retry-after': '120' } };
+
+  await fetch(url);
+  clock += 100_000;
+  await fetch(url);
+  assert.equal(requests.length, 1);
+
+  clock += 21_000;
+  await fetch(url);
+  assert.equal(requests.length, 2);
+});
+
+test('GET /latest waits a minute after any other failure', async () => {
+  const url = await start();
+  answer = new Error('network down');
+
+  await fetch(url);
+  await fetch(url);
+  assert.equal(requests.length, 1);
+
+  clock += 61_000;
+  await fetch(url);
+  assert.equal(requests.length, 2);
 });
