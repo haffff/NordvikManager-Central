@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { parseTrustProxy } = require('./trustProxy');
 
 require('dotenv').config();
 
@@ -19,6 +20,9 @@ const config = Object.freeze({
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction: process.env.NODE_ENV === 'production',
+
+  // Express 'trust proxy' (see config/trustProxy.js): one hop in production unless TRUST_PROXY says otherwise.
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY, process.env.NODE_ENV === 'production'),
 
   jwt: {
     secret: process.env.JWT_SECRET,
