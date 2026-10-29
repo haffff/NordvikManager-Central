@@ -44,6 +44,15 @@ test('joinSession lets an existing member back in without the password', () => {
   assert.equal(again.sessionId, session.id);
 });
 
+test('joinSession lets the owner into their own session without the password or a member row', () => {
+  const result = sessionService.joinSession(ownerId, session.id, undefined);
+  assert.deepEqual(result, { ok: true, sessionId: session.id });
+  const row = db
+    .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
+    .get(session.id, ownerId);
+  assert.equal(row, undefined);
+});
+
 test('joinSession rejects a wrong password for a new player', () => {
   const otherId = createUser('other');
   const result = sessionService.joinSession(otherId, session.id, 'wrong');
