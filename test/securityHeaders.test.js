@@ -76,3 +76,37 @@ test('only the sandbox page itself gets the looser policy', async () => {
     assert.equal(directive(csp, 'script-src'), "script-src 'self'", path);
   }
 });
+
+async function coopOf(path) {
+  const app = express();
+  app.use(securityHeaders());
+  app.use((req, res) => res.send('ok'));
+  const server = app.listen(0);
+  try {
+    const res = await fetch(`http://127.0.0.1:${server.address().port}${path}`);
+    return res.headers.get('cross-origin-opener-policy');
+  } finally {
+    server.close();
+  }
+}
+
+// A game (the GM app on its own host, or the player client here) opens the token editor
+// in a new tab and passes it the token file with postMessage over window.opener. A
+// cross-origin opener policy of same-origin would cut that link.
+test('the token editor page keeps its opener, whatever the opener\'s origin', async () => {
+  for (const path of ['/client/tokens/', '/client/tokens/index.html']) {
+    assert.equal(await coopOf(path), 'unsafe-none', path);
+  }
+});
+
+test('the player client keeps the link to pop-ups it opens (the token editor)', async () => {
+  for (const path of ['/client/', '/client/index.html', '/client/p3/index.html', '/client/dev/index.html']) {
+    assert.equal(await coopOf(path), 'same-origin-allow-popups', path);
+  }
+});
+
+test('other pages stay isolated from other windows', async () => {
+  for (const path of ['/', '/api/meta', '/addon-guide/tokens']) {
+    assert.equal(await coopOf(path), 'same-origin', path);
+  }
+});
