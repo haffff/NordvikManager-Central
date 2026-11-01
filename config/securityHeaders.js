@@ -43,14 +43,26 @@ const sandboxDirectives = {
 // the public demo at /client/demo/, and the dev build at /client/dev/.
 const SANDBOX_PAGE = /^\/client\/(?:p\d+\/|demo\/|dev\/)?sandbox\.html$/;
 
-const options = (directives) => ({
+// The token editor (/client/tokens/). A game opens it in a new tab and passes it the token
+// file over window.opener (postMessage): the GM app from its own host, the player client
+// from here. It keeps its opener whatever the opener's origin, and the player client
+// keeps its link to the pop-ups it opens.
+const TOKEN_EDITOR = /^\/client\/tokens\//;
+const CLIENT = /^\/client\//;
+
+const options = (directives, opener = 'same-origin') => ({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: opener },
   contentSecurityPolicy: { directives },
 });
 
 /** Security headers middleware: the app's policy, or the card sandbox page's. */
 module.exports = function securityHeaders() {
   const app = helmet(options(appDirectives));
+  const client = helmet(options(appDirectives, 'same-origin-allow-popups'));
+  const tokenEditor = helmet(options(appDirectives, 'unsafe-none'));
   const sandbox = helmet(options(sandboxDirectives));
-  return (req, res, next) => (SANDBOX_PAGE.test(req.path) ? sandbox : app)(req, res, next);
+  const pick = (path) =>
+    SANDBOX_PAGE.test(path) ? sandbox : TOKEN_EDITOR.test(path) ? tokenEditor : CLIENT.test(path) ? client : app;
+  return (req, res, next) => pick(req.path)(req, res, next);
 };

@@ -7,6 +7,27 @@ title: Tokens
 
 A token definition is a JSON resource (schema: `schemas/token.json` in the addon registry). It sets the image object, the UI pieces drawn around the token (`additions`), the fields offered in its quick-edit panel (`editableProps`), and the status icons a player can toggle (`assignableIcons`).
 
+## The token editor
+
+The [token editor](pathname:///client/tokens/) builds a token file without writing JSON by hand, and shows the token as a game draws it. It runs in your browser only: nothing is uploaded. Open a file (or start from a blank token or the dnd5e example), change it, then **Download** `token_<name>.json` into your addon's `Resources/`.
+
+| In the editor | In the file |
+|---|---|
+| **Parts** (bars, labels, buttons, status icons, ring, shapes) | `additions`; each part is one or more additions |
+| A part's **Visibility switch** | `tokenData.maskGroup` + `label`: one setting the GM flips in a game's map and token settings to show, make GM-only or hide every part on it. No switch: always shown. |
+| A part's or the picture's **Rules** | `propDeps`: each sets one property (`opacity`, `fill`, `visible`, `text`…) from a game property |
+| **Quick-edit fields** | `editableProps` |
+| Status icons offered in the picker | `assignableIcons` |
+| **Picture** | the stamper makes a round picture with transparent corners; picture rules are the root `tokenData.propDeps` |
+
+**From a game:** a GM can open a game's token file in the editor with **Edit in token editor**, on a JSON resource in Resources or next to a card's or template's token. The editor opens in a new tab with that file; **Save to game** writes it back. Tokens already on a map keep what they were built from; tokens placed after the save use the new file. A token file installed by an addon is replaced when the addon updates, so change an addon's tokens in the addon itself.
+
+**Sample values** lists every property the token reads; change them to see the preview follow. **Token file** shows the JSON and checks it against the schema.
+
+:::note[Current client]
+`fitToToken`, a value table's (`Enum`) default and stacking icons off the top-right corner (`tokenData.stack`) need the current player client. A frozen client for an older protocol (`/client/p<N>/`) draws those parts without them.
+:::
+
 ## Where values come from: `source`
 
 Every `propDeps`, `editableProps` and `assignableIcons` entry has a `source`:

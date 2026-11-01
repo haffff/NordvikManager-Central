@@ -57,6 +57,7 @@ Docs: https://nordvikmanager.pl/addon-guide/cards/overview, https://nordvikmanag
 - **Your own `Set` comes back** through `Subscribe`. Render from the property; ignore the echo while the user is typing.
 - `Set` with an unchanged value does nothing. Create defaults with `Init` (only creates missing properties).
 - The app's look: template property `app_styles` = `"true"` gives `--nordvik-*` colour variables (`--nordvik-surface`, `--nordvik-text-color`, `--nordvik-font`, ...) and the GM's theme. Always use a fallback: `var(--nordvik-surface, #1e1e1e)`. Don't remove the `nm-app-base` / `nm-app-theme` elements in `<head>`.
+- Token files: build or check them in the token editor (https://nordvikmanager.pl/client/tokens/, browser only) rather than writing Fabric JSON by hand; docs: https://nordvikmanager.pl/addon-guide/tokens. A human can open a file there, see it drawn with sample values and download it.
 - Special properties: `token` (token file for the map, e.g. `"myaddon_token_character.json"`), `app_styles`, `additionalArguments` (value handed to the page; a view opened with ShowView `Data` gets that instead).
 - Pages are small and resizable; make them work at narrow widths.
 
