@@ -107,3 +107,27 @@ test('updateSession refuses anyone but the owner or an admin', () => {
 test('updateSession reports a missing session', () => {
   assert.equal(sessionService.updateSession(randomUUID(), ownerId, false, { name: 'X' }).status, 404);
 });
+
+test('updateSession with a password sets it, so a session made without one becomes joinable', () => {
+  // A session the GM backend created without sending the password: required, but no hash.
+  const broken = sessionService.createSession(ownerId, { name: 'No hash', passwordRequired: true });
+  assert.equal(broken.password_hash, null);
+
+  sessionService.updateSession(broken.id, ownerId, false, { name: 'No hash', password: 'fixed' });
+
+  const row = sessionService.getSessionById(broken.id);
+  assert.equal(row.password_required, 1);
+  const newcomer = createUser('newcomer-after-fix');
+  assert.equal(sessionService.joinSession(newcomer, broken.id, 'wrong').status, 401);
+  assert.equal(sessionService.joinSession(newcomer, broken.id, 'fixed').ok, true);
+});
+
+test('joinSession on a password-required session without a stored hash answers 503 instead of throwing', () => {
+  const broken = sessionService.createSession(ownerId, { name: 'Unjoinable', passwordRequired: true });
+  const newcomer = createUser('newcomer-broken');
+
+  const result = sessionService.joinSession(newcomer, broken.id, 'anything');
+
+  assert.equal(result.status, 503);
+  assert.match(result.error, /start the game again/);
+});

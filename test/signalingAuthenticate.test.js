@@ -167,3 +167,15 @@ test('evicting an unresponsive GM tells the session the GM peer left', async () 
   const left = (io.rooms[`session:${session.id}`] ?? []).filter((e) => e.event === EVENTS.PEER_LEFT);
   assert.deepEqual(left.map((e) => e.data.peerId), [gm.id]);
 });
+
+test('a GM connecting marks its session as seen, so session expiry keeps it', () => {
+  const session = sessionService.createSession(owner.id, { name: 'Seen' });
+  db.prepare('UPDATE game_sessions SET last_gm_seen_at = ? WHERE id = ?').run('2000-01-01T00:00:00.000Z', session.id);
+  const gm = fakeSocket(io);
+
+  handleAuthenticate(io, gm, { token: authService.generateSignalingTicket(owner.id, session.id), sessionId: session.id, role: 'gm', protocol: 2 });
+
+  assert.equal(events(gm, EVENTS.AUTHENTICATED).length, 1);
+  const seen = Date.parse(sessionService.getSessionById(session.id).last_gm_seen_at);
+  assert.ok(Date.now() - seen < 5000);
+});

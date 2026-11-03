@@ -14,6 +14,7 @@ const mountRoutes = require('./routes/index');
 const mountDocs = require('./routes/docs');
 const { attachSignalingServer } = require('./signaling/signalingServer');
 const errorHandler = require('./middleware/errorHandler');
+const { startCleanup } = require('./services/cleanupService');
 const logger = require('./logger');
 
 // Run DB migrations before anything else
@@ -74,6 +75,8 @@ attachSignalingServer(server);
 
 server.listen(config.port, () => {
   logger.info(`NordvikManager Central Server listening on port ${config.port} [${config.nodeEnv}]`);
+  // Prunes used refresh tokens, old invites and expired game sessions, now and hourly.
+  startCleanup();
 });
 
 module.exports = { app, server };

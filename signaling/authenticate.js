@@ -101,6 +101,8 @@ function handleAuthenticate(io, socket, { token, sessionId, role, traceId, proto
 
   if (role === 'gm') {
     signaling.registerGm(sessionId, socket.id, gmProtocol);
+    // Session expiry counts from the GM's last connection (services/cleanupService.js).
+    sessionService.touchSession(sessionId);
   }
 
   socket.join(`session:${sessionId}`);

@@ -38,6 +38,14 @@ function runMigration() {
     console.log('[migration] added max_uses/use_count columns to invites');
   }
 
+  // When the session's GM backend last connected (session expiry). Existing sessions start
+  // counting from now instead of being expired straight away.
+  if (!columns.some((c) => c.name === 'last_gm_seen_at')) {
+    db.prepare('ALTER TABLE game_sessions ADD COLUMN last_gm_seen_at TEXT').run();
+    db.prepare('UPDATE game_sessions SET last_gm_seen_at = ?').run(new Date().toISOString());
+    console.log('[migration] added last_gm_seen_at column to game_sessions');
+  }
+
   console.log('[migration] 001_initial applied');
 }
 

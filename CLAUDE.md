@@ -73,6 +73,8 @@ SQLite via `better-sqlite3` (synchronous API). All queries use prepared statemen
 
 All primary keys are UUID strings generated with `crypto.randomUUID()`. Boolean columns are stored as `INTEGER 0/1`. Dates are ISO8601 strings via SQLite `datetime('now')`.
 
+**Cleanup** (`services/cleanupService.js`, at startup and hourly): deletes revoked/expired refresh tokens, invites expired more than 30 days ago, and game sessions whose GM backend last connected (`game_sessions.last_gm_seen_at`, set on GM `authenticate` and for every live GM each run) more than `SESSION_EXPIRY_DAYS` (default 90, 0 = off) ago. A GM backend whose session is gone gets 404 from `updategame` on its next start and creates a new one. `updategame` also takes an optional `password` (the backend sends the game's), which heals sessions created with `password_required` but no hash; joining such a session answers 503 instead of crashing.
+
 ### API response shapes
 
 The `/api/user/*` and `/api/gamelist/*` shapes must stay compatible with the React frontend. Key constraints:
