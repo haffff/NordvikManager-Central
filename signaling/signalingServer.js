@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const config = require('../config/config');
 const signaling = require('../services/signalingService');
 const { handleAuthenticate } = require('./authenticate');
+const { relayOffer } = require('./relay');
 const EVENTS = require('./events');
 const logger = require('../logger');
 
@@ -25,19 +26,7 @@ function attachSignalingServer(httpServer) {
     socket.on(EVENTS.AUTHENTICATE, (payload) => handleAuthenticate(io, socket, payload));
 
     // ── WEBRTC OFFER ────────────────────────────────────────────────────
-    socket.on(EVENTS.WEBRTC_OFFER, ({ targetPeerId, offer } = {}) => {
-      if (!isAuthenticated(socket.id)) return;
-      if (!targetPeerId || !offer) return;
-      if (!signaling.inSameSession(socket.id, targetPeerId)) return;
-
-      const peer = signaling.getPeer(socket.id);
-      logger.debug(`[signaling] relay webrtc-offer from=${socket.id} to=${targetPeerId} session=${peer?.sessionId ?? 'n/a'} traceId=${peer?.traceId ?? 'n/a'}`);
-
-      io.to(targetPeerId).emit(EVENTS.WEBRTC_OFFER, {
-        fromPeerId: socket.id,
-        offer,
-      });
-    });
+    socket.on(EVENTS.WEBRTC_OFFER, (payload) => relayOffer(io, socket, payload));
 
     // ── WEBRTC ANSWER ───────────────────────────────────────────────────
     socket.on(EVENTS.WEBRTC_ANSWER, ({ targetPeerId, answer } = {}) => {
