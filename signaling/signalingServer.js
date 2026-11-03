@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 const config = require('../config/config');
 const signaling = require('../services/signalingService');
 const { handleAuthenticate } = require('./authenticate');
-const { relayOffer } = require('./relay');
+const { relayOffer, answerGmAlive } = require('./relay');
 const EVENTS = require('./events');
 const logger = require('../logger');
 
@@ -27,6 +27,9 @@ function attachSignalingServer(httpServer) {
 
     // ── WEBRTC OFFER ────────────────────────────────────────────────────
     socket.on(EVENTS.WEBRTC_OFFER, (payload) => relayOffer(io, socket, payload));
+
+    // ── GM ALIVE (watchdog, acknowledged) ────────────────────────────────
+    socket.on(EVENTS.GM_ALIVE, (...args) => answerGmAlive(socket, args.at(-1)));
 
     // ── WEBRTC ANSWER ───────────────────────────────────────────────────
     socket.on(EVENTS.WEBRTC_ANSWER, ({ targetPeerId, answer } = {}) => {

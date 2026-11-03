@@ -23,4 +23,12 @@ function relayOffer(io, socket, { targetPeerId, offer } = {}) {
   });
 }
 
-module.exports = { relayOffer };
+// The GM backend's watchdog (gm-alive, acknowledged): true while this socket is still its
+// session's GM. No answer, or false, tells a backend its connection died unnoticed.
+function answerGmAlive(socket, ack) {
+  if (typeof ack !== 'function') return;
+  const peer = signaling.getPeer(socket.id);
+  ack(!!peer && peer.role === 'gm' && signaling.getGmSocket(peer.sessionId) === socket.id);
+}
+
+module.exports = { relayOffer, answerGmAlive };

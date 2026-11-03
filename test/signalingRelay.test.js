@@ -43,3 +43,20 @@ test('an offer to a peer in another session, or from an unauthenticated socket, 
   signaling.removePeer('p1');
   signaling.removePeer('gm2');
 });
+
+// The GM backend's watchdog: Central acknowledges gm-alive with whether the socket is
+// still the session's GM, so a backend whose connection died unnoticed can tell.
+const { answerGmAlive } = require('../signaling/relay');
+
+test('gm-alive is answered true for the session\'s GM socket, false otherwise', () => {
+  signaling.addPeer('gm-alive-sock', { userId: 'u', username: 'gm', isAdmin: false, sessionId: 's-alive', role: 'gm' });
+  signaling.registerGm('s-alive', 'gm-alive-sock', 2);
+  const answers = [];
+
+  answerGmAlive({ id: 'gm-alive-sock' }, (ok) => answers.push(ok));
+  answerGmAlive({ id: 'unknown-sock' }, (ok) => answers.push(ok));
+  answerGmAlive({ id: 'gm-alive-sock' }, undefined); // no ack asked: nothing to do
+
+  assert.deepEqual(answers, [true, false]);
+  signaling.removePeer('gm-alive-sock');
+});
