@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     password_required INTEGER NOT NULL DEFAULT 0,
     is_public         INTEGER NOT NULL DEFAULT 0,
     owner_id          TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_gm_seen_at   TEXT,
     created_at        TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at        TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -54,6 +54,10 @@ const config = Object.freeze({
   // Lowest GM backend protocol version allowed to start a session (see services/protocol.js).
   minGmProtocol: parseInt(process.env.MIN_GM_PROTOCOL || '1', 10),
 
+  // A game session whose GM backend hasn't connected for this many days is deleted, with its
+  // members (see services/cleanupService.js). 0 keeps sessions forever.
+  sessionExpiryDays: parseInt(process.env.SESSION_EXPIRY_DAYS || '90', 10),
+
   // Optional log level override. If not set, defaults to 'debug' in development and 'info' in production.
   logLevel: process.env.LOG_LEVEL || null,
 

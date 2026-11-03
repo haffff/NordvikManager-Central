@@ -126,10 +126,11 @@ router.post(
     body('summary').optional({ checkFalsy: true }).isLength({ max: 500 }),
     body('description').optional({ checkFalsy: true }).isLength({ max: 5000 }),
     body('isPublic').optional().isBoolean().toBoolean(),
+    body('password').optional({ checkFalsy: true }).isString().isLength({ max: 128 }),
   ],
   validate,
   (req, res) => {
-    const { sessionId, name, summary, description, image, isPublic } = req.body;
+    const { sessionId, name, summary, description, image, isPublic, password } = req.body;
 
     if (isPublic && !config.allowPublicGames) {
       return res.status(403).json({ error: 'Public games are not allowed on this server' });
@@ -141,6 +142,7 @@ router.post(
       description,
       imageData: image || null,
       isPublic: !!isPublic,
+      password: password || null,
     });
     if (result.error) {
       return res.status(result.status).json({ error: result.error });
