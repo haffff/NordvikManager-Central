@@ -78,3 +78,24 @@ test('it needs a login', async () => {
   const session = sessionService.createSession(ownerId, { name: 'G' });
   assert.equal((await post({ sessionId: session.id })).status, 401);
 });
+
+// A ticket lives as long as a refresh token; logging out (or an admin resetting the
+// password) has to end it too, as it ends the refresh tokens.
+test('a ticket issued before its user logged out is refused', async () => {
+  const { randomUUID } = require('crypto');
+  const db2 = require('../db/database');
+  const auth2 = require('../services/authService');
+  const sessions2 = require('../services/gameSessionService');
+  const id = randomUUID();
+  db2.prepare('INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)').run(id, `logout-${id}`, 'x');
+  const s = sessions2.createSession(id, { name: 'Ticketed' });
+  const ticket = auth2.generateSignalingTicket(id, s.id);
+  assert.ok(auth2.verifySignalingTicket(ticket, s.id));
+
+
+  auth2.revokeRefreshTokensForUser(id);
+
+  assert.equal(auth2.verifySignalingTicket(ticket, s.id), null);
+  const fresh = auth2.generateSignalingTicket(id, s.id);
+  assert.ok(auth2.verifySignalingTicket(fresh, s.id), 'a ticket issued after the logout works');
+});

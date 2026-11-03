@@ -86,3 +86,19 @@ test('it needs a login, a session id and a name', async () => {
 test('an unknown session is 404', async () => {
   assert.equal((await post({ sessionId: randomUUID(), name: 'X' }, ownerId)).status, 404);
 });
+
+test('a password sent with the update is stored; one left out keeps the old one', async () => {
+  const session = sessionService.createSession(ownerId, { name: 'Locked', passwordRequired: true });
+
+  assert.equal((await post({ sessionId: session.id, name: 'Locked', password: 'pw' }, ownerId)).status, 200);
+  const hash = sessionService.getSessionById(session.id).password_hash;
+  assert.ok(hash);
+
+  assert.equal((await post({ sessionId: session.id, name: 'Locked' }, ownerId)).status, 200);
+  assert.equal(sessionService.getSessionById(session.id).password_hash, hash);
+});
+
+test('a too-long password is 400', async () => {
+  const session = sessionService.createSession(ownerId, { name: 'Long' });
+  assert.equal((await post({ sessionId: session.id, name: 'Long', password: 'x'.repeat(129) }, ownerId)).status, 400);
+});

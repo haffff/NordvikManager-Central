@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 const config = require('../config/config');
 const signaling = require('../services/signalingService');
 const { handleAuthenticate } = require('./authenticate');
-const { relayOffer, answerGmAlive } = require('./relay');
+const { relayOffer, relayAnswer, relayIceCandidate, answerGmAlive } = require('./relay');
 const EVENTS = require('./events');
 const logger = require('../logger');
 
@@ -25,42 +25,17 @@ function attachSignalingServer(httpServer) {
     // ── AUTHENTICATE ────────────────────────────────────────────────────
     socket.on(EVENTS.AUTHENTICATE, (payload) => handleAuthenticate(io, socket, payload));
 
-    // ── WEBRTC OFFER ────────────────────────────────────────────────────
+    // ── WEBRTC OFFER (player → GM) ──────────────────────────────────────
     socket.on(EVENTS.WEBRTC_OFFER, (payload) => relayOffer(io, socket, payload));
 
     // ── GM ALIVE (watchdog, acknowledged) ────────────────────────────────
     socket.on(EVENTS.GM_ALIVE, (...args) => answerGmAlive(socket, args.at(-1)));
 
-    // ── WEBRTC ANSWER ───────────────────────────────────────────────────
-    socket.on(EVENTS.WEBRTC_ANSWER, ({ targetPeerId, answer } = {}) => {
-      if (!isAuthenticated(socket.id)) return;
-      if (!targetPeerId || !answer) return;
-      if (!signaling.inSameSession(socket.id, targetPeerId)) return;
+    // ── WEBRTC ANSWER (GM → player) ─────────────────────────────────────
+    socket.on(EVENTS.WEBRTC_ANSWER, (payload) => relayAnswer(io, socket, payload));
 
-      const targetPeer = signaling.getPeer(targetPeerId);
-      logger.debug(`[signaling] relay webrtc-answer from=${socket.id} to=${targetPeerId} session=${targetPeer?.sessionId ?? 'n/a'} traceId=${targetPeer?.traceId ?? 'n/a'}`);
-
-      io.to(targetPeerId).emit(EVENTS.WEBRTC_ANSWER, {
-        fromPeerId: socket.id,
-        answer,
-      });
-    });
-
-    // ── ICE CANDIDATE ───────────────────────────────────────────────────
-    socket.on(EVENTS.ICE_CANDIDATE, ({ targetPeerId, candidate } = {}) => {
-      if (!isAuthenticated(socket.id)) return;
-      if (!targetPeerId || !candidate) return;
-      if (!signaling.inSameSession(socket.id, targetPeerId)) return;
-      if (!signaling.checkIceRateLimit(socket.id, targetPeerId)) return;
-
-      const peer = signaling.getPeer(socket.id);
-      logger.debug(`[signaling] relay ice-candidate from=${socket.id} to=${targetPeerId} session=${peer?.sessionId ?? 'n/a'}`);
-
-      io.to(targetPeerId).emit(EVENTS.ICE_CANDIDATE, {
-        fromPeerId: socket.id,
-        candidate,
-      });
-    });
+    // ── ICE CANDIDATE (between the GM and a player) ─────────────────────
+    socket.on(EVENTS.ICE_CANDIDATE, (payload) => relayIceCandidate(io, socket, payload));
 
     // ── DISCONNECT ──────────────────────────────────────────────────────
     socket.on('disconnect', (reason) => {
@@ -79,10 +54,6 @@ function attachSignalingServer(httpServer) {
   });
 
   return io;
-}
-
-function isAuthenticated(socketId) {
-  return signaling.getPeer(socketId) !== null;
 }
 
 module.exports = { attachSignalingServer };

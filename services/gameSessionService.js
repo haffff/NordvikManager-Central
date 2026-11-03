@@ -11,11 +11,16 @@ function createSession(ownerId, { name, summary, description, imageData, passwor
     : null;
 
   db.prepare(
-    `INSERT INTO game_sessions (id, name, summary, description, image_data, password_hash, password_required, is_public, owner_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, name, summary || null, description || null, imageData || null, passwordHash, passwordRequired ? 1 : 0, isPublic ? 1 : 0, ownerId);
+    `INSERT INTO game_sessions (id, name, summary, description, image_data, password_hash, password_required, is_public, owner_id, last_gm_seen_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, name, summary || null, description || null, imageData || null, passwordHash, passwordRequired ? 1 : 0, isPublic ? 1 : 0, ownerId, new Date().toISOString());
 
   return getSessionById(id);
+}
+
+// The session's GM backend just connected: session expiry counts from now.
+function touchSession(sessionId, now = new Date()) {
+  db.prepare('UPDATE game_sessions SET last_gm_seen_at = ? WHERE id = ?').run(now.toISOString(), sessionId);
 }
 
 function getSessionById(id) {
@@ -54,6 +59,10 @@ function joinSession(userId, sessionId, password) {
   if (existing) return { error: 'Already joined', status: 409, sessionId };
 
   if (session.password_required) {
+    // Made by a GM backend that didn't send the password; it sends it with its next start.
+    if (!session.password_hash) {
+      return { error: "This game's password isn't set up yet. Ask the GM to start the game again.", status: 503 };
+    }
     if (!password) return { error: 'Password required', status: 400 };
     if (!bcrypt.compareSync(password, session.password_hash)) {
       return { error: 'Incorrect password', status: 401 };
@@ -67,6 +76,16 @@ function joinSession(userId, sessionId, password) {
   return { ok: true, sessionId };
 }
 
+/** True for the session's owner and for anyone who joined it (and so passed its password). */
+function isMember(sessionId, userId) {
+  const session = db.prepare('SELECT owner_id FROM game_sessions WHERE id = ?').get(sessionId);
+  if (!session) return false;
+  if (session.owner_id === userId) return true;
+  return !!db
+    .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
+    .get(sessionId, userId);
+}
+
 function deleteSession(sessionId, requestingUserId, isAdmin) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
@@ -78,18 +97,25 @@ function deleteSession(sessionId, requestingUserId, isAdmin) {
 }
 
 // The listed details of a session, sent again by the GM backend when it starts the
-// session so the list stays current. The password isn't among them (the backend
-// doesn't keep it in a form it can send); a value left out is cleared.
-function updateSession(sessionId, requestingUserId, isAdmin, { name, summary, description, imageData, isPublic }) {
+// session so the list stays current; a value left out is cleared. The password is the
+// exception: given, it replaces the stored one (and makes the game password-protected);
+// left out — an older backend never sends it — the stored one is kept.
+function updateSession(sessionId, requestingUserId, isAdmin, { name, summary, description, imageData, isPublic, password }) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
   if (!isAdmin && session.owner_id !== requestingUserId) {
     return { error: 'Forbidden', status: 403 };
   }
-  db.prepare(
-    `UPDATE game_sessions SET name = ?, summary = ?, description = ?, image_data = ?, is_public = ?
-     WHERE id = ?`
-  ).run(name, summary || null, description || null, imageData || null, isPublic ? 1 : 0, sessionId);
+  db.transaction(() => {
+    db.prepare(
+      `UPDATE game_sessions SET name = ?, summary = ?, description = ?, image_data = ?, is_public = ?
+       WHERE id = ?`
+    ).run(name, summary || null, description || null, imageData || null, isPublic ? 1 : 0, sessionId);
+    if (password) {
+      db.prepare('UPDATE game_sessions SET password_hash = ?, password_required = 1 WHERE id = ?')
+        .run(bcrypt.hashSync(password, 10), sessionId);
+    }
+  })();
   return { ok: true, session: getSessionById(sessionId) };
 }
 
@@ -110,10 +136,12 @@ function getPublicSessions() {
 
 module.exports = {
   createSession,
+  touchSession,
   getSessionById,
   getSessionsForUser,
   getPublicSessions,
   joinSession,
+  isMember,
   deleteSession,
   updateSession,
   getPlayersInSession,

@@ -564,6 +564,7 @@ const spec = {
                   description: { type: 'string', maxLength: 5000 },
                   image: { type: 'string', description: 'Cover image as a data URL' },
                   isPublic: { type: 'boolean', default: false },
+                  password: { type: 'string', maxLength: 128, description: 'Optional. Replaces the game password (and makes the game password-protected); left out, the stored one is kept.' },
                 },
               },
             },

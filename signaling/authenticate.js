@@ -60,6 +60,19 @@ function handleAuthenticate(io, socket, { token, sessionId, role, traceId, proto
     }
   }
 
+  // A player must have joined the game first (gamelist/join checks its password); the GM
+  // backend creates whoever connects here as a player, so this is the password gate.
+  if (role === 'player') {
+    if (!sessionService.getSessionById(sessionId)) {
+      reject(socket, 'Game session not found', `${logCtx} userId=${user.id}`);
+      return;
+    }
+    if (!sessionService.isMember(sessionId, user.id)) {
+      reject(socket, 'Join the game before connecting', `${logCtx} userId=${user.id}`);
+      return;
+    }
+  }
+
   let gmProtocol = null;
   if (role === 'gm') {
     const protocolCheck = checkGmProtocol(protocol, config.minGmProtocol);
@@ -101,6 +114,8 @@ function handleAuthenticate(io, socket, { token, sessionId, role, traceId, proto
 
   if (role === 'gm') {
     signaling.registerGm(sessionId, socket.id, gmProtocol);
+    // Session expiry counts from the GM's last connection (services/cleanupService.js).
+    sessionService.touchSession(sessionId);
   }
 
   socket.join(`session:${sessionId}`);

@@ -92,6 +92,11 @@ function getGmSocket(sessionId) {
   return gmSockets.get(sessionId) || null;
 }
 
+/** Ids of the sessions that have a GM connected right now. */
+function getGmSessionIds() {
+  return Array.from(gmSockets.keys());
+}
+
 function isGmAlreadyConnected(sessionId) {
   return gmSockets.has(sessionId);
 }
@@ -208,6 +213,7 @@ module.exports = {
   getPeer,
   registerGm,
   getGmSocket,
+  getGmSessionIds,
   getGmProtocol,
   isGmAlreadyConnected,
   isSessionFull,
