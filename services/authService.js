@@ -51,8 +51,9 @@ const TICKET_TYPE = 'gm-signaling';
 const ticketSecret = () => createHmac('sha256', config.jwt.secret).update(TICKET_TYPE).digest();
 
 function generateSignalingTicket(userId, sessionId) {
+  const user = db.prepare('SELECT ticket_generation FROM users WHERE id = ?').get(userId);
   return jwt.sign(
-    { sub: userId, sid: sessionId, typ: TICKET_TYPE },
+    { sub: userId, sid: sessionId, typ: TICKET_TYPE, gen: user?.ticket_generation ?? 0 },
     ticketSecret(),
     { expiresIn: config.refreshToken.expiresIn }
   );
@@ -69,6 +70,9 @@ function verifySignalingTicket(token, sessionId) {
   if (payload.typ !== TICKET_TYPE || payload.sid !== sessionId) return null;
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.sub);
   if (!user) return null;
+  // Logging out (or an admin resetting the password) ends the user's tickets along with
+  // their refresh tokens: it moves the user on to a new ticket generation.
+  if ((payload.gen ?? 0) !== (user.ticket_generation ?? 0)) return null;
   return { id: user.id, username: user.username, email: user.email, isAdmin: user.is_admin === 1 };
 }
 
@@ -106,8 +110,13 @@ function rotateRefreshToken(oldToken) {
   return { accessToken, refreshToken: newRefreshToken, user };
 }
 
+// Logout and admin password reset: every refresh token and GM signaling ticket the user
+// holds stops working (tickets issued up to now, see verifySignalingTicket).
 function revokeRefreshTokensForUser(userId) {
-  db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?').run(userId);
+  db.transaction(() => {
+    db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?').run(userId);
+    db.prepare('UPDATE users SET ticket_generation = ticket_generation + 1 WHERE id = ?').run(userId);
+  })();
 }
 
 function parseExpiry(expiry) {

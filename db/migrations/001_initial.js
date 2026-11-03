@@ -46,6 +46,14 @@ function runMigration() {
     console.log('[migration] added last_gm_seen_at column to game_sessions');
   }
 
+  // Bumped when the user logs out or has the password reset: GM signaling tickets carry the
+  // generation they were issued in, and older ones are refused (services/authService.js).
+  const userColumns = db.prepare('PRAGMA table_info(users)').all();
+  if (!userColumns.some((c) => c.name === 'ticket_generation')) {
+    db.prepare('ALTER TABLE users ADD COLUMN ticket_generation INTEGER NOT NULL DEFAULT 0').run();
+    console.log('[migration] added ticket_generation column to users');
+  }
+
   console.log('[migration] 001_initial applied');
 }
 

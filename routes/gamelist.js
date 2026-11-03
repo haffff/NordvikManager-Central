@@ -7,8 +7,30 @@ const authService = require('../services/authService');
 const config = require('../config/config');
 const sessionService = require('../services/gameSessionService');
 const signalingService = require('../services/signalingService');
+const rateLimit = require('express-rate-limit');
 
 const router = express.Router();
+
+// gamelist/join is where a game's password is checked (signaling admits members only), so
+// guessing it is slowed down: per user, and per address for someone using several accounts.
+// Only failed tries count; a member coming back (409) or a right password never does.
+const JOIN_WINDOW_MS = 15 * 60 * 1000;
+const JOIN_FAILURES_PER_USER = 10;
+const JOIN_FAILURES_PER_IP = 30;
+const joinTryCounted = {
+  windowMs: JOIN_WINDOW_MS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req, res) => res.statusCode < 400 || res.statusCode === 409,
+  message: { error: 'Too many failed attempts to join, please try again later' },
+};
+const joinLimiterPerIp = rateLimit({ ...joinTryCounted, limit: JOIN_FAILURES_PER_IP });
+const joinLimiterPerUser = rateLimit({
+  ...joinTryCounted,
+  limit: JOIN_FAILURES_PER_USER,
+  keyGenerator: (req) => `user:${req.user.id}`,
+});
 
 function validate(req, res, next) {
   const errors = validationResult(req);
@@ -186,6 +208,8 @@ router.post(
 router.post(
   '/join',
   auth,
+  joinLimiterPerIp,
+  joinLimiterPerUser,
   [body('gameID').trim().notEmpty()],
   validate,
   (req, res) => {
@@ -246,3 +270,4 @@ router.get('/versioninfo', auth, (_req, res) => {
 });
 
 module.exports = router;
+module.exports.JOIN_FAILURES_PER_USER = JOIN_FAILURES_PER_USER;
