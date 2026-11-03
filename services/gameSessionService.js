@@ -76,6 +76,16 @@ function joinSession(userId, sessionId, password) {
   return { ok: true, sessionId };
 }
 
+/** True for the session's owner and for anyone who joined it (and so passed its password). */
+function isMember(sessionId, userId) {
+  const session = db.prepare('SELECT owner_id FROM game_sessions WHERE id = ?').get(sessionId);
+  if (!session) return false;
+  if (session.owner_id === userId) return true;
+  return !!db
+    .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
+    .get(sessionId, userId);
+}
+
 function deleteSession(sessionId, requestingUserId, isAdmin) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
@@ -131,6 +141,7 @@ module.exports = {
   getSessionsForUser,
   getPublicSessions,
   joinSession,
+  isMember,
   deleteSession,
   updateSession,
   getPlayersInSession,

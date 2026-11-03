@@ -55,7 +55,7 @@ Refresh tokens are UUID strings stored in the `refresh_tokens` table with a `rev
 
 Socket.io is attached to the same HTTP server at path `/socket.io`. It is a **pure relay** — it never participates in the WebRTC handshake itself.
 
-After connecting, a client must emit `authenticate { token, sessionId, role }` (role is `'gm'` or `'player'`). On success the socket joins room `session:<sessionId>`. All subsequent signaling events (`webrtc-offer`, `webrtc-answer`, `ice-candidate`) carry a `targetPeerId` and are forwarded only if sender and target are in the same room. See `signaling/events.js` for all event name constants.
+After connecting, a client must emit `authenticate { token, sessionId, role }` (role is `'gm'` or `'player'`). A GM must own the session; a player must own it or have joined it through `gamelist/join` (which checks the password) — the GM backend creates whoever connects as a player, so this check is the game's password gate. On success the socket joins room `session:<sessionId>`. All subsequent signaling events (`webrtc-offer`, `webrtc-answer`, `ice-candidate`) carry a `targetPeerId` and are forwarded only if sender and target are in the same room. See `signaling/events.js` for all event name constants.
 
 **Protocol version.** The GM backend sends `protocol` (integer) in its `authenticate`. `services/protocol.js` validates it; below `MIN_GM_PROTOCOL` the GM gets an `auth-error` telling it to update. Players receive it as `gmProtocol` in `session-info` and switch to the matching frozen player build at `/client/p<N>/` before connecting. The protocol number only goes up on breaking player↔backend changes; bump it in Backend (`ProtocolVersion.Current`) and Frontend (`src/protocol.json`) together.
 
