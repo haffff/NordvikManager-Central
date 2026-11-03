@@ -631,6 +631,32 @@ const spec = {
       },
     },
 
+    '/api/gamelist/signalingticket': {
+      post: {
+        tags: ['Game Sessions'],
+        summary: 'Get a GM signaling ticket for a session',
+        description: 'Sent by the GM backend when it starts the session. The ticket lets it authenticate to signaling as GM of this one session (as the `token` of `authenticate`) for as long as a refresh token lives, so its socket can reconnect after the access token expired. It is not an access token. Owner only.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['sessionId'],
+                properties: { sessionId: { type: 'string', format: 'uuid' } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Ticket issued', content: { 'application/json': { schema: { type: 'object', properties: { ticket: { type: 'string' } } } } } },
+          400: { description: 'Validation error' },
+          401: { description: 'Not authenticated' },
+          403: { description: 'Not the owner' },
+          404: { description: 'Session not found' },
+        },
+      },
+    },
     '/api/gamelist/join': {
       post: {
         tags: ['Game Sessions'],

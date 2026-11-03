@@ -3,6 +3,7 @@
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
+const authService = require('../services/authService');
 const config = require('../config/config');
 const sessionService = require('../services/gameSessionService');
 const signalingService = require('../services/signalingService');
@@ -156,6 +157,26 @@ router.post(
       ownerId: session.owner_id,
       createdAt: session.created_at,
     });
+  }
+);
+
+// POST /api/gamelist/signalingticket
+// The GM backend trades its short-lived access token for a ticket that only lets it
+// connect to signaling as GM of this session (see authService.generateSignalingTicket),
+// so its socket can reconnect on its own long after the access token expired.
+router.post(
+  '/signalingticket',
+  auth,
+  [body('sessionId').trim().notEmpty()],
+  validate,
+  (req, res) => {
+    const session = sessionService.getSessionById(req.body.sessionId);
+    if (!session) return res.status(404).json({ error: 'Game session not found' });
+    if (session.owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the session owner may connect as GM' });
+    }
+    res.set('Cache-Control', 'no-store');
+    res.json({ ticket: authService.generateSignalingTicket(req.user.id, session.id) });
   }
 );
 

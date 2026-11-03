@@ -56,6 +56,25 @@ function removePeer(socketId) {
   }
 }
 
+/**
+ * Drops a peer the server gave up on: the rest of its session hears PEER_LEFT (players
+ * then look for the GM's next connection), then its socket is closed. Its own disconnect
+ * handler finds no peer left, so PEER_LEFT goes out once. `error`, when given, is sent
+ * to the socket as AUTH_ERROR first — the reason it should not just reconnect.
+ */
+function evictPeer(socketId, { error } = {}) {
+  const peer = peers.get(socketId);
+  if (peer) {
+    _io?.to(`session:${peer.sessionId}`).emit(EVENTS.PEER_LEFT, { peerId: socketId, username: peer.username });
+    removePeer(socketId);
+  }
+  const socket = _io?.sockets?.sockets?.get(socketId);
+  if (socket) {
+    if (error) socket.emit(EVENTS.AUTH_ERROR, { error });
+    socket.disconnect(true);
+  }
+}
+
 function getPeer(socketId) {
   return peers.get(socketId) || null;
 }
@@ -162,14 +181,10 @@ async function pingGmSocket(sessionId, timeoutMs = GM_PING_TIMEOUT_MS) {
         const strikes = (gmPingStrikes.get(sessionId) || 0) + 1;
 
         if (strikes >= GM_PING_MAX_STRIKES) {
-          // Consistently unresponsive — evict state and force-disconnect so
-          // the GM backend's OnDisconnected fires and triggers its reconnect.
+          // Consistently unresponsive — evict it and force-disconnect so the GM
+          // backend's OnDisconnected fires and triggers its reconnect.
           logger.warn(`[signaling] GM evicted sessionId=${sessionId} reason="consecutive ping timeouts (${GM_PING_MAX_STRIKES})" socketId=${gmSocketId}`);
-          gmPingStrikes.delete(sessionId);
-          gmSockets.delete(sessionId);
-          gmProtocols.delete(sessionId);
-          removePeer(gmSocketId);
-          socket.disconnect(true);
+          evictPeer(gmSocketId);
         } else {
           gmPingStrikes.set(sessionId, strikes);
           logger.warn(`[signaling] GM ping timeout sessionId=${sessionId} strikes=${strikes}/${GM_PING_MAX_STRIKES} socketId=${gmSocketId}`);
@@ -189,6 +204,7 @@ module.exports = {
   setIo,
   addPeer,
   removePeer,
+  evictPeer,
   getPeer,
   registerGm,
   getGmSocket,
