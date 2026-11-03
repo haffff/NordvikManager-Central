@@ -17,4 +17,8 @@ module.exports = Object.freeze({
 
   // Server → GM (with ack) — GM backend must call the acknowledgment callback immediately
   PING_GM: 'ping-gm',
+
+  // GM → Server (with ack): the GM backend's watchdog; acknowledged with whether the socket
+  // is still the session's GM.
+  GM_ALIVE: 'gm-alive',
 });

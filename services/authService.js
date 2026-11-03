@@ -2,7 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { randomUUID } = require('crypto');
+const { randomUUID, createHmac } = require('crypto');
 const config = require('../config/config');
 const db = require('../db/database');
 
@@ -41,6 +41,35 @@ function verifyAccessToken(token) {
   } catch {
     return null;
   }
+}
+
+// GM signaling ticket: lets a GM backend (re)connect to signaling as GM of one session
+// long after its 15-minute access token expired (its socket drops and comes back on its
+// own, with no browser around to refresh). Signed with a key derived from JWT_SECRET, so
+// it never passes as an access token, and it names the one session it is good for.
+const TICKET_TYPE = 'gm-signaling';
+const ticketSecret = () => createHmac('sha256', config.jwt.secret).update(TICKET_TYPE).digest();
+
+function generateSignalingTicket(userId, sessionId) {
+  return jwt.sign(
+    { sub: userId, sid: sessionId, typ: TICKET_TYPE },
+    ticketSecret(),
+    { expiresIn: config.refreshToken.expiresIn }
+  );
+}
+
+/** The ticket's user, read from the database (it may be gone), or null. */
+function verifySignalingTicket(token, sessionId) {
+  let payload;
+  try {
+    payload = jwt.verify(token, ticketSecret());
+  } catch {
+    return null;
+  }
+  if (payload.typ !== TICKET_TYPE || payload.sid !== sessionId) return null;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.sub);
+  if (!user) return null;
+  return { id: user.id, username: user.username, email: user.email, isAdmin: user.is_admin === 1 };
 }
 
 function generateRefreshToken(userId) {
@@ -99,6 +128,8 @@ module.exports = {
   comparePassword,
   generateAccessToken,
   verifyAccessToken,
+  generateSignalingTicket,
+  verifySignalingTicket,
   generateRefreshToken,
   rotateRefreshToken,
   revokeRefreshTokensForUser,
