@@ -111,6 +111,46 @@ const blob = await Api.Resources.Read('portrait');
 img.src = blob ? URL.createObjectURL(blob) : placeholder;
 ```
 
+### Big files: Open and Upload
+
+A PDF, a book of data or a music track can be tens of megabytes. Open it as a file and read only what you
+show: the app downloads just those bytes, in pieces it keeps in its cache, so the file opens at once and a
+second visit downloads nothing. You never split, encode or chunk files yourself.
+
+| Method | Returns | Notes |
+|---|---|---|
+| `Open(ref)` | a file, or `null` | `ref` is a game-wide key (`'myaddon_rules.pdf'`), `{ key }` or `{ id }`. |
+| `Upload(data, options?, onProgress?)` | `{ id, key }` | Stores a file. Big files go up in parts and carry on after a dropped connection. |
+| `List({ mimeType? })` | `[{ id, name, mimeType, key }]` | The game's files this player can see (all of them for a GM), e.g. PDFs from the Materials panel. |
+| `ReadById(id)` | string, Blob or `null` | A file from `List`, whole. |
+
+A file from `Open` has:
+
+| Member | |
+|---|---|
+| `size`, `mimeType`, `version` | What it is. `version` changes when the file does. |
+| `read(start, end)` | The bytes from `start` up to `end` (not included), as a `Uint8Array`. |
+| `blob()`, `text()`, `json()` | All of it. |
+| `mediaUrl()` | A `blob:` URL for an `<img>`, `<audio>` or `<video>` in the card (the whole file). |
+
+`Upload` options: `key` (scoped to the card unless `global: true`; made up when you leave it out),
+`name`, `mimeType`, `global`, and `storage: 'file'` to keep a big file in the server's file storage, where
+its parts are read without loading it whole (needs **Edit** on the game, so the GM's cards).
+`onProgress(fraction)` follows the upload.
+
+```js
+// show page 3 of a big PDF with pdf.js, reading only what it asks for
+const file = await Api.Resources.Open({ id: pdfId });
+const transport = new pdfjs.PDFDataRangeTransport(file.size, await file.read(0, 262144));
+transport.requestDataRange = (begin, end) => file.read(begin, end).then((b) => transport.onDataRange(begin, b));
+const pdf = await pdfjs.getDocument({ range: transport, disableAutoFetch: true }).promise;
+
+// store a file the user picked
+const { key } = await Api.Resources.Upload(input.files[0], { global: true, storage: 'file' }, (f) => bar.value = f);
+```
+
+`ReadRange(ref, start, length)` is the primitive under `Open`; use `Open`.
+
 ## ClientMediator: the app's panels
 
 `ClientMediator.sendCommandAsync(panel, command, data)` asks a part of the app something. Cards may call:
