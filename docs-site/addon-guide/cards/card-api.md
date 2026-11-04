@@ -149,6 +149,11 @@ const pdf = await pdfjs.getDocument({ range: transport, disableAutoFetch: true }
 const { key } = await Api.Resources.Upload(input.files[0], { global: true, storage: 'file' }, (f) => bar.value = f);
 ```
 
+pdf.js needs its worker as a classic script: the card's frame has a null origin, where a module worker
+started from a `blob:` URL never starts and the document never opens, without an error. Bundle it with
+Vite as `import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker&inline'`, set `worker: { format: 'iife' }`
+in `vite.config.js`, and pass `pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker()`.
+
 `ReadRange(ref, start, length)` is the primitive under `Open`; use `Open`.
 
 ## ClientMediator: the app's panels
