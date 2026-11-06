@@ -111,6 +111,55 @@ const blob = await Api.Resources.Read('portrait');
 img.src = blob ? URL.createObjectURL(blob) : placeholder;
 ```
 
+### Big files: Open and Upload
+
+A PDF, a book of data or a music track can be tens of megabytes. Open it as a file and read only what you
+show: the app downloads just those bytes, in pieces it keeps in its cache, so the file opens at once and a
+second visit downloads nothing. You never split, encode or chunk files yourself.
+
+| Method | Returns | Notes |
+|---|---|---|
+| `Open(ref)` | a file, or `null` | `ref` is a game-wide key (`'myaddon_rules.pdf'`), `{ key }` or `{ id }`. |
+| `Upload(data, options?, onProgress?)` | `{ id, key }` | Stores a file. Big files go up in parts; after a short drop the upload carries on where it was (reloading the page starts it again). |
+| `List({ mimeType? })` | `[{ id, name, mimeType, key }]` | The game's files this player can see (all of them for a GM), e.g. PDFs from the Materials panel. |
+| `ReadById(id)` | string, Blob or `null` | A file from `List`, whole. |
+
+A file from `Open` has:
+
+| Member | |
+|---|---|
+| `size`, `mimeType`, `version` | What it is when you opened it. If the file changes after that, `read` rejects: open it again for the new version. |
+| `read(start, end)` | The bytes from `start` up to `end` (not included), as a `Uint8Array`. |
+| `blob()`, `text()`, `json()` | All of it. |
+| `mediaUrl()` | A `blob:` URL for an `<img>`, `<audio>` or `<video>` in the card (the whole file). |
+
+`Upload` options: `key` (scoped to the card unless `global: true`; made up when you leave it out),
+`name`, `mimeType`, `global`, and `storage: 'file'` to keep the file in the server's file storage, where
+its parts are read without loading it whole. Asking for that needs **Edit** on the game for the player
+using the card (a GM or co-GM); files over 32 MB go there anyway, whoever uploads them.
+`onProgress(fraction)` follows the upload. `Resources.Global.Create(key, data, name?, mimeType?, options?)`
+takes the same `storage` option.
+
+```js
+// show page 3 of a big PDF with pdf.js, reading only what it asks for
+const file = await Api.Resources.Open({ id: pdfId });
+const transport = new pdfjs.PDFDataRangeTransport(file.size, await file.read(0, 262144));
+transport.requestDataRange = (begin, end) => file.read(begin, end).then((b) => transport.onDataRange(begin, b));
+const pdf = await pdfjs.getDocument({ range: transport, disableAutoFetch: true, worker }).promise;
+
+// store a file the user picked
+const { key } = await Api.Resources.Upload(input.files[0], { global: true, storage: 'file' }, (f) => bar.value = f);
+```
+
+pdf.js needs its worker as a classic script: the card's frame has a null origin, where a module worker
+started from a `blob:` URL never starts and the document never opens, without an error. Bundle it with
+Vite as `import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker&inline'`, set `worker: { format: 'iife' }`
+in `vite.config.js`, and give every document the same worker:
+`const worker = new pdfjs.PDFWorker({ port: new PdfWorker() })`, then `pdfjs.getDocument({ ..., worker })`.
+(With `GlobalWorkerOptions.workerPort` instead, destroying one document ends the worker for all of them.)
+
+`ReadRange(ref, start, length)` is the primitive under `Open`; use `Open`.
+
 ## ClientMediator: the app's panels
 
 `ClientMediator.sendCommandAsync(panel, command, data)` asks a part of the app something. Cards may call:
