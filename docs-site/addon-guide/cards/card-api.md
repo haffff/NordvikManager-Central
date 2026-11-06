@@ -138,7 +138,8 @@ A file from `Open` has:
 its parts are read without loading it whole. Asking for that needs **Edit** on the game for the player
 using the card (a GM or co-GM); files over 32 MB go there anyway, whoever uploads them.
 `onProgress(fraction)` follows the upload. `Resources.Global.Create(key, data, name?, mimeType?, options?)`
-takes the same `storage` option.
+takes the same `storage` option. The server may limit how much a player (or the game's GMs) can upload into a
+game: over it, `Upload` and `Create` reject with an error that says so; show its message.
 
 ```js
 // show page 3 of a big PDF with pdf.js, reading only what it asks for

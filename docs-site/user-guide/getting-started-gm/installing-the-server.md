@@ -76,6 +76,7 @@ Everything lives in the server's folder. **Application Settings → Backups** ma
 - **Local network access:** hosts on this computer or your network that actions may call (*Send Request*, *Download Resource*), for example a Trilium at `localhost:8080`. Enter a host or `host:port`, without `http://` or a path; without a port, any port is allowed. Everything else on your network stays blocked.
 - **Card sandbox:** the `https` hosts addon cards may load styles, fonts and images from. See [Sandbox and security](/addon-guide/cards/sandbox#which-hosts-a-card-can-reach).
 - **Addon registry:** where addons are listed and downloaded from, and which ones are offered when a game is created.
+- **Upload limits:** how much may be uploaded into one game, in MB; 0 means no limit. **GMs, per game** is for everything the game's GMs (the owner and co-GMs) uploaded together, and has no limit at first. **Each player, per game** is for each other player, 200 MB at first. Linked files and addon files don't count. An upload over a limit is refused before it starts, and the uploader is told how much is used.
 
 Changes apply at once. They're saved in `data/server-settings.json`, which stays when you update (you keep the `data` folder) but isn't part of backups.
 
