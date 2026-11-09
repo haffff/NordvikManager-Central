@@ -438,7 +438,7 @@ Every step there is, with its arguments. Arguments are text and take tokens unle
 
 **RunClientCommand**: Runs a targeted ClientMediator command (panel + command + data) on a specific player's client.
 
-- `Panel`: ClientMediator panel name to dispatch to (e.g. "BattleMap_token").
+- `Panel`: ClientMediator panel name to dispatch to (e.g. "BattleMap_token"). Only `BattleMap_token.CreateToken`, `BattleMap.FocusElement`, `Game.CreateNewPanel` and `addon_*` panels run; anything else is refused in the browser.
 - `Command`: ClientMediator command name to run on that panel (e.g. "CreateToken").
 - `Player`: Player to send the command to. Pick one, or type a name / ID / %variable%. Leave empty to broadcast to all — beware duplicated client-side effects (e.g. token creation) if every connected client would run the same command.
 - `Data`: JSON data to pass as the command's payload. Supports %variable% substitution — embed object/array variables unquoted since they're already valid JSON.

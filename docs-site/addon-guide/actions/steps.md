@@ -300,6 +300,17 @@ Supported notation:
 | **FireClientMediator** | Sends an event to the players' browsers | `EventName`, `Payload`, `Player` |
 | **RunClientCommand** | Runs a panel command in one player's browser | `Panel`, `Command`, `Player`, `Data` |
 
+**RunClientCommand → what it can run**:
+
+| Panel | Command | What it does | `Data` |
+|---|---|---|---|
+| `BattleMap_token` | `CreateToken` | Places a card's token on a map | `contextId`, `cardId`, `position` |
+| `BattleMap` | `FocusElement` | Centres the view on an element and selects it if the player may | `contextId`, `elementId` |
+| `Game` | `CreateNewPanel` | Opens a panel | `type`, `props`, `battleMapId`, `inWindow` |
+| `addon_…` | anything | A panel a card registered (see the [Card API](../cards/card-api.md)) | yours |
+
+Anything else is refused in the player's browser and logged to its console.
+
 **SendChat → `Player`** (whisper): set a player's name, id or `%playerId%` to send the message to that
 player only. Whispers aren't saved in the chat history. Leave it empty to post to everyone.
 

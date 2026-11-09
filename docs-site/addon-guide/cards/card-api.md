@@ -255,6 +255,21 @@ await Api.Rolls.Finish({
 | `property_` | rarely needed: property changes, including list rows, already reach `Properties.Subscribe` |
 | `custom_` | custom panel and layer changes |
 
+## What's selected on the map
+
+`BattleMap.SubscribeSelection(callback)` tells the card each time the player's selection on a map changes.
+`BattleMap.UnsubscribeSelection(callback)` stops it.
+
+```js
+Api.BattleMap.SubscribeSelection(({ battleMapId, mapId, selected }) => {
+  // selected: [{ id, name, isToken, cardId }], empty when the selection is cleared
+  const tokens = selected.filter((element) => element.isToken);
+});
+```
+
+`battleMapId` says which open map it was, and `cardId` is `null` for anything that isn't a card's token. A
+card hears only about changes after it subscribes, and only the selection of the player viewing it.
+
 ## Closing the card
 
 `CardAPI.Close()` closes the panel the card is in, and its window if it was the last panel there. Useful
