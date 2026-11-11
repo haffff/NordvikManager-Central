@@ -30,7 +30,7 @@ The addon's own description, at the root of the zip:
 | `key` | Required. Lowercase letters and digits only. It prefixes the addon's resources (`dnd5e_index.html`) and actions (`dnd5e/roll_attribute`), so never change it after release. |
 | `name` | Letters, digits, spaces and `- ( ) . , : ' &`. |
 | `version` | Semantic version, e.g. `1.2.0`. **Raise it with every release**, so games can tell they're out of date. |
-| `dependencies` | Optional: `[{ "key": "dnd5e", "version": "0.0.4" }]`. Addons from the registry, installed first; leave `version` out for any version. |
+| `dependencies` | Optional: `[{ "key": "dnd5e", "version": "0.0.4" }]`. Addons from the registry, or `basics`, which ships with every server; they're installed first, and their install actions run before yours. `version` is the lowest version that works (`0.0.5` and `0.1.0` satisfy `0.0.4`); leave it out for any version. An older installed copy is updated, and if the registry's newest release is still too old the install stops before changing the game. Addons can't depend on each other in a circle, and an addon others depend on can't be uninstalled until they are. |
 
 The `$schema` line gives you checking and completion in editors that support JSON Schema. Templates and
 views use `schemas/card.json`, actions `schemas/action.json` and token files `schemas/token.json`, from the
