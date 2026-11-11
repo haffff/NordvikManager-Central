@@ -38,6 +38,10 @@ Each card has **Duplicate** and **Export JSON** (in the toolbar and its right-cl
 - A **map's** export can **Include the tokens' cards**: in another game they're made too, in a Cards folder named after the map, and the tokens belong to them again. Without them, the tokens there have no card (and only the GM sees them).
 - Dropping an exported file onto the battle map or into Materials asks whether to **Import** it or just add the file to Materials. An imported map then shows on that battle map; an imported card's token is placed where you dropped it.
 
+:::warning[Files from another server]
+A card's page runs with the rights of whoever opens it, so a page someone else wrote would run with yours as GM. Your server signs what it exports. When a file wasn't exported by your server, or was changed after it was, and it brings card pages or other card files your game doesn't have, the import first lists those cards and their files and asks: **Import anyway** or **Don't import**. Import it only if you trust where the file came from. Files from your own server, **Duplicate**, and files that bring no new card code import without asking.
+:::
+
 ## Card settings
 
 **Edit** on a selected card opens its settings.
