@@ -19,16 +19,16 @@ The menu has three groups: **Addons** (installing), **Views** (templates and vie
 
 ![Addons Manage, Browse tab](/img/user-guide/addons-manage.png)
 
-- **Browse:** addons from the addon registry. Search (names, authors, descriptions), filter by category, sort, and click one to see its details and readme beside the list. Install it with a click; installed ones are marked, and **Update available** shows when there's a newer version.
-- **Installed:** the game's addons, with their author, licence, website, dependencies and readme. Per addon:
-  - **Enabled** switches it off without removing it.
-  - **Update** installs the newest version.
-  - **Uninstall** removes it.
+- **Browse:** addons from the addon registry. Search (names, authors, descriptions), filter by category, sort, and click one to see its details and readme beside the list. **Also installs** lists the addons it needs that the game doesn't have yet, or has in an older version. Install it with a click; installed ones are marked, and **Update available** shows when there's a newer version.
+- **Installed:** the game's addons, with their author, licence, website, readme, the addons each one needs (**Dependencies**) and the addons that need it (**Needed by**). Per addon:
+  - **Enabled** switches it off without removing it. Addons that need it may not work while it's off; you get a warning naming them.
+  - **Update** installs the newest version, along with newer versions of anything it needs.
+  - **Uninstall** removes it. An addon other addons need can't be uninstalled until they are.
 - **Install:** **Install from file** (drop the addon's `.zip`) or **Install from URL**.
 
 Everyone can look through the same addons, with their readmes, on the public [addons page](/addons).
 
-Installing can take a while for big addons; a progress message shows until it's done. Addons a new addon depends on are installed with it.
+Installing can take a while for big addons; a progress message shows until it's done. Addons a new addon depends on are installed with it, or updated when the game has an older version. If one can't be fetched, the install stops before changing anything, and an update keeps the version you had.
 
 :::caution
 An addon can run code in the game, so only install addons you trust.
