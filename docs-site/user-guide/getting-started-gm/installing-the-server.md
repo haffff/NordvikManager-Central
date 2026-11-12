@@ -7,6 +7,10 @@ title: Installing the server
 
 Players don't install anything; this is only for the GM.
 
+:::tip[Nothing to install?]
+You can also host straight from your browser, with no download: see [Hosting from your browser](./browser-version). It's good for trying things out; for regular play, the server below is more dependable.
+:::
+
 ## Download
 
 Get the latest release from [GitHub Releases](https://github.com/haffff/NordvikManager/releases). Pick the zip for your system:
