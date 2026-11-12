@@ -9,11 +9,13 @@ Nordvik Manager runs in the browser. Who needs what:
 
 | | Game Master (GM) | Players |
 |---|---|---|
-| **Installs** | The Nordvik Manager server, on their own computer | Nothing |
+| **Installs** | The Nordvik Manager server on their own computer, or nothing with the [browser version](./browser-version.md) | Nothing |
 | **Opens** | `http://localhost:8213` on that computer | The invite link the GM sends |
 | **Account** | A Nordvik Manager account | A Nordvik Manager account |
 
 **The GM's computer hosts the game.** Maps, tokens, cards, chat history and uploaded files are stored on it. Players' browsers connect straight to it, so you don't need port forwarding or a public address. The Nordvik Manager central server (nordvikmanager.pl) only handles accounts and introduces players' browsers to the GM's server. Game data doesn't go through it. The exception: when a network blocks direct connections, the connection is relayed through a TURN server, still encrypted end to end.
+
+With the [browser version](./browser-version.md), the GM's browser tab is the host instead: the games are kept in that browser, and the same holds for the tab as for the server.
 
 That means **players can only join while the GM's server is running and the GM has opened the game.** Opening a game starts its session. Leaving it for the lobby, or stopping the server, ends the session for everyone.
 
