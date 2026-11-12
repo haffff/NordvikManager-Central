@@ -1,9 +1,10 @@
 'use strict';
 
+require('./setupEnv'); // the auth middleware (package downloads) reads the config
 const { test, beforeEach, after } = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
-const { createAddonsRouter, MAX_README_BYTES } = require('../routes/addons');
+const { createAddonsRouter, MAX_README_BYTES, MAX_PACKAGE_BYTES } = require('../routes/addons');
 
 // The public addons page's API: the registry (addons.json) and each addon's readme, fetched
 // from GitHub by the server and cached, so the page needs no outside connections.
@@ -36,12 +37,23 @@ const fakeFetch = async (url) => {
   const answer = answers[url];
   if (answer instanceof Error) throw answer;
   if (!answer) return new Response('missing', { status: 404 });
-  return new Response(answer.body, { status: answer.status ?? 200 });
+  const response = new Response(answer.body, { status: answer.status ?? 200 });
+  // Where a redirect ended up (fetch follows them): GitHub's release downloads move to another host.
+  if (answer.url) Object.defineProperty(response, 'url', { value: answer.url });
+  return response;
 };
 
-async function start() {
+// requireAuth: the real middleware unless a test passes its own (x-user header = logged in as that user).
+const fakeAuth = (req, res, next) => {
+  if (!req.headers['x-user']) return res.status(401).json({ error: 'Authentication required' });
+  req.user = { id: req.headers['x-user'] };
+  next();
+};
+
+async function start(options = {}) {
   const app = express();
-  app.use('/api/addons', createAddonsRouter({ registryUrl: REGISTRY, fetchImpl: fakeFetch, now: () => clock }));
+  app.use(require('cookie-parser')()); // as index.js: the auth middleware reads the cookie
+  app.use('/api/addons', createAddonsRouter({ registryUrl: REGISTRY, fetchImpl: fakeFetch, now: () => clock, ...options }));
   const server = app.listen(0);
   servers.push(server);
   await new Promise((resolve) => server.once('listening', resolve));
@@ -121,4 +133,69 @@ test('readme: cached for 10 minutes', async () => {
   await fetch(`${base}/poll/readme`);
   await fetch(`${base}/poll/readme`);
   assert.equal(requests.filter((u) => u === README).length, 1);
+});
+
+
+// ── Packages: the browser-hosted GM backend (the host build, served by this Central) installs
+// registry addons through here. Its page may only connect to this origin (CSP), and GitHub's
+// release downloads don't allow other origins anyway.
+const POLL_ZIP = registry.repository[0].releaseUrl;
+const ASSET = 'https://release-assets.githubusercontent.com/github-production-release-asset/1/poll.zip';
+const zipBytes = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from(' a small zip')]);
+
+test("package: a registry addon's release file, by key, for a logged-in user", async () => {
+  answers[POLL_ZIP] = { body: zipBytes, url: ASSET };
+  const base = await start({ requireAuth: fakeAuth });
+  const res = await fetch(`${base}/poll/package`, { headers: { 'x-user': 'u1' } });
+
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('content-type'), 'application/zip');
+  assert.equal(res.headers.get('x-addon-version'), '0.1.0');
+  assert.deepEqual(Buffer.from(await res.arrayBuffer()), zipBytes);
+  assert.ok(requests.includes(POLL_ZIP));
+});
+
+test('package: only for a logged-in user (the real auth middleware by default)', async () => {
+  answers[POLL_ZIP] = { body: zipBytes };
+  const base = await start();
+  assert.equal((await fetch(`${base}/poll/package`)).status, 401);
+  assert.ok(!requests.includes(POLL_ZIP));
+});
+
+test('package: unknown key, or an addon without a release file, is 404', async () => {
+  const base = await start({ requireAuth: fakeAuth });
+  assert.equal((await fetch(`${base}/nope/package`, { headers: { 'x-user': 'u1' } })).status, 404);
+  assert.equal((await fetch(`${base}/dnd5e/package`, { headers: { 'x-user': 'u1' } })).status, 404);
+});
+
+test('package: only GitHub release assets are fetched, and only where GitHub sends them', async () => {
+  const evil = { ...registry, repository: [
+    { key: 'elsewhere', releaseUrl: 'https://example.com/addon.zip' },
+    { key: 'moved', releaseUrl: 'https://github.com/o/r/releases/download/1.0/a.zip' },
+  ] };
+  answers[REGISTRY] = { body: JSON.stringify(evil) };
+  answers['https://github.com/o/r/releases/download/1.0/a.zip'] = { body: zipBytes, url: 'https://example.com/a.zip' };
+  const base = await start({ requireAuth: fakeAuth });
+
+  assert.equal((await fetch(`${base}/elsewhere/package`, { headers: { 'x-user': 'u1' } })).status, 502);
+  assert.ok(!requests.includes('https://example.com/addon.zip'), 'a URL that is no release asset is never fetched');
+  assert.equal((await fetch(`${base}/moved/package`, { headers: { 'x-user': 'u1' } })).status, 502);
+});
+
+test('package: over the size limit is refused, whatever the length header says', async () => {
+  answers[POLL_ZIP] = { body: Buffer.alloc(MAX_PACKAGE_BYTES + 1) };
+  const base = await start({ requireAuth: fakeAuth });
+  const res = await fetch(`${base}/poll/package`, { headers: { 'x-user': 'u1' } });
+
+  assert.equal(res.status, 502);
+  assert.match((await res.json()).error, /MB/);
+});
+
+test('package: GitHub failing is a 502 saying so', async () => {
+  answers[POLL_ZIP] = { status: 404, body: 'gone' };
+  const base = await start({ requireAuth: fakeAuth });
+  const res = await fetch(`${base}/poll/package`, { headers: { 'x-user': 'u1' } });
+
+  assert.equal(res.status, 502);
+  assert.match((await res.json()).error, /poll/);
 });
