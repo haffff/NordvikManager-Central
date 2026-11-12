@@ -40,8 +40,17 @@ const sandboxDirectives = {
 };
 
 // /client/sandbox.html, and the same page in the frozen builds at /client/p<N>/, in
-// the public demo at /client/demo/, and the dev build at /client/dev/.
-const SANDBOX_PAGE = /^\/client\/(?:p\d+\/|demo\/|dev\/)?sandbox\.html$/;
+// the public demo at /client/demo/, the dev build at /client/dev/ and the host build at /client/host/.
+const SANDBOX_PAGE = /^\/client\/(?:p\d+\/|demo\/|dev\/|host\/)?sandbox\.html$/;
+
+// The host build (/client/host/): the GM app with the GM's game host running in the page, .NET
+// compiled to WebAssembly in a worker of this origin. Compiling wasm needs 'wasm-unsafe-eval'
+// (it allows no JS eval); the rest is the app's policy.
+const HOST_BUILD = /^\/client\/host\//;
+const hostDirectives = {
+  ...appDirectives,
+  'script-src': ["'self'", "'wasm-unsafe-eval'"],
+};
 
 // The token editor (/client/tokens/). A game opens it in a new tab and passes it the token
 // file over window.opener (postMessage): the GM app from its own host, the player client
@@ -61,8 +70,13 @@ module.exports = function securityHeaders() {
   const app = helmet(options(appDirectives));
   const client = helmet(options(appDirectives, 'same-origin-allow-popups'));
   const tokenEditor = helmet(options(appDirectives, 'unsafe-none'));
+  const hostBuild = helmet(options(hostDirectives, 'same-origin-allow-popups'));
   const sandbox = helmet(options(sandboxDirectives));
   const pick = (path) =>
-    SANDBOX_PAGE.test(path) ? sandbox : TOKEN_EDITOR.test(path) ? tokenEditor : CLIENT.test(path) ? client : app;
+    SANDBOX_PAGE.test(path) ? sandbox
+      : TOKEN_EDITOR.test(path) ? tokenEditor
+      : HOST_BUILD.test(path) ? hostBuild
+      : CLIENT.test(path) ? client
+      : app;
   return (req, res, next) => pick(req.path)(req, res, next);
 };

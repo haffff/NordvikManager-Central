@@ -77,6 +77,32 @@ test('only the sandbox page itself gets the looser policy', async () => {
   }
 });
 
+// The host build (/client/host/) runs the GM's game host in the page: .NET compiled to
+// WebAssembly, in a worker of the page's own origin. Compiling wasm needs 'wasm-unsafe-eval'
+// (not 'unsafe-eval': no JS eval); nothing else about the scripts loosens.
+test('the host build may compile WebAssembly, and nothing more', async () => {
+  for (const path of ['/client/host/', '/client/host/index.html', '/client/host/wasm/_framework/dotnet.js']) {
+    const csp = await cspOf(path);
+
+    assert.equal(directive(csp, 'script-src'), "script-src 'self' 'wasm-unsafe-eval'", path);
+    assert.equal(directive(csp, 'script-src-attr'), "script-src-attr 'none'", path);
+    assert.equal(directive(csp, 'frame-src'), "frame-src 'self'", path);
+  }
+});
+
+test('only the host build may compile WebAssembly', async () => {
+  for (const path of ['/client/index.html', '/client/hostile/index.html', '/client/p3/host/index.html', '/', '/api/meta']) {
+    assert.doesNotMatch(await cspOf(path), /wasm-unsafe-eval/, path);
+  }
+});
+
+test("the host build's card sandbox page is the sandbox", async () => {
+  const csp = await cspOf('/client/host/sandbox.html');
+
+  assert.match(csp, /script-src 'self' 'unsafe-inline' data: blob:/);
+  assert.doesNotMatch(csp, /wasm-unsafe-eval/);
+});
+
 async function coopOf(path) {
   const app = express();
   app.use(securityHeaders());
