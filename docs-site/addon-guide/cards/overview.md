@@ -49,7 +49,7 @@ From the Fifth Edition addon, `Templates/character_template.json`:
   "$schema": "https://raw.githubusercontent.com/haffff/NordvikManager-Addons/refs/heads/main/schemas/card.json",
   "name": "5E Character Template",
   "description": "A template for fifth edition characters.",
-  "key": "character",
+  "key": "dnd5e_character",
   "mainResource": "dnd5e_index.html",
   "additionalResources": ["dnd5e_dnd5e-nordvikcard.js", "dnd5e_shared.css"],
   "properties": [
@@ -61,7 +61,7 @@ From the Fifth Edition addon, `Templates/character_template.json`:
 | Field | Meaning |
 |---|---|
 | `name` | Shown in lists. Required. |
-| `key` | A stable id. Actions find views by it (ShowView's `ViewKey`), so make it unique, e.g. `dnd5e_card_settings`. |
+| `key` | A stable id, starting with the addon key, e.g. `dnd5e_character`, `dnd5e_card_settings`: keys are unique in a game, whichever addon brought them. Actions find views by it (ShowView's `ViewKey`). Cards made from a template remember its key and find the template again by it when the addon is updated (an update re-creates the templates) or the card is imported into another game, so **never change a template's key after a release**. |
 | `description` | Shown in lists. |
 | `mainResource` | The HTML page. |
 | `additionalResources` | Scripts (`.js`) and stylesheets (`.css`) added to the page, in this order. |
