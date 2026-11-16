@@ -23,7 +23,8 @@ While a game runs, keep the tab open. Closing or reloading it disconnects every 
 | Backups | Yes | No |
 | Thumbnails | Yes | No: images reach players at full size |
 | Addons | From any addon registry, or a file | From Central's registry, or a file |
-| Addons that reach other services (Trilium, Obsidian notes) | Yes | No |
+| Addons that use websites (e.g. content from GitHub) | Yes | Only https sites that allow requests from a browser |
+| Addons that use programs on your computer (Trilium, Obsidian notes) | Yes | No |
 | Linking files and folders on your disk | Yes | No |
 | Upload limits | Yours to set | 500 MB per game for GMs, 100 MB per player |
 | An upload cut off midway | Continues where it stopped | Starts over |
@@ -35,7 +36,7 @@ When you start the browser version it shows the first six of these, until you ch
 
 - **Keep this tab open.** The game runs in that tab (see above).
 - **Your games can be lost.** They exist only in this browser's storage, with no backup. Unless the browser grants the site persistent storage, it may delete them without asking when the disk gets full. Clearing the site's data deletes them too, and another browser, another computer or a private window doesn't have them. See [Keeping your games safe](#keeping-your-games-safe).
-- **No connections to other services.** A browser page may only connect to the site it came from, so addons that work with other programs or websites (such as Trilium or Obsidian notes) don't work, and nor do actions that download a file from a link. In *Addons*, such addons show **Needs the local server**, and when one of their actions tries anyway you get a notice saying which addon needs the local server.
+- **Only websites that allow browser requests.** Addons reach other websites from this tab, so only https sites that allow requests from a browser answer. Programs on your computer or network (for example Trilium or Obsidian notes) and sites that refuse browser requests need the local server; you're told when an addon's request couldn't be made. In *Addons*, addons that connect outside show **May need the local server**.
 - **Upload limits are fixed.** Uploads are capped at 500 MB per game for you and 100 MB per player, and can't be raised. On the local server you set them.
 - **Images load slower for players.** There are no small previews: players download every image (maps, tokens, handouts) at full size, so on a slow connection they appear later than from the local server. Your Materials panel shows an eye instead of a preview; hover it to see the image.
 - **Host from one tab only.** Your games open in one tab of the site at a time. A second tab won't open them: close it and use the first one.
