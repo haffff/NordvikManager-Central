@@ -22,7 +22,7 @@ The frame is sandboxed with scripts allowed and almost nothing else:
 | File downloads | Store a resource, or show the content for copying. |
 | Reaching the app's page or other cards | `ClientMediator` (an `addon_` panel) and properties. |
 | Frames (`<iframe>`, `<frame>`) | Show the content in the page itself. A frame would be a fresh window outside these rules. |
-| WebRTC (`RTCPeerConnection`) | Properties, actions and chat. The app removes it from the card's window: CSP can't limit where a peer connection goes. |
+| WebRTC (`RTCPeerConnection`) | Properties, actions and chat. The app removes it from the card's window, because CSP can't limit where a peer connection goes. This keeps cards off WebRTC; it isn't a wall against an addon set on getting round it, so installing an addon still means trusting it. |
 
 ## Which hosts a card can reach
 
