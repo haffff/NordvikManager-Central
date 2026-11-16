@@ -16,6 +16,8 @@ From nothing to a running game in a few minutes. For the details, see the [User 
 5. **Invite:** on the game's card, choose the **gear** button, copy the **Player Invite Link** and send it to your players.
 6. **Join** the game. Players can connect while you're in it.
 
+**Nothing to install?** Open the [browser version](pathname:///client/host/), log in and create a game: it runs in that browser tab. Good for trying things out; [Hosting from your browser](/user-guide/getting-started-gm/browser-version) says what to expect.
+
 {/* SCREENSHOT: img/quickstart-gm.png — The lobby with the new game's card. */}
 
 ## Player
