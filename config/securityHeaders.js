@@ -35,7 +35,10 @@ const sandboxDirectives = {
   'img-src': ["'self'", 'data:', 'blob:', 'https:'],
   'connect-src': ["'self'", 'https:'],
   'media-src': ["'self'", 'data:', 'blob:'],
-  'frame-src': ["'self'", 'blob:', 'data:'],
+  // No frames in a card: one would be a fresh window. A frame of this page would run
+  // without the card's own CSP (so with any https: host), and any frame gets back what
+  // the card's window had taken away.
+  'frame-src': ["'none'"],
   'form-action': ["'none'"],
 };
 

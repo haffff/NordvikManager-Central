@@ -69,6 +69,15 @@ test("the card sandbox page leaves the host list to the card's own CSP", async (
   assert.equal(directive(csp, 'form-action'), "form-action 'none'");
 });
 
+// A frame in a card would be a fresh window: a frame of this page would run without the
+// card's own CSP (so with any https: host), and any frame gets back what the card's window
+// had taken away. No sandbox page lets a card make one.
+test('the card sandbox pages allow no frames', async () => {
+  for (const path of ['/client/sandbox.html', '/client/p3/sandbox.html', '/client/demo/sandbox.html', '/client/dev/sandbox.html', '/client/host/sandbox.html']) {
+    assert.equal(directive(await cspOf(path), 'frame-src'), "frame-src 'none'", path);
+  }
+});
+
 test('only the sandbox page itself gets the looser policy', async () => {
   for (const path of ['/sandbox.html', '/client/x/sandbox.html', '/client/sandbox.html.map', '/client-admin/sandbox.html']) {
     const csp = await cspOf(path);
