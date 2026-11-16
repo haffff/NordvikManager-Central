@@ -55,6 +55,18 @@ const hostDirectives = {
   'script-src': ["'self'", "'wasm-unsafe-eval'"],
 };
 
+// The game host itself runs in a worker started from host-worker.js, and a worker follows its
+// own script's CSP, not the page's. Only that file may connect to https sites: actions' Send
+// Request / Download Resource go out from there (the host holds each addon to its declared
+// hosts and refuses local addresses). Never plain http: (local services). The app page and
+// every other file keep the policy above. This route must always send a CSP: a worker script
+// without one could reach anything.
+const HOST_WORKER = /^\/client\/host\/wasm\/host-worker\.js$/;
+const hostWorkerDirectives = {
+  ...hostDirectives,
+  'connect-src': ["'self'", 'https:'],
+};
+
 // The token editor (/client/tokens/). A game opens it in a new tab and passes it the token
 // file over window.opener (postMessage): the GM app from its own host, the player client
 // from here. It keeps its opener whatever the opener's origin, and the player client
@@ -74,10 +86,12 @@ module.exports = function securityHeaders() {
   const client = helmet(options(appDirectives, 'same-origin-allow-popups'));
   const tokenEditor = helmet(options(appDirectives, 'unsafe-none'));
   const hostBuild = helmet(options(hostDirectives, 'same-origin-allow-popups'));
+  const hostWorker = helmet(options(hostWorkerDirectives, 'same-origin-allow-popups'));
   const sandbox = helmet(options(sandboxDirectives));
   const pick = (path) =>
     SANDBOX_PAGE.test(path) ? sandbox
       : TOKEN_EDITOR.test(path) ? tokenEditor
+      : HOST_WORKER.test(path) ? hostWorker
       : HOST_BUILD.test(path) ? hostBuild
       : CLIENT.test(path) ? client
       : app;
