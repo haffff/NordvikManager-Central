@@ -36,8 +36,9 @@ An addon can run code in the game, so only install addons you trust.
 
 ## Templates
 
-**Addons → Views → Templates** lists the card templates (see [Cards](./cards.md)): **UI Name**, **Key**, **Description**, its **Main Resource (HTML)** and **Additional Resources**, and its **Default Token**.
+**Addons → Views → Templates** lists the card templates (see [Cards](./cards.md)): **Key**, **UI Name**, **Description**, its **Main Resource (HTML)** and **Additional Resources**, and its **Default Token**.
 - **Hidden** leaves a template out of the template lists, e.g. one an addon uses only for its own windows.
+- **Key:** a short name, unique in the game, by which the cards made from the template find it again: after an addon update, or when a card or the template is imported into another game. Addon templates have one; give your own templates one too, and don't change it once cards use the template.
 - **New template** (the greyed row at the end of the list or of a folder, or the toolbar's **+**) makes one from your own files, and a template can be applied again to the cards made from it.
 - Share a template with players by giving **Everyone** the **See** permission on it.
 

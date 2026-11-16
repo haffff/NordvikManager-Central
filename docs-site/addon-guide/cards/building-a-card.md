@@ -44,7 +44,7 @@ The built-in **Note** card (Basics addon) is one HTML page plus the Quill editor
 ```json
 {
   "name": "Note",
-  "key": "note",
+  "key": "basics_note",
   "mainResource": "basics_note_index.html",
   "additionalResources": ["basics_quill.js", "basics_quill.snow.css"],
   "genericPermission": 1,
