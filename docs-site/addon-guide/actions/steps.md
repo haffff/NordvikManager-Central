@@ -428,6 +428,18 @@ For example, roll initiative for a token with **RollDice**, then **SetInitiative
 `statusCode`, `resourceId`, `mimeType` and `size` (bytes). Nothing is saved when the download fails. Cards
 read the file with `Resources.Global.Read('<key>')`.
 
+Both also store `Reason` when the request didn't go out, so a later step can tell why (an *If* on
+`%output.Reason%`); it's empty when the request went out, whatever the other side answered:
+
+| `Reason` | Why |
+|---|---|
+| `blocked-host` | Not an http(s) address, or a private or local host the server doesn't allow (below). |
+| `undeclared-host` | The addon's `info.json` lists where it connects (`network`), and this host isn't there. |
+| `no-outside-connections` | The game runs on the [browser version](../../user-guide/getting-started-gm/browser-version.md), which can't reach other services. |
+| `network-error` | It went out but failed on the way (no such host, refused, timed out). |
+
+For the first three the game's GMs also get a notice naming the addon, the action and the host.
+
 ### Private and local hosts
 
 *SendRequest* and *DownloadResource* can't reach the server's own computer or its network (`localhost`,
