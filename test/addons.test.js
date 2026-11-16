@@ -19,7 +19,7 @@ const registry = {
       key: 'poll', name: 'Poll', description: 'Votes', version: '0.1.0', author: 'haffff', license: 'AGPL-3.0-only',
       repositoryUrl: 'https://github.com/haffff/NordvikManager-Extras',
       releaseUrl: 'https://github.com/haffff/NordvikManager-Extras/releases/download/poll-0.1.0/poll.zip',
-      readme: README, categories: ['tools'], dependencies: [], somethingElse: 'not passed on',
+      readme: README, categories: ['tools'], dependencies: [], network: {}, somethingElse: 'not passed on',
     },
     { key: 'dnd5e', name: '5E Edition', version: '0.0.7', categories: [] },
     { key: 'evil', name: 'Evil', readme: 'https://example.com/README.md' },
@@ -82,6 +82,9 @@ test('lists the categories and addons, with only the fields the page uses', asyn
   assert.equal(body.addons[0].readme, README);
   assert.equal(body.addons[0].releaseUrl, registry.repository[0].releaseUrl);
   assert.equal(body.addons[0].somethingElse, undefined);
+  // Where the addon connects: the browser version's Addons panel shows "Needs the local server" from it.
+  assert.deepEqual(body.addons[0].network, {});
+  assert.equal('network' in body.addons[1], false);
 });
 
 test('fetches the registry once per 10 minutes', async () => {
