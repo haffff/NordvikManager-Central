@@ -24,7 +24,7 @@ const MAX_PACKAGE_BYTES = 16 * 1024 * 1024;
 const PACKAGE_TIMEOUT_MS = 60 * 1000;
 const PACKAGES_PER_USER = 30; // per 10 minutes
 
-const ADDON_FIELDS = ['key', 'name', 'description', 'version', 'author', 'license', 'repositoryUrl', 'releaseUrl', 'readme', 'categories', 'dependencies'];
+const ADDON_FIELDS = ['key', 'name', 'description', 'version', 'author', 'license', 'repositoryUrl', 'releaseUrl', 'readme', 'categories', 'dependencies', 'network'];
 const CATEGORY_FIELDS = ['key', 'name', 'description'];
 
 const pick = (source, fields) => Object.fromEntries(fields.filter((f) => source?.[f] !== undefined).map((f) => [f, source[f]]));

@@ -242,6 +242,26 @@ await Api.Rolls.Finish({
 - The message can't run scripts and can't load anything outside the allowed hosts (see
   [Sandbox and security](./sandbox.md)).
 
+## Host: where the game runs
+
+A game runs on a GM server (the program a GM runs) or on the [browser version](../../user-guide/getting-started-gm/browser-version.md),
+which can't do everything. `Host` tells the card which, so it can say so instead of failing:
+
+```js
+if (await Api.Host.HasLimitation('outside-connections')) {
+  showNote('Notes from Trilium need the local server: the browser version can't reach other services.');
+}
+```
+
+| Member | Result |
+|---|---|
+| `Host.GetInfo()` | `{ kind, version, protocol, unavailable, limitations }`, or `null` from an older server (treat it as a server with everything). `kind` is `"server"` or `"browser"`. `unavailable` lists server-only routes as `{ path, reason }`, `limitations` lists `{ id, title, detail }`. |
+| `Host.IsBrowser()` | `true` on the browser version. |
+| `Host.HasLimitation(id)` | Whether the host lists that limitation, e.g. `"outside-connections"`, `"no-thumbnails"`. |
+| `Host.IsAvailable(path)` | Whether the host serves a route, e.g. `"api/Backup"`. `true` when it can't say. |
+
+The answer comes from the game's own backend, once per game, so players get it too.
+
 ## Hearing about events
 
 `SubscribeWebSocket(callback)` and `UnsubscribeWebSocket(callback)` deliver game events to the card as

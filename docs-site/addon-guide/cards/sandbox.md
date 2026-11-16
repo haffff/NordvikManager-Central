@@ -21,6 +21,8 @@ The frame is sandboxed with scripts allowed and almost nothing else:
 | Forms that submit to a URL | Handle the form in JavaScript. |
 | File downloads | Store a resource, or show the content for copying. |
 | Reaching the app's page or other cards | `ClientMediator` (an `addon_` panel) and properties. |
+| Frames (`<iframe>`, `<frame>`) | Show the content in the page itself. A frame would be a fresh window outside these rules. |
+| WebRTC (`RTCPeerConnection`) | Properties, actions and chat. The app removes it from the card's window, because CSP can't limit where a peer connection goes. This keeps cards off WebRTC; it isn't a wall against an addon set on getting round it, so installing an addon still means trusting it. |
 
 ## Which hosts a card can reach
 
@@ -40,8 +42,17 @@ https://fonts.gstatic.com
 ```
 
 So Google Fonts and data files on GitHub work out of the box. A card that needs another host must ask the
-GM to add it, so say so in the addon's description. When something is blocked, the browser console names
-the host.
+GM to add it, so say so in the addon's description.
+
+**Your addon's own list.** When `info.json` says where the addon connects (`network`, see
+[Packaging](./packaging.md#infojson)), its cards may reach only the hosts listed there **and** allowed by
+the GM. `"network": {}` means nowhere outside. An addon that lets the user enter an address
+(`userHosts`) keeps the GM's whole list, and so does one that doesn't say (the app shows it as
+"Doesn't say what it connects to").
+
+**When something is blocked**, the GM gets a notice the first time each card or action of each addon is
+blocked from a host (the host only, never the path), and the addon's details in *Addons → Installed* list
+what was blocked during the game. Players see it in the browser console.
 
 The GM's list applies to everyone: the GM and every player. Html chat messages (from `Rolls.Finish`) follow
 the same list.
