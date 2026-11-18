@@ -18,11 +18,11 @@ let ownerId;
 let playerId;
 let session;
 
-before(() => {
+before(async () => {
   runMigration();
   ownerId = createUser('owner');
   playerId = createUser('player');
-  session = sessionService.createSession(ownerId, {
+  session = await sessionService.createSession(ownerId, {
     name: 'Locked game',
     passwordRequired: true,
     password: 'secret',
@@ -30,22 +30,22 @@ before(() => {
   });
 });
 
-test('joinSession still requires the password for a new player', () => {
-  const result = sessionService.joinSession(playerId, session.id, undefined);
+test('joinSession still requires the password for a new player', async () => {
+  const result = await sessionService.joinSession(playerId, session.id, undefined);
   assert.equal(result.status, 400);
 });
 
-test('joinSession lets an existing member back in without the password', () => {
-  const first = sessionService.joinSession(playerId, session.id, 'secret');
+test('joinSession lets an existing member back in without the password', async () => {
+  const first = await sessionService.joinSession(playerId, session.id, 'secret');
   assert.equal(first.ok, true);
 
-  const again = sessionService.joinSession(playerId, session.id, undefined);
+  const again = await sessionService.joinSession(playerId, session.id, undefined);
   assert.equal(again.status, 409);
   assert.equal(again.sessionId, session.id);
 });
 
-test('joinSession lets the owner into their own session without the password or a member row', () => {
-  const result = sessionService.joinSession(ownerId, session.id, undefined);
+test('joinSession lets the owner into their own session without the password or a member row', async () => {
+  const result = await sessionService.joinSession(ownerId, session.id, undefined);
   assert.deepEqual(result, { ok: true, sessionId: session.id });
   const row = db
     .prepare('SELECT id FROM session_players WHERE session_id = ? AND user_id = ?')
@@ -53,19 +53,19 @@ test('joinSession lets the owner into their own session without the password or 
   assert.equal(row, undefined);
 });
 
-test('joinSession rejects a wrong password for a new player', () => {
+test('joinSession rejects a wrong password for a new player', async () => {
   const otherId = createUser('other');
-  const result = sessionService.joinSession(otherId, session.id, 'wrong');
+  const result = await sessionService.joinSession(otherId, session.id, 'wrong');
   assert.equal(result.status, 401);
 });
 
 // The GM backend re-sends a game's details whenever it starts the session, so the
 // session list players see (read before any WebRTC connection) stays current —
 // e.g. a cover image changed after the session was first made.
-test('updateSession lets the owner change the listed details', () => {
-  const own = sessionService.createSession(ownerId, { name: 'Old', isPublic: false });
+test('updateSession lets the owner change the listed details', async () => {
+  const own = await sessionService.createSession(ownerId, { name: 'Old', isPublic: false });
 
-  const result = sessionService.updateSession(own.id, ownerId, false, {
+  const result = await sessionService.updateSession(own.id, ownerId, false, {
     name: 'New',
     summary: 'Short',
     description: 'Long',
@@ -82,12 +82,12 @@ test('updateSession lets the owner change the listed details', () => {
   assert.equal(row.is_public, 1);
 });
 
-test('updateSession clears what is no longer set, and keeps the password', () => {
-  const own = sessionService.createSession(ownerId, {
+test('updateSession clears what is no longer set, and keeps the password', async () => {
+  const own = await sessionService.createSession(ownerId, {
     name: 'Game', summary: 'S', imageData: 'data:image/png;base64,aGk=', passwordRequired: true, password: 'pw',
   });
 
-  sessionService.updateSession(own.id, ownerId, false, { name: 'Game' });
+  await sessionService.updateSession(own.id, ownerId, false, { name: 'Game' });
 
   const row = sessionService.getSessionById(own.id);
   assert.equal(row.summary, null);
@@ -96,37 +96,37 @@ test('updateSession clears what is no longer set, and keeps the password', () =>
   assert.equal(row.password_hash, own.password_hash);
 });
 
-test('updateSession refuses anyone but the owner or an admin', () => {
-  const own = sessionService.createSession(ownerId, { name: 'Mine' });
+test('updateSession refuses anyone but the owner or an admin', async () => {
+  const own = await sessionService.createSession(ownerId, { name: 'Mine' });
 
-  assert.equal(sessionService.updateSession(own.id, playerId, false, { name: 'Taken' }).status, 403);
+  assert.equal((await sessionService.updateSession(own.id, playerId, false, { name: 'Taken' })).status, 403);
   assert.equal(sessionService.getSessionById(own.id).name, 'Mine');
-  assert.equal(sessionService.updateSession(own.id, playerId, true, { name: 'By admin' }).ok, true);
+  assert.equal((await sessionService.updateSession(own.id, playerId, true, { name: 'By admin' })).ok, true);
 });
 
-test('updateSession reports a missing session', () => {
-  assert.equal(sessionService.updateSession(randomUUID(), ownerId, false, { name: 'X' }).status, 404);
+test('updateSession reports a missing session', async () => {
+  assert.equal((await sessionService.updateSession(randomUUID(), ownerId, false, { name: 'X' })).status, 404);
 });
 
-test('updateSession with a password sets it, so a session made without one becomes joinable', () => {
+test('updateSession with a password sets it, so a session made without one becomes joinable', async () => {
   // A session the GM backend created without sending the password: required, but no hash.
-  const broken = sessionService.createSession(ownerId, { name: 'No hash', passwordRequired: true });
+  const broken = await sessionService.createSession(ownerId, { name: 'No hash', passwordRequired: true });
   assert.equal(broken.password_hash, null);
 
-  sessionService.updateSession(broken.id, ownerId, false, { name: 'No hash', password: 'fixed' });
+  await sessionService.updateSession(broken.id, ownerId, false, { name: 'No hash', password: 'fixed' });
 
   const row = sessionService.getSessionById(broken.id);
   assert.equal(row.password_required, 1);
   const newcomer = createUser('newcomer-after-fix');
-  assert.equal(sessionService.joinSession(newcomer, broken.id, 'wrong').status, 401);
-  assert.equal(sessionService.joinSession(newcomer, broken.id, 'fixed').ok, true);
+  assert.equal((await sessionService.joinSession(newcomer, broken.id, 'wrong')).status, 401);
+  assert.equal((await sessionService.joinSession(newcomer, broken.id, 'fixed')).ok, true);
 });
 
-test('joinSession on a password-required session without a stored hash answers 503 instead of throwing', () => {
-  const broken = sessionService.createSession(ownerId, { name: 'Unjoinable', passwordRequired: true });
+test('joinSession on a password-required session without a stored hash answers 503 instead of throwing', async () => {
+  const broken = await sessionService.createSession(ownerId, { name: 'Unjoinable', passwordRequired: true });
   const newcomer = createUser('newcomer-broken');
 
-  const result = sessionService.joinSession(newcomer, broken.id, 'anything');
+  const result = await sessionService.joinSession(newcomer, broken.id, 'anything');
 
   assert.equal(result.status, 503);
   assert.match(result.error, /start the game again/);

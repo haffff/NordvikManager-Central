@@ -60,20 +60,20 @@ let owner;
 let player;
 let io;
 
-before(() => {
+before(async () => {
   runMigration();
   owner = createUser('auth-owner');
   player = createUser('auth-player');
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   io = fakeIo();
   signaling.setIo(io);
 });
 
-test('an expired token is refused but the socket stays open, so the client can refresh and retry', () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
-  sessionService.joinSession(player.id, session.id, undefined);
+test('an expired token is refused but the socket stays open, so the client can refresh and retry', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
+  await sessionService.joinSession(player.id, session.id, undefined);
   const socket = fakeSocket(io);
 
   handleAuthenticate(io, socket, { token: expiredToken(player), sessionId: session.id, role: 'player' });
@@ -85,8 +85,8 @@ test('an expired token is refused but the socket stays open, so the client can r
   assert.equal(events(socket, EVENTS.AUTHENTICATED).length, 1);
 });
 
-test(`a socket that keeps sending bad tokens is dropped after ${MAX_AUTH_FAILURES} tries`, () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
+test(`a socket that keeps sending bad tokens is dropped after ${MAX_AUTH_FAILURES} tries`, async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
   const socket = fakeSocket(io);
 
   for (let i = 0; i < MAX_AUTH_FAILURES; i++) {
@@ -96,8 +96,8 @@ test(`a socket that keeps sending bad tokens is dropped after ${MAX_AUTH_FAILURE
   assert.equal(socket.connected, false);
 });
 
-test('the owner reconnecting as GM replaces its stale GM socket instead of being refused', () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
+test('the owner reconnecting as GM replaces its stale GM socket instead of being refused', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
   const token = authService.generateAccessToken(owner);
   const oldGm = fakeSocket(io);
   handleAuthenticate(io, oldGm, { token, sessionId: session.id, role: 'gm', protocol: 2 });
@@ -118,8 +118,8 @@ test('the owner reconnecting as GM replaces its stale GM socket instead of being
   signaling.removePeer(newGm.id);
 });
 
-test('a GM signaling ticket authenticates the owner as GM of that session', () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
+test('a GM signaling ticket authenticates the owner as GM of that session', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
   const ticket = authService.generateSignalingTicket(owner.id, session.id);
   const gm = fakeSocket(io);
 
@@ -131,9 +131,9 @@ test('a GM signaling ticket authenticates the owner as GM of that session', () =
   signaling.removePeer(gm.id);
 });
 
-test('a GM signaling ticket is refused for another session and for the player role', () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
-  const other = sessionService.createSession(owner.id, { name: 'Other' });
+test('a GM signaling ticket is refused for another session and for the player role', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
+  const other = await sessionService.createSession(owner.id, { name: 'Other' });
   const ticket = authService.generateSignalingTicket(owner.id, session.id);
 
   const wrongSession = fakeSocket(io);
@@ -145,8 +145,8 @@ test('a GM signaling ticket is refused for another session and for the player ro
   assert.equal(events(asPlayer, EVENTS.AUTHENTICATED).length, 0);
 });
 
-test('a GM signaling ticket is not an access token', () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
+test('a GM signaling ticket is not an access token', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
   const ticket = authService.generateSignalingTicket(owner.id, session.id);
 
   assert.equal(authService.verifyAccessToken(ticket), null);
@@ -155,7 +155,7 @@ test('a GM signaling ticket is not an access token', () => {
 });
 
 test('evicting an unresponsive GM tells the session the GM peer left', async () => {
-  const session = sessionService.createSession(owner.id, { name: 'G' });
+  const session = await sessionService.createSession(owner.id, { name: 'G' });
   const gm = fakeSocket(io);
   // Never acknowledges a ping.
   gm.timeout = () => ({ emit: (_event, cb) => cb(new Error('timeout')) });
@@ -169,8 +169,8 @@ test('evicting an unresponsive GM tells the session the GM peer left', async () 
   assert.deepEqual(left.map((e) => e.data.peerId), [gm.id]);
 });
 
-test('a GM connecting marks its session as seen, so session expiry keeps it', () => {
-  const session = sessionService.createSession(owner.id, { name: 'Seen' });
+test('a GM connecting marks its session as seen, so session expiry keeps it', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'Seen' });
   db.prepare('UPDATE game_sessions SET last_gm_seen_at = ? WHERE id = ?').run('2000-01-01T00:00:00.000Z', session.id);
   const gm = fakeSocket(io);
 
@@ -183,8 +183,8 @@ test('a GM connecting marks its session as seen, so session expiry keeps it', ()
 
 // Only the owner or a member (someone who passed gamelist/join, and with it the password)
 // may connect as a player; the GM backend creates whoever connects as a player.
-test('a player who never joined the game is refused for good', () => {
-  const session = sessionService.createSession(owner.id, { name: 'Locked', passwordRequired: true, password: 'pw' });
+test('a player who never joined the game is refused for good', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'Locked', passwordRequired: true, password: 'pw' });
   const stranger = createUser('auth-stranger');
   const socket = fakeSocket(io);
 
@@ -196,7 +196,7 @@ test('a player who never joined the game is refused for good', () => {
   assert.equal(socket.connected, false);
 });
 
-test('a player of a session that does not exist is refused', () => {
+test('a player of a session that does not exist is refused', async () => {
   const socket = fakeSocket(io);
 
   handleAuthenticate(io, socket, { token: authService.generateAccessToken(player), sessionId: randomUUID(), role: 'player' });
@@ -205,10 +205,10 @@ test('a player of a session that does not exist is refused', () => {
   assert.equal(socket.connected, false);
 });
 
-test('a member and the owner may connect as players', () => {
-  const session = sessionService.createSession(owner.id, { name: 'Open' });
+test('a member and the owner may connect as players', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'Open' });
   const member = createUser('auth-member');
-  sessionService.joinSession(member.id, session.id, undefined);
+  await sessionService.joinSession(member.id, session.id, undefined);
   const asMember = fakeSocket(io);
   const asOwner = fakeSocket(io);
 
@@ -221,11 +221,11 @@ test('a member and the owner may connect as players', () => {
   signaling.removePeer(asOwner.id);
 });
 
-test('isMember: the owner and members, nobody else', () => {
-  const session = sessionService.createSession(owner.id, { name: 'Members' });
+test('isMember: the owner and members, nobody else', async () => {
+  const session = await sessionService.createSession(owner.id, { name: 'Members' });
   const member = createUser('is-member');
   const stranger = createUser('is-stranger');
-  sessionService.joinSession(member.id, session.id, undefined);
+  await sessionService.joinSession(member.id, session.id, undefined);
 
   assert.equal(sessionService.isMember(session.id, owner.id), true);
   assert.equal(sessionService.isMember(session.id, member.id), true);

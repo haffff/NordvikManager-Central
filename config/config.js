@@ -24,6 +24,14 @@ const config = Object.freeze({
   // Express 'trust proxy' (see config/trustProxy.js): one hop in production unless TRUST_PROXY says otherwise.
   trustProxy: parseTrustProxy(process.env.TRUST_PROXY, process.env.NODE_ENV === 'production'),
 
+  // Flood limits per client address (as TRUST_PROXY gives it); 0 turns one off.
+  // API_RATE_LIMIT: requests to /api and /webrtc per minute.
+  apiRateLimit: parseInt(process.env.API_RATE_LIMIT ?? '600', 10) || 0,
+  // Open signaling (Socket.IO) connections at once, and how long one may stay without
+  // authenticating.
+  signalingMaxConnectionsPerIp: parseInt(process.env.SIGNALING_MAX_CONNECTIONS_PER_IP ?? '50', 10) || 0,
+  signalingAuthTimeoutMs: parseInt(process.env.SIGNALING_AUTH_TIMEOUT_MS ?? '20000', 10) || 0,
+
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',

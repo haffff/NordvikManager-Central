@@ -14,6 +14,7 @@ const mountRoutes = require('./routes/index');
 const mountDocs = require('./routes/docs');
 const { attachSignalingServer } = require('./signaling/signalingServer');
 const errorHandler = require('./middleware/errorHandler');
+const { applyBodyParsers, createApiLimiter } = require('./middleware/requestLimits');
 const { startCleanup } = require('./services/cleanupService');
 const logger = require('./logger');
 
@@ -36,9 +37,8 @@ app.use(
   })
 );
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false }));
+// Body parsing: small bodies, except a game's cover image (middleware/requestLimits.js)
+applyBodyParsers(app);
 app.use(cookieParser());
 
 // HTTP request logging
@@ -63,7 +63,8 @@ if (mountDocs(app, config.docsDir)) {
   logger.warn(`Docs site not found at ${config.docsDir} (set DOCS_DIR); /quickstart, /user-guide etc. won't be served`);
 }
 
-// API routes
+// API routes, with a per-address request limit (API_RATE_LIMIT)
+app.use(['/api', '/webrtc'], createApiLimiter({ limit: config.apiRateLimit }));
 mountRoutes(app);
 
 // Global error handler (must be last)
@@ -71,7 +72,7 @@ app.use(errorHandler);
 
 // Create HTTP server and attach Socket.io
 const server = http.createServer(app);
-attachSignalingServer(server);
+attachSignalingServer(server, { trust: app.get('trust proxy fn') });
 
 server.listen(config.port, () => {
   logger.info(`NordvikManager Central Server listening on port ${config.port} [${config.nodeEnv}]`);

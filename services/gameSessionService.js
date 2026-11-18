@@ -1,13 +1,16 @@
 'use strict';
 
 const { randomUUID } = require('crypto');
-const bcrypt = require('bcryptjs');
+const passwords = require('./passwords');
 const db = require('../db/database');
 
-function createSession(ownerId, { name, summary, description, imageData, passwordRequired, password, isPublic }) {
+// A game's password is hashed like an account's (services/passwords.js), with fewer rounds.
+const GAME_PASSWORD_ROUNDS = 10;
+
+async function createSession(ownerId, { name, summary, description, imageData, passwordRequired, password, isPublic }) {
   const id = randomUUID();
   const passwordHash = passwordRequired && password
-    ? bcrypt.hashSync(password, 10)
+    ? await passwords.hash(password, GAME_PASSWORD_ROUNDS)
     : null;
 
   db.prepare(
@@ -41,7 +44,7 @@ function getSessionsForUser(userId) {
     .all(userId, userId);
 }
 
-function joinSession(userId, sessionId, password) {
+async function joinSession(userId, sessionId, password) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
 
@@ -64,14 +67,21 @@ function joinSession(userId, sessionId, password) {
       return { error: "This game's password isn't set up yet. Ask the GM to start the game again.", status: 503 };
     }
     if (!password) return { error: 'Password required', status: 400 };
-    if (!bcrypt.compareSync(password, session.password_hash)) {
+    if (!(await passwords.compare(password, session.password_hash))) {
       return { error: 'Incorrect password', status: 401 };
     }
   }
 
-  db.prepare(
-    'INSERT INTO session_players (id, session_id, user_id) VALUES (?, ?, ?)'
-  ).run(randomUUID(), sessionId, userId);
+  // Two joins of one player can overlap while the password is checked: the second finds
+  // the first one's row.
+  try {
+    db.prepare(
+      'INSERT INTO session_players (id, session_id, user_id) VALUES (?, ?, ?)'
+    ).run(randomUUID(), sessionId, userId);
+  } catch (err) {
+    if (err?.code === 'SQLITE_CONSTRAINT_UNIQUE') return { error: 'Already joined', status: 409, sessionId };
+    throw err;
+  }
 
   return { ok: true, sessionId };
 }
@@ -100,20 +110,22 @@ function deleteSession(sessionId, requestingUserId, isAdmin) {
 // session so the list stays current; a value left out is cleared. The password is the
 // exception: given, it replaces the stored one (and makes the game password-protected);
 // left out — an older backend never sends it — the stored one is kept.
-function updateSession(sessionId, requestingUserId, isAdmin, { name, summary, description, imageData, isPublic, password }) {
+async function updateSession(sessionId, requestingUserId, isAdmin, { name, summary, description, imageData, isPublic, password }) {
   const session = db.prepare('SELECT * FROM game_sessions WHERE id = ?').get(sessionId);
   if (!session) return { error: 'Session not found', status: 404 };
   if (!isAdmin && session.owner_id !== requestingUserId) {
     return { error: 'Forbidden', status: 403 };
   }
+  // Hashed before the transaction: better-sqlite3 transactions can't wait for anything.
+  const passwordHash = password ? await passwords.hash(password, GAME_PASSWORD_ROUNDS) : null;
   db.transaction(() => {
     db.prepare(
       `UPDATE game_sessions SET name = ?, summary = ?, description = ?, image_data = ?, is_public = ?
        WHERE id = ?`
     ).run(name, summary || null, description || null, imageData || null, isPublic ? 1 : 0, sessionId);
-    if (password) {
+    if (passwordHash) {
       db.prepare('UPDATE game_sessions SET password_hash = ?, password_required = 1 WHERE id = ?')
-        .run(bcrypt.hashSync(password, 10), sessionId);
+        .run(passwordHash, sessionId);
     }
   })();
   return { ok: true, session: getSessionById(sessionId) };

@@ -13,7 +13,8 @@ const router = express.Router();
 
 // gamelist/join is where a game's password is checked (signaling admits members only), so
 // guessing it is slowed down: per user, and per address for someone using several accounts.
-// Only failed tries count; a member coming back (409) or a right password never does.
+// Only failed tries count; a member coming back (409), a right password, or a server too
+// busy to check it (503, services/passwords.js) never does.
 const JOIN_WINDOW_MS = 15 * 60 * 1000;
 const JOIN_FAILURES_PER_USER = 10;
 const JOIN_FAILURES_PER_IP = 30;
@@ -22,7 +23,7 @@ const joinTryCounted = {
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
-  requestWasSuccessful: (_req, res) => res.statusCode < 400 || res.statusCode === 409,
+  requestWasSuccessful: (_req, res) => res.statusCode < 400 || res.statusCode === 409 || res.statusCode === 503,
   message: { error: 'Too many failed attempts to join, please try again later' },
 };
 const joinLimiterPerIp = rateLimit({ ...joinTryCounted, limit: JOIN_FAILURES_PER_IP });
@@ -106,14 +107,14 @@ router.post(
     body('isPublic').optional().isBoolean().toBoolean(),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { name, summary, description, image, passwordRequired, password, isPublic } = req.body;
 
     if (isPublic && !config.allowPublicGames) {
       return res.status(403).json({ error: 'Public games are not allowed on this server' });
     }
 
-    const session = sessionService.createSession(req.user.id, {
+    const session = await sessionService.createSession(req.user.id, {
       name,
       summary,
       description,
@@ -151,14 +152,14 @@ router.post(
     body('password').optional({ checkFalsy: true }).isString().isLength({ max: 128 }),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { sessionId, name, summary, description, image, isPublic, password } = req.body;
 
     if (isPublic && !config.allowPublicGames) {
       return res.status(403).json({ error: 'Public games are not allowed on this server' });
     }
 
-    const result = sessionService.updateSession(sessionId, req.user.id, req.user.isAdmin, {
+    const result = await sessionService.updateSession(sessionId, req.user.id, req.user.isAdmin, {
       name,
       summary,
       description,
@@ -212,9 +213,9 @@ router.post(
   joinLimiterPerUser,
   [body('gameID').trim().notEmpty()],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { gameID, password } = req.body;
-    const result = sessionService.joinSession(req.user.id, gameID, password);
+    const result = await sessionService.joinSession(req.user.id, gameID, password);
     if (result.error && result.status !== 409) {
       return res.status(result.status).json({ error: result.error });
     }

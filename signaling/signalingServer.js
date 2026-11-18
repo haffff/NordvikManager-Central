@@ -5,12 +5,19 @@ const config = require('../config/config');
 const signaling = require('../services/signalingService');
 const { handleAuthenticate } = require('./authenticate');
 const { relayOffer, relayAnswer, relayIceCandidate, answerGmAlive } = require('./relay');
+const { createConnectionLimiter, requireAuthWithin } = require('./limits');
 const EVENTS = require('./events');
 const logger = require('../logger');
 
-function attachSignalingServer(httpServer) {
+// Offers, answers and ICE candidates are a few KB; Socket.IO's own default is 1 MB.
+const MAX_MESSAGE_BYTES = 100 * 1024;
+
+// `trust` is the app's compiled TRUST_PROXY (app.get('trust proxy fn')), so the per-address
+// limit sees the same client addresses as the HTTP rate limits.
+function attachSignalingServer(httpServer, { trust = () => false } = {}) {
   const io = new Server(httpServer, {
     path: '/socket.io',
+    maxHttpBufferSize: MAX_MESSAGE_BYTES,
     cors: {
       origin: config.corsOrigins,
       credentials: true,
@@ -18,9 +25,12 @@ function attachSignalingServer(httpServer) {
   });
 
   signaling.setIo(io);
+  io.use(createConnectionLimiter({ max: config.signalingMaxConnectionsPerIp, trust }));
 
   io.on('connection', (socket) => {
     logger.debug(`[signaling] socket connected: ${socket.id}`);
+    // A socket that never authenticates only holds a connection: it's closed.
+    requireAuthWithin(socket, config.signalingAuthTimeoutMs, () => !!signaling.getPeer(socket.id));
 
     // ── AUTHENTICATE ────────────────────────────────────────────────────
     socket.on(EVENTS.AUTHENTICATE, (payload) => handleAuthenticate(io, socket, payload));

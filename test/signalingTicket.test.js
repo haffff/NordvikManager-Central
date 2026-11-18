@@ -56,7 +56,7 @@ const post = (body, userId) =>
   });
 
 test('the owner gets a ticket for its session', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'G' });
+  const session = await sessionService.createSession(ownerId, { name: 'G' });
 
   const res = await post({ sessionId: session.id }, ownerId);
 
@@ -66,7 +66,7 @@ test('the owner gets a ticket for its session', async () => {
 });
 
 test('anyone but the owner is refused', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'G' });
+  const session = await sessionService.createSession(ownerId, { name: 'G' });
   assert.equal((await post({ sessionId: session.id }, otherId)).status, 403);
 });
 
@@ -75,7 +75,7 @@ test('an unknown session is not found', async () => {
 });
 
 test('it needs a login', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'G' });
+  const session = await sessionService.createSession(ownerId, { name: 'G' });
   assert.equal((await post({ sessionId: session.id })).status, 401);
 });
 
@@ -88,7 +88,7 @@ test('a ticket issued before its user logged out is refused', async () => {
   const sessions2 = require('../services/gameSessionService');
   const id = randomUUID();
   db2.prepare('INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)').run(id, `logout-${id}`, 'x');
-  const s = sessions2.createSession(id, { name: 'Ticketed' });
+  const s = await sessions2.createSession(id, { name: 'Ticketed' });
   const ticket = auth2.generateSignalingTicket(id, s.id);
   assert.ok(auth2.verifySignalingTicket(ticket, s.id));
 

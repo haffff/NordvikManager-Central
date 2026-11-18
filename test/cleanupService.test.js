@@ -32,26 +32,26 @@ const addInvite = (key, expiresAt) =>
   db.prepare('INSERT INTO invites (key, created_by, expires_at) VALUES (?, ?, ?)').run(key, userId, expiresAt);
 const invites = () => db.prepare('SELECT key FROM invites ORDER BY key').all().map((r) => r.key);
 
-function sessionSeen(name, lastSeen) {
-  const s = sessionService.createSession(userId, { name });
+async function sessionSeen(name, lastSeen) {
+  const s = await sessionService.createSession(userId, { name });
   db.prepare('UPDATE game_sessions SET last_gm_seen_at = ? WHERE id = ?').run(lastSeen, s.id);
   return s.id;
 }
 const sessionExists = (id) => !!sessionService.getSessionById(id);
 
-before(() => {
+before(async () => {
   runMigration();
   userId = createUser('cleanup-user');
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   db.prepare('DELETE FROM refresh_tokens').run();
   db.prepare('DELETE FROM invites').run();
   db.prepare('DELETE FROM game_sessions').run();
   for (const s of signaling.getActiveSessions()) for (const p of s.peers) signaling.removePeer(p.socketId);
 });
 
-test('pruneRefreshTokens deletes revoked and expired tokens, keeps live ones', () => {
+test('pruneRefreshTokens deletes revoked and expired tokens, keeps live ones', async () => {
   addToken('a-live', daysAhead(3));
   addToken('b-revoked', daysAhead(3), 1);
   addToken('c-expired', daysAgo(1));
@@ -62,7 +62,7 @@ test('pruneRefreshTokens deletes revoked and expired tokens, keeps live ones', (
   assert.deepEqual(tokens(), ['a-live']);
 });
 
-test('pruneInvites deletes invites expired more than 30 days ago, keeps recent ones', () => {
+test('pruneInvites deletes invites expired more than 30 days ago, keeps recent ones', async () => {
   addInvite('a-valid', daysAhead(1));
   addInvite('b-recently-expired', daysAgo(10));
   addInvite('c-long-expired', daysAgo(31));
@@ -73,9 +73,9 @@ test('pruneInvites deletes invites expired more than 30 days ago, keeps recent o
   assert.deepEqual(invites(), ['a-valid', 'b-recently-expired']);
 });
 
-test('pruneSessions deletes sessions whose GM was last seen before the expiry window', () => {
-  const old = sessionSeen('old', daysAgo(91));
-  const recent = sessionSeen('recent', daysAgo(89));
+test('pruneSessions deletes sessions whose GM was last seen before the expiry window', async () => {
+  const old = await sessionSeen('old', daysAgo(91));
+  const recent = await sessionSeen('recent', daysAgo(89));
 
   const removed = cleanup.pruneSessions(NOW, 90);
 
@@ -84,10 +84,10 @@ test('pruneSessions deletes sessions whose GM was last seen before the expiry wi
   assert.equal(sessionExists(recent), true);
 });
 
-test('pruneSessions also removes the expired session\'s members', () => {
-  const old = sessionSeen('old-with-member', daysAgo(200));
+test('pruneSessions also removes the expired session\'s members', async () => {
+  const old = await sessionSeen('old-with-member', daysAgo(200));
   const member = createUser('cleanup-member');
-  sessionService.joinSession(member, old, undefined);
+  await sessionService.joinSession(member, old, undefined);
 
   cleanup.pruneSessions(NOW, 90);
 
@@ -95,8 +95,8 @@ test('pruneSessions also removes the expired session\'s members', () => {
   assert.equal(rows.length, 0);
 });
 
-test('pruneSessions never deletes a session whose GM is connected', () => {
-  const live = sessionSeen('live', daysAgo(400));
+test('pruneSessions never deletes a session whose GM is connected', async () => {
+  const live = await sessionSeen('live', daysAgo(400));
   signaling.addPeer('gm-socket', { userId, username: 'gm', sessionId: live, role: 'gm' });
   signaling.registerGm(live, 'gm-socket', 2);
 
@@ -105,16 +105,16 @@ test('pruneSessions never deletes a session whose GM is connected', () => {
   assert.equal(sessionExists(live), true);
 });
 
-test('pruneSessions with 0 days is off', () => {
-  const old = sessionSeen('ancient', daysAgo(5000));
+test('pruneSessions with 0 days is off', async () => {
+  const old = await sessionSeen('ancient', daysAgo(5000));
 
   assert.equal(cleanup.pruneSessions(NOW, 0), 0);
   assert.equal(sessionExists(old), true);
 });
 
-test('touchLiveSessions marks sessions with a connected GM as seen now', () => {
-  const live = sessionSeen('touched', daysAgo(50));
-  const idle = sessionSeen('idle', daysAgo(50));
+test('touchLiveSessions marks sessions with a connected GM as seen now', async () => {
+  const live = await sessionSeen('touched', daysAgo(50));
+  const idle = await sessionSeen('idle', daysAgo(50));
   signaling.addPeer('gm-socket-2', { userId, username: 'gm', sessionId: live, role: 'gm' });
   signaling.registerGm(live, 'gm-socket-2', 2);
 
@@ -124,8 +124,8 @@ test('touchLiveSessions marks sessions with a connected GM as seen now', () => {
   assert.equal(sessionService.getSessionById(idle).last_gm_seen_at, daysAgo(50));
 });
 
-test('runCleanup touches live sessions before expiring, so a long-running GM keeps its session', () => {
-  const live = sessionSeen('long-running', daysAgo(120));
+test('runCleanup touches live sessions before expiring, so a long-running GM keeps its session', async () => {
+  const live = await sessionSeen('long-running', daysAgo(120));
   signaling.addPeer('gm-socket-3', { userId, username: 'gm', sessionId: live, role: 'gm' });
   signaling.registerGm(live, 'gm-socket-3', 2);
   addToken('expired', daysAgo(1));
@@ -136,15 +136,15 @@ test('runCleanup touches live sessions before expiring, so a long-running GM kee
   assert.deepEqual(tokens(), []);
 });
 
-test('createSession records the GM as seen now', () => {
+test('createSession records the GM as seen now', async () => {
   const before = Date.now();
-  const s = sessionService.createSession(userId, { name: 'fresh' });
+  const s = await sessionService.createSession(userId, { name: 'fresh' });
   const seen = Date.parse(s.last_gm_seen_at);
   assert.ok(seen >= before - 1000 && seen <= Date.now() + 1000, `last_gm_seen_at=${s.last_gm_seen_at}`);
 });
 
-test('touchSession marks one session as seen now', () => {
-  const id = sessionSeen('one', daysAgo(30));
+test('touchSession marks one session as seen now', async () => {
+  const id = await sessionSeen('one', daysAgo(30));
   sessionService.touchSession(id, NOW);
   assert.equal(sessionService.getSessionById(id).last_gm_seen_at, NOW.toISOString());
 });
