@@ -11,7 +11,7 @@ const runMigration = require('../db/migrations/001_initial');
 const authService = require('../services/authService');
 const mountRoutes = require('../routes/index');
 const errorHandler = require('../middleware/errorHandler');
-const { applyBodyParsers, createApiLimiter, LARGE_BODY_PATHS } = require('../middleware/requestLimits');
+const { applyRequestLimits, createApiLimiter, LARGE_BODY_PATHS } = require('../middleware/requestLimits');
 
 // What one request may make the server read: small bodies everywhere except the two
 // routes that carry a game's cover image, and a cap on API requests per client address.
@@ -28,9 +28,9 @@ before(async () => {
 
   const app = express();
   app.set('trust proxy', true);
-  applyBodyParsers(app);
+  // As index.js does it: the request limit first, then the body parsers.
+  applyRequestLimits(app, { apiRateLimit: 5 });
   app.use(cookieParser());
-  app.use(['/api', '/webrtc'], createApiLimiter({ limit: 5, windowMs: 60 * 1000 }));
   mountRoutes(app);
   app.use(errorHandler);
   server = app.listen(0);
@@ -69,6 +69,25 @@ test("a game's cover image may still be large", async () => {
   assert.equal(res.status, 201);
 });
 
+test('the large body of a cover image is only read once the caller is logged in', async () => {
+  const res = await fetch(`${baseUrl}/api/gamelist/addgame`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': '10.4.0.1' },
+    body: `{"name": "x", "image": "${'A'.repeat(1024 * 1024)}"`, // not even valid JSON
+  });
+
+  assert.equal(res.status, 401);
+});
+
+test('past the API limit, a request is refused before its body is read', async () => {
+  const from = '10.5.0.1';
+  for (let i = 0; i < 5; i++) await send('GET', '/api/meta', undefined, { from });
+
+  const res = await send('POST', '/api/user/login', { UserName: 'x', password: 'y'.repeat(200 * 1024) }, { from });
+
+  assert.equal(res.status, 429);
+});
+
 test('one address past the API limit gets 429; another address is unaffected', async () => {
   const from = '10.3.0.1';
   const statuses = [];
@@ -86,6 +105,21 @@ test('a limit of 0 turns the API limit off', async () => {
   await new Promise((resolve) => s.once('listening', resolve));
   try {
     for (let i = 0; i < 20; i++)
+      assert.equal((await fetch(`http://127.0.0.1:${s.address().port}/x`)).status, 200);
+  } finally {
+    s.close();
+  }
+});
+
+test('requests without a client address are not limited (rather than all sharing one limit)', async () => {
+  const app = express();
+  app.use((req, _res, next) => { Object.defineProperty(req, 'ip', { value: undefined }); next(); });
+  app.use(createApiLimiter({ limit: 2 }));
+  app.get('/x', (_req, res) => res.sendStatus(200));
+  const s = app.listen(0);
+  await new Promise((resolve) => s.once('listening', resolve));
+  try {
+    for (let i = 0; i < 5; i++)
       assert.equal((await fetch(`http://127.0.0.1:${s.address().port}/x`)).status, 200);
   } finally {
     s.close();

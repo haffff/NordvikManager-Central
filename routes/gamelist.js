@@ -3,6 +3,7 @@
 const express = require('express');
 const { body, query, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
+const { largeBody } = require('../middleware/requestLimits');
 const authService = require('../services/authService');
 const config = require('../config/config');
 const sessionService = require('../services/gameSessionService');
@@ -98,6 +99,8 @@ router.get('/publicgames', async (req, res) => {
 router.post(
   '/addgame',
   auth,
+  // The cover image: read only for a logged-in user (middleware/requestLimits.js).
+  largeBody,
   [
     body('name').trim().notEmpty().isLength({ max: 200 }),
     body('summary').optional({ checkFalsy: true }).isLength({ max: 500 }),
@@ -143,6 +146,7 @@ router.post(
 router.post(
   '/updategame',
   auth,
+  largeBody,
   [
     body('sessionId').trim().notEmpty(),
     body('name').trim().notEmpty().isLength({ max: 200 }),

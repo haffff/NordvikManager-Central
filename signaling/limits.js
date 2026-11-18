@@ -1,5 +1,7 @@
 'use strict';
 
+const logger = require('../logger');
+
 // Limits on signaling sockets, so connections alone can't wear the server down: how many
 // one client address may hold open, and how long a socket may stay without authenticating.
 
@@ -28,11 +30,22 @@ function clientAddress(req, trust) {
  */
 function createConnectionLimiter({ max, trust }) {
   const open = new Map();
+  let warnedUnknown = false;
   return function limitConnections(socket, next) {
     if (!max) return next();
     const address = clientAddress(socket.request, trust);
+    // No address to count by (e.g. a unix socket with TRUST_PROXY not trusting it): rather
+    // than every client sharing one place, nothing is limited, and the setting is named.
+    if (!address) {
+      if (!warnedUnknown) {
+        warnedUnknown = true;
+        logger.warn('[signaling] no client address for a socket: connections per address are not limited (check TRUST_PROXY)');
+      }
+      return next();
+    }
     const count = open.get(address) ?? 0;
     if (count >= max) {
+      logger.warn(`[signaling] refused a connection from ${address}: ${count} already open (SIGNALING_MAX_CONNECTIONS_PER_IP)`);
       const err = new Error('Too many connections from this address');
       err.data = { error: 'Too many connections from this address' };
       return next(err);

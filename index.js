@@ -14,7 +14,7 @@ const mountRoutes = require('./routes/index');
 const mountDocs = require('./routes/docs');
 const { attachSignalingServer } = require('./signaling/signalingServer');
 const errorHandler = require('./middleware/errorHandler');
-const { applyBodyParsers, createApiLimiter } = require('./middleware/requestLimits');
+const { applyRequestLimits } = require('./middleware/requestLimits');
 const { startCleanup } = require('./services/cleanupService');
 const logger = require('./logger');
 
@@ -37,8 +37,9 @@ app.use(
   })
 );
 
-// Body parsing: small bodies, except a game's cover image (middleware/requestLimits.js)
-applyBodyParsers(app);
+// The per-address request limit on /api and /webrtc (API_RATE_LIMIT), then small-body
+// parsing; a game's cover image is read inside its route (middleware/requestLimits.js).
+applyRequestLimits(app, { apiRateLimit: config.apiRateLimit });
 app.use(cookieParser());
 
 // HTTP request logging
@@ -63,8 +64,7 @@ if (mountDocs(app, config.docsDir)) {
   logger.warn(`Docs site not found at ${config.docsDir} (set DOCS_DIR); /quickstart, /user-guide etc. won't be served`);
 }
 
-// API routes, with a per-address request limit (API_RATE_LIMIT)
-app.use(['/api', '/webrtc'], createApiLimiter({ limit: config.apiRateLimit }));
+// API routes
 mountRoutes(app);
 
 // Global error handler (must be last)

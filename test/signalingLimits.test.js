@@ -61,6 +61,13 @@ test('one address may hold up to the limit of connections, more are refused', ()
   assert.deepEqual(results.slice(3), ['other ok', 'freed ok']);
 });
 
+test('a socket whose address is unknown is not limited (rather than all sharing one place)', () => {
+  const limit = createConnectionLimiter({ max: 1, trust: trustFor(false) });
+  let refused = 0;
+  for (let i = 0; i < 5; i++) limit(fakeSocket({ headers: {}, socket: {} }), (err) => { if (err) refused++; });
+  assert.equal(refused, 0);
+});
+
 test('a limit of 0 turns it off', () => {
   const limit = createConnectionLimiter({ max: 0, trust: trustFor(false) });
   let refused = 0;
