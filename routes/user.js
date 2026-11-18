@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const db = require('../db/database');
 const authService = require('../services/authService');
 const inviteService = require('../services/inviteService');
+const signupGuard = require('../services/signupGuard');
 const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
 const config = require('../config/config');
@@ -149,7 +150,14 @@ router.post(
       return res.status(400).json({ error: 'Passwords do not match' });
     }
 
-    // The cheap checks first: a wrong code or a taken name costs no password hash.
+    // The cheap checks first, none costs a password hash: the signup guard (hidden field,
+    // puzzle; services/signupGuard.js), the daily cap on open registration, the invite and
+    // the name.
+    const refused = await signupGuard.checkSignup(req.body);
+    if (refused) return res.status(refused.status).json({ error: refused.error });
+    if (!inviteRequired && signupGuard.dailyCapReached()) {
+      return res.status(signupGuard.DAILY_CAP_ERROR.status).json({ error: signupGuard.DAILY_CAP_ERROR.error });
+    }
     if (inviteRequired && !inviteService.validateInvite(inviteCode)) {
       return res.status(400).json({ error: 'Invalid or expired invite code' });
     }
@@ -165,6 +173,7 @@ router.post(
     let outcome;
     try {
       outcome = db.transaction(() => {
+        if (!inviteRequired && signupGuard.dailyCapReached()) return 'cap';
         if (inviteRequired && !inviteService.tryConsumeInvite(inviteCode)) return 'invite';
         db.prepare(
           'INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)'
@@ -179,6 +188,9 @@ router.post(
     if (outcome === 'invite') {
       return res.status(400).json({ error: 'Invalid or expired invite code' });
     }
+    if (outcome === 'cap') {
+      return res.status(signupGuard.DAILY_CAP_ERROR.status).json({ error: signupGuard.DAILY_CAP_ERROR.error });
+    }
 
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
     const accessToken = authService.generateAccessToken(user);
@@ -187,6 +199,16 @@ router.post(
     sendTokens(req, res, 201, accessToken, refreshToken);
   }
 );
+
+// GET /api/user/signupchallenge
+// The proof-of-work puzzle the register form solves while the user fills it in
+// (services/signupGuard.js). 404 while SIGNUP_CHALLENGE is off.
+router.get('/signupchallenge', async (_req, res) => {
+  const challenge = await signupGuard.newChallenge();
+  if (!challenge) return res.status(404).json({ error: 'Registration needs no check here' });
+  res.set('Cache-Control', 'no-store');
+  res.json(challenge);
+});
 
 // GET /api/user/CheckRegistrationKey
 router.get(

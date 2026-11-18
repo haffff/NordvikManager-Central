@@ -128,3 +128,14 @@ test('while every password check is taken, login and register answer 503 at once
   // The invite wasn't used up by the refused registration.
   assert.equal((await register('busy_user', code)).status, 201);
 });
+
+test('with the signup guard off (the default), there is no puzzle and meta says so', async () => {
+  assert.equal((await fetch(`${baseUrl}/api/user/signupchallenge`)).status, 404);
+  assert.equal((await (await fetch(`${baseUrl}/api/meta`)).json()).signupChallenge, false);
+});
+
+test('the hidden field filled in is refused even with the guard off', async () => {
+  process.env.NO_INVITATION = 'true';
+
+  assert.equal((await register('trap_user', undefined, { nmTrapField: 'x' })).status, 400);
+});
