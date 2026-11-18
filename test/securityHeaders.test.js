@@ -99,6 +99,40 @@ test('the host build may compile WebAssembly, and nothing more', async () => {
   }
 });
 
+// The GM's game host runs in a worker started from host-worker.js. A worker follows its own
+// script's CSP, not the page's, so that one file may connect to any https site (actions'
+// Send Request / Download Resource, held to each addon's declared hosts by the host itself)
+// while the app page stays as strict as the rest.
+const HOST_WORKER = '/client/host/wasm/host-worker.js';
+
+test("the game host's worker may connect to https sites, and still compile WebAssembly", async () => {
+  const csp = await cspOf(HOST_WORKER);
+
+  assert.equal(directive(csp, 'connect-src'), "connect-src 'self' https:");
+  assert.equal(directive(csp, 'script-src'), "script-src 'self' 'wasm-unsafe-eval'");
+  assert.doesNotMatch(csp, /http:|ws:|\*/);
+});
+
+test("only the game host's worker gets outside connections", async () => {
+  for (const path of [
+    '/client/host/', '/client/host/index.html', '/client/host/wasm/host.js',
+    '/client/host/wasm/host-worker.js.map', '/client/host/wasm/_framework/dotnet.js',
+    '/client/p3/host/wasm/host-worker.js', '/client/wasm/host-worker.js',
+  ]) {
+    const csp = await cspOf(path);
+    assert.ok(csp, `${path} has a CSP`);
+    assert.equal(directive(csp, 'connect-src'), undefined, path);
+  }
+});
+
+// A worker script served without a CSP header could reach anything: it must always have one.
+test("the game host's worker always carries a CSP", async () => {
+  const csp = await cspOf(HOST_WORKER);
+
+  assert.ok(csp);
+  assert.equal(directive(csp, 'default-src'), "default-src 'self'");
+});
+
 test('only the host build may compile WebAssembly', async () => {
   for (const path of ['/client/index.html', '/client/hostile/index.html', '/client/p3/host/index.html', '/', '/api/meta']) {
     assert.doesNotMatch(await cspOf(path), /wasm-unsafe-eval/, path);

@@ -435,10 +435,17 @@ Both also store `Reason` when the request didn't go out, so a later step can tel
 |---|---|
 | `blocked-host` | Not an http(s) address, or a private or local host the server doesn't allow (below). |
 | `undeclared-host` | The addon's `info.json` lists where it connects (`network`), and this host isn't there. |
-| `no-outside-connections` | The game runs on the [browser version](../../user-guide/getting-started-gm/browser-version.md), which can't reach other services. |
+| `browser-refused` | The game runs on the [browser version](../../user-guide/getting-started-gm/browser-version.md), and the site refuses requests from a browser (CORS) or didn't answer: a browser can't tell which. The local server can reach it. |
+| `no-outside-connections` | The GM host makes no outside requests at all. |
 | `network-error` | It went out but failed on the way (no such host, refused, timed out). |
 
-For the first three the game's GMs also get a notice naming the addon, the action and the host.
+For all but `network-error` the game's GMs also get a notice naming the addon, the action and the host.
+
+**On the browser version** the request goes out from the GM's browser, so the site must allow requests
+from a browser (CORS): many public APIs do, and GitHub's raw files do. A Bearer token works only where the
+site also allows the `Authorization` header from a browser (`api.github.com` does, raw files don't). Only
+`https://` addresses, never a local or private host. To work there, prefer such APIs and say in your
+addon's readme what needs the local server.
 
 ### Private and local hosts
 
