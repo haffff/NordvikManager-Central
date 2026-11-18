@@ -32,6 +32,17 @@ const config = Object.freeze({
   signalingMaxConnectionsPerIp: parseInt(process.env.SIGNALING_MAX_CONNECTIONS_PER_IP ?? '50', 10) || 0,
   signalingAuthTimeoutMs: parseInt(process.env.SIGNALING_AUTH_TIMEOUT_MS ?? '20000', 10) || 0,
 
+  // Open registration (services/signupGuard.js). SIGNUP_CHALLENGE: registering needs a solved
+  // proof-of-work puzzle (off until the clients that solve it are deployed). The puzzle's
+  // size: at 100,000, measured in Chromium, a desktop solves it in about 0.3 s (0.8 s at
+  // worst) and a 4x slower CPU, like a phone's, in about 3 s (4.4 s at worst); the form
+  // solves it while the user types. Then how soon after it was handed out it may be
+  // answered. SIGNUP_DAILY_LIMIT: accounts registered without an invite in 24 hours, 0 = no cap.
+  signupChallenge: process.env.SIGNUP_CHALLENGE === 'true',
+  signupChallengeMaxNumber: parseInt(process.env.SIGNUP_CHALLENGE_MAX_NUMBER ?? '100000', 10) || 100000,
+  signupChallengeMinAgeMs: parseInt(process.env.SIGNUP_CHALLENGE_MIN_AGE_MS ?? '2000', 10) || 0,
+  signupDailyLimit: parseInt(process.env.SIGNUP_DAILY_LIMIT ?? '200', 10) || 0,
+
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',

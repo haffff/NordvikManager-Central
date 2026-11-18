@@ -71,6 +71,13 @@ After connecting, a client must emit `authenticate { token, sessionId, role }` (
 - Signaling allows `SIGNALING_MAX_CONNECTIONS_PER_IP` open sockets (50), and closes a socket that hasn't authenticated after `SIGNALING_AUTH_TIMEOUT_MS` (20 s). Messages are at most 100 KB. The socket's address is read with the app's compiled trust setting (`signaling/limits.js`, `clientAddress`).
 - Password hashes and checks (accounts and game passwords, `services/passwords.js`) are async, so the event loop keeps running during one. At most `PASSWORD_CHECKS_MAX` (4) run at once; past that, login, register and join answer 503 with `Retry-After` straight away. Register checks the invite and the username before hashing, then consumes the invite and inserts the user in one transaction (`inviteService.tryConsumeInvite`). Never pass an async function to `db.transaction`: better-sqlite3 commits at the first `await`.
 
+**Open registration guard** (`services/signupGuard.js`, `routes/user.js` register):
+- A honeypot field, `HONEYPOT_FIELD`. A registration that fills it in gets a generic 400.
+- An ALTCHA puzzle (`altcha-lib` v1, pinned 2.8.0) from `GET /api/user/signupchallenge`, required while `SIGNUP_CHALLENGE=true` (`/api/meta` `signupChallenge`).
+  - Central signs the puzzle with its creation time; the HMAC key is derived from `JWT_SECRET`.
+  - An answer is accepted once, and only `SIGNUP_CHALLENGE_MIN_AGE_MS` after the puzzle was handed out. It's used up before the password hash's await.
+- `SIGNUP_DAILY_LIMIT` accounts registered without an invite per rolling 24 hours (429 past it). It's checked before the hash and again in the insert's transaction.
+
 In-memory state lives in `services/signalingService.js` (a plain `Map`). It is lost on restart — clients are expected to reconnect and re-authenticate.
 
 ### Database

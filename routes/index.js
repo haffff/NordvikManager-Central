@@ -28,7 +28,10 @@ function mountRoutes(app) {
 
     const publicGamesAllowed = process.env.ALLOW_PUBLIC_GAMES === 'true';
 
-    res.json({ isInvitationRequired, stunServers, minBackendVersion, publicGamesAllowed });
+    // Whether registering needs the signup puzzle (GET /api/user/signupchallenge).
+    const signupChallenge = config.signupChallenge;
+
+    res.json({ isInvitationRequired, stunServers, minBackendVersion, publicGamesAllowed, signupChallenge });
   });
 
   // Full ICE config incl. short-lived TURN credentials. Authenticated, unlike /api/meta,
