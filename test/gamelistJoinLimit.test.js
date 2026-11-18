@@ -33,7 +33,7 @@ let session;
 before(async () => {
   runMigration();
   ownerId = createUser('limit-owner');
-  session = sessionService.createSession(ownerId, { name: 'Locked', passwordRequired: true, password: 'right' });
+  session = await sessionService.createSession(ownerId, { name: 'Locked', passwordRequired: true, password: 'right' });
 
   const app = express();
   app.use(express.json());

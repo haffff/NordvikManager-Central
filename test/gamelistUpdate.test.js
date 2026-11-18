@@ -55,7 +55,7 @@ const post = (body, userId) =>
   });
 
 test('the owner updates the listed details, cover image included', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'Old' });
+  const session = await sessionService.createSession(ownerId, { name: 'Old' });
 
   const res = await post({ sessionId: session.id, name: 'New', summary: 'S', image: 'data:image/png;base64,aGk=' }, ownerId);
 
@@ -67,7 +67,7 @@ test('the owner updates the listed details, cover image included', async () => {
 });
 
 test('someone else gets 403 and nothing changes', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'Mine' });
+  const session = await sessionService.createSession(ownerId, { name: 'Mine' });
 
   const res = await post({ sessionId: session.id, name: 'Taken' }, otherId);
 
@@ -76,7 +76,7 @@ test('someone else gets 403 and nothing changes', async () => {
 });
 
 test('it needs a login, a session id and a name', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'Game' });
+  const session = await sessionService.createSession(ownerId, { name: 'Game' });
 
   assert.equal((await post({ sessionId: session.id, name: 'X' })).status, 401);
   assert.equal((await post({ name: 'X' }, ownerId)).status, 400);
@@ -88,7 +88,7 @@ test('an unknown session is 404', async () => {
 });
 
 test('a password sent with the update is stored; one left out keeps the old one', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'Locked', passwordRequired: true });
+  const session = await sessionService.createSession(ownerId, { name: 'Locked', passwordRequired: true });
 
   assert.equal((await post({ sessionId: session.id, name: 'Locked', password: 'pw' }, ownerId)).status, 200);
   const hash = sessionService.getSessionById(session.id).password_hash;
@@ -99,6 +99,6 @@ test('a password sent with the update is stored; one left out keeps the old one'
 });
 
 test('a too-long password is 400', async () => {
-  const session = sessionService.createSession(ownerId, { name: 'Long' });
+  const session = await sessionService.createSession(ownerId, { name: 'Long' });
   assert.equal((await post({ sessionId: session.id, name: 'Long', password: 'x'.repeat(129) }, ownerId)).status, 400);
 });

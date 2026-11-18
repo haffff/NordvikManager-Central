@@ -31,6 +31,12 @@ const registerLimiter = rateLimit({
   message: { error: 'Too many registration attempts, please try again later' },
 });
 
+// Which unique column a failed INSERT INTO users ran into ('username' or 'email'), or null.
+function takenColumn(err) {
+  if (err?.code !== 'SQLITE_CONSTRAINT_UNIQUE') return null;
+  return /users\.email/.test(err.message) ? 'email' : /users\.username/.test(err.message) ? 'username' : null;
+}
+
 function setCookieToken(res, token) {
   res.cookie('Authorization', token, {
     httpOnly: true,
@@ -79,14 +85,15 @@ router.post(
     body('password').notEmpty().isLength({ max: 128 }),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { UserName, password } = req.body;
 
     const user = db
       .prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE')
       .get(UserName);
 
-    if (!user || !authService.comparePassword(password, user.password_hash)) {
+    // An unknown name costs no hash (register already tells which names exist).
+    if (!user || !(await authService.comparePassword(password, user.password_hash))) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
@@ -134,35 +141,44 @@ router.post(
     body('inviteCode').if(() => process.env.NO_INVITATION !== 'true').trim().notEmpty(),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { UserName, password, confirmPassword, email, inviteCode } = req.body;
+    const inviteRequired = process.env.NO_INVITATION !== 'true';
 
     if (password !== confirmPassword) {
       return res.status(400).json({ error: 'Passwords do not match' });
     }
 
-    //check configuration of nodejs if invitation is required 
-    if (process.env.NO_INVITATION !== 'true') {
-      if (!inviteService.validateInvite(inviteCode)) {
-        return res.status(400).json({ error: 'Invalid or expired invite code' });
-      }
+    // The cheap checks first: a wrong code or a taken name costs no password hash.
+    if (inviteRequired && !inviteService.validateInvite(inviteCode)) {
+      return res.status(400).json({ error: 'Invalid or expired invite code' });
     }
-
-    const existing = db
-      .prepare('SELECT id FROM users WHERE username = ? COLLATE NOCASE')
-      .get(UserName);
-    if (existing) {
+    if (db.prepare('SELECT id FROM users WHERE username = ? COLLATE NOCASE').get(UserName)) {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
     const id = randomUUID();
-    const hash = authService.hashPassword(password);
+    const hash = await authService.hashPassword(password);
 
-    db.prepare(
-      'INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)'
-    ).run(id, UserName, email || null, hash);
-
-    inviteService.consumeInvite(inviteCode);
+    // Another registration may have run meanwhile: the invite's place and the account are
+    // taken together, or neither is.
+    let outcome;
+    try {
+      outcome = db.transaction(() => {
+        if (inviteRequired && !inviteService.tryConsumeInvite(inviteCode)) return 'invite';
+        db.prepare(
+          'INSERT INTO users (id, username, email, password_hash) VALUES (?, ?, ?, ?)'
+        ).run(id, UserName, email || null, hash);
+        return 'ok';
+      })();
+    } catch (err) {
+      const taken = takenColumn(err);
+      if (taken) return res.status(409).json({ error: taken === 'email' ? 'Email already in use' : 'Username already taken' });
+      throw err;
+    }
+    if (outcome === 'invite') {
+      return res.status(400).json({ error: 'Invalid or expired invite code' });
+    }
 
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
     const accessToken = authService.generateAccessToken(user);
@@ -277,7 +293,7 @@ router.post(
     body('isAdmin').optional().isBoolean().toBoolean(),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { userName, email, password, isAdmin } = req.body;
 
     const existing = db
@@ -286,11 +302,17 @@ router.post(
     if (existing) return res.status(409).json({ error: 'Username already taken' });
 
     const id = randomUUID();
-    const hash = authService.hashPassword(password);
+    const hash = await authService.hashPassword(password);
 
-    db.prepare(
-      'INSERT INTO users (id, username, email, password_hash, is_admin) VALUES (?, ?, ?, ?, ?)'
-    ).run(id, userName, email || null, hash, isAdmin ? 1 : 0);
+    try {
+      db.prepare(
+        'INSERT INTO users (id, username, email, password_hash, is_admin) VALUES (?, ?, ?, ?, ?)'
+      ).run(id, userName, email || null, hash, isAdmin ? 1 : 0);
+    } catch (err) {
+      const taken = takenColumn(err);
+      if (taken) return res.status(409).json({ error: taken === 'email' ? 'Email already in use' : 'Username already taken' });
+      throw err;
+    }
 
     res.status(201).json({ id });
   }
@@ -306,9 +328,9 @@ router.post(
     body('newPassword').notEmpty().isLength({ min: 6, max: 128 }),
   ],
   validate,
-  (req, res) => {
+  async (req, res) => {
     const { userID, newPassword } = req.body;
-    const hash = authService.hashPassword(newPassword);
+    const hash = await authService.hashPassword(newPassword);
     const result = db
       .prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\') WHERE id = ?')
       .run(hash, userID);

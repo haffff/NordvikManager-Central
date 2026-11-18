@@ -14,6 +14,7 @@ const mountRoutes = require('./routes/index');
 const mountDocs = require('./routes/docs');
 const { attachSignalingServer } = require('./signaling/signalingServer');
 const errorHandler = require('./middleware/errorHandler');
+const { applyRequestLimits } = require('./middleware/requestLimits');
 const { startCleanup } = require('./services/cleanupService');
 const logger = require('./logger');
 
@@ -36,9 +37,9 @@ app.use(
   })
 );
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false }));
+// The per-address request limit on /api and /webrtc (API_RATE_LIMIT), then small-body
+// parsing; a game's cover image is read inside its route (middleware/requestLimits.js).
+applyRequestLimits(app, { apiRateLimit: config.apiRateLimit });
 app.use(cookieParser());
 
 // HTTP request logging
@@ -71,7 +72,7 @@ app.use(errorHandler);
 
 // Create HTTP server and attach Socket.io
 const server = http.createServer(app);
-attachSignalingServer(server);
+attachSignalingServer(server, { trust: app.get('trust proxy fn') });
 
 server.listen(config.port, () => {
   logger.info(`NordvikManager Central Server listening on port ${config.port} [${config.nodeEnv}]`);

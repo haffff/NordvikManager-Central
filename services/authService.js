@@ -1,19 +1,21 @@
 'use strict';
 
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const { randomUUID, createHmac } = require('crypto');
 const config = require('../config/config');
 const db = require('../db/database');
+const passwords = require('./passwords');
 
 const SALT_ROUNDS = 12;
 
+/** Resolves to the hash; rejects with passwords.PasswordBusyError while too many run. */
 function hashPassword(plaintext) {
-  return bcrypt.hashSync(plaintext, SALT_ROUNDS);
+  return passwords.hash(plaintext, SALT_ROUNDS);
 }
 
+/** Resolves to true or false; rejects with passwords.PasswordBusyError while too many run. */
 function comparePassword(plaintext, hash) {
-  return bcrypt.compareSync(plaintext, hash);
+  return passwords.compare(plaintext, hash);
 }
 
 function generateAccessToken(user) {
