@@ -35,6 +35,20 @@ function consumeInvite(key) {
   ).run(key);
 }
 
+/**
+ * Uses one of the invite's places if it is still valid, in one statement: true if it did.
+ * Registration checks the code first and hashes the password in between, so two
+ * registrations can reach this together; only the places left are given out.
+ */
+function tryConsumeInvite(key) {
+  const result = db.prepare(
+    `UPDATE invites SET use_count = use_count + 1,
+       used = CASE WHEN max_uses IS NOT NULL AND use_count + 1 >= max_uses THEN 1 ELSE used END
+     WHERE key = ? AND (max_uses IS NULL OR use_count < max_uses) AND expires_at > ?`
+  ).run(key, new Date().toISOString());
+  return result.changes === 1;
+}
+
 function listInvites(page = 1) {
   const offset = (page - 1) * PAGE_SIZE;
   const total = db.prepare('SELECT COUNT(*) as count FROM invites').get().count;
@@ -53,4 +67,4 @@ function deleteInvite(key) {
   return result.changes > 0;
 }
 
-module.exports = { generateInvite, validateInvite, consumeInvite, listInvites, deleteInvite };
+module.exports = { generateInvite, validateInvite, consumeInvite, tryConsumeInvite, listInvites, deleteInvite };

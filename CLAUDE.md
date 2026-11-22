@@ -65,6 +65,19 @@ After connecting, a client must emit `authenticate { token, sessionId, role }` (
 
 **ICE servers.** `GET /api/ice-servers` (authenticated) returns the `RTCIceServer[]` both peers use: STUN from `STUN_SERVERS`, plus TURN with short-lived coturn `use-auth-secret` credentials when `TURN_URLS` + `TURN_SECRET` are set (`services/iceServers.js`). The unauthenticated `/api/meta` never carries TURN details. Sample coturn config is in `coturn/`.
 
+**Flood limits** (all per client address as `TRUST_PROXY` gives it, 0 = off; see `.env.example`):
+- Request bodies are at most 100 KB, except `addgame`/`updategame`, which carry the game's cover image: their 10 MB parser (`largeBody`) runs inside the route after `auth`. `applyRequestLimits` (index.js and the tests) mounts the API limit before the body parsers. A request or socket without a client address isn't limited (a warning names `TRUST_PROXY`), so a misconfiguration can't put every client in one bucket.
+- `/api` and `/webrtc` are limited to `API_RATE_LIMIT` requests a minute (600).
+- Signaling allows `SIGNALING_MAX_CONNECTIONS_PER_IP` open sockets (50), and closes a socket that hasn't authenticated after `SIGNALING_AUTH_TIMEOUT_MS` (20 s). Messages are at most 100 KB. The socket's address is read with the app's compiled trust setting (`signaling/limits.js`, `clientAddress`).
+- Password hashes and checks (accounts and game passwords, `services/passwords.js`) are async, so the event loop keeps running during one. At most `PASSWORD_CHECKS_MAX` (4) run at once; past that, login, register and join answer 503 with `Retry-After` straight away. Register checks the invite and the username before hashing, then consumes the invite and inserts the user in one transaction (`inviteService.tryConsumeInvite`). Never pass an async function to `db.transaction`: better-sqlite3 commits at the first `await`.
+
+**Open registration guard** (`services/signupGuard.js`, `routes/user.js` register):
+- A honeypot field, `HONEYPOT_FIELD`. A registration that fills it in gets a generic 400.
+- An ALTCHA puzzle (`altcha-lib` v1, pinned 2.8.0) from `GET /api/user/signupchallenge`, required while `SIGNUP_CHALLENGE=true` (`/api/meta` `signupChallenge`).
+  - Central signs the puzzle with its creation time; the HMAC key is derived from `JWT_SECRET`.
+  - An answer is accepted once, and only `SIGNUP_CHALLENGE_MIN_AGE_MS` after the puzzle was handed out. It's used up before the password hash's await.
+- `SIGNUP_DAILY_LIMIT` accounts registered without an invite per rolling 24 hours (429 past it). It's checked before the hash and again in the insert's transaction.
+
 In-memory state lives in `services/signalingService.js` (a plain `Map`). It is lost on restart — clients are expected to reconnect and re-authenticate.
 
 ### Database

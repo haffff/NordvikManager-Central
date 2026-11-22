@@ -21,7 +21,7 @@ let baseUrl;
 before(async () => {
   runMigration();
   db.prepare('INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)')
-    .run(randomUUID(), 'cookie-user', authService.hashPassword('secret-pw'));
+    .run(randomUUID(), 'cookie-user', await authService.hashPassword('secret-pw'));
 
   const app = express();
   app.use(express.json());
